@@ -1,0 +1,1573 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Avatar V Paper - Explained for Beginners</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --border: #30363d;
+    --text: #e6edf3;
+    --text-muted: #8b949e;
+    --accent: #58a6ff;
+    --accent-subtle: #1f6feb22;
+    --green: #3fb950;
+    --yellow: #d29922;
+    --red: #f85149;
+    --purple: #bc8cff;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.7;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem;
+    display: flex;
+    gap: 0;
+  }
+
+  /* Sidebar TOC */
+  .sidebar {
+    position: sticky;
+    top: 1rem;
+    align-self: flex-start;
+    width: 240px;
+    flex-shrink: 0;
+    max-height: calc(100vh - 2rem);
+    overflow-y: auto;
+    padding-right: 1.25rem;
+    border-right: 1px solid var(--border);
+    margin-right: 2rem;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+  }
+  .sidebar::-webkit-scrollbar { width: 4px; }
+  .sidebar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+  .sidebar::-webkit-scrollbar-track { background: transparent; }
+
+  .sidebar .toc-title {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .sidebar a {
+    display: block;
+    color: var(--text-muted);
+    text-decoration: none;
+    font-size: 0.8rem;
+    padding: 0.2rem 0 0.2rem 0;
+    line-height: 1.4;
+    transition: color 0.15s, border-color 0.15s;
+    border-left: 2px solid transparent;
+    padding-left: 0.6rem;
+  }
+  .sidebar a:hover { color: var(--text); }
+  .sidebar a.active {
+    color: var(--accent);
+    border-left-color: var(--accent);
+    font-weight: 600;
+  }
+  .sidebar a.indent { padding-left: 1.4rem; font-size: 0.75rem; }
+  .sidebar a.section-gap { margin-top: 0.4rem; }
+
+  .main-content {
+    flex: 1;
+    min-width: 0;
+    max-width: 860px;
+  }
+
+  /* Mobile: hide sidebar, show inline TOC toggle */
+  @media (max-width: 900px) {
+    body { display: block; max-width: 860px; }
+    .sidebar {
+      position: fixed;
+      top: 0;
+      left: -280px;
+      width: 260px;
+      height: 100vh;
+      max-height: 100vh;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      padding: 1rem 1rem 1rem 1rem;
+      margin-right: 0;
+      z-index: 1001;
+      transition: left 0.25s ease;
+    }
+    .sidebar.mobile-open { left: 0; }
+    .main-content { max-width: 100%; }
+    .mobile-toc-btn {
+      display: flex !important;
+    }
+    .mobile-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 1000;
+    }
+    .mobile-overlay.active { display: block; }
+  }
+
+  .mobile-toc-btn {
+    display: none;
+    position: fixed;
+    bottom: 1.5rem;
+    left: 1.5rem;
+    width: 44px;
+    height: 44px;
+    background: var(--accent);
+    color: var(--bg);
+    border: none;
+    border-radius: 50%;
+    font-size: 1.1rem;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+    z-index: 999;
+    align-items: center;
+    justify-content: center;
+  }
+  h1 { font-size: 2rem; margin-bottom: 0.5rem; }
+  h2 { font-size: 1.5rem; margin: 2.5rem 0 1rem; color: var(--accent); border-bottom: 1px solid var(--border); padding-bottom: 0.5rem; }
+  h3 { font-size: 1.2rem; margin: 1.5rem 0 0.75rem; color: var(--purple); }
+  p { margin-bottom: 1rem; }
+  .subtitle { color: var(--text-muted); margin-bottom: 2rem; font-size: 1.05rem; }
+
+  /* Term highlighting */
+  .term {
+    color: var(--yellow);
+    cursor: help;
+    border-bottom: 1px dashed var(--yellow);
+    position: relative;
+  }
+  .term:hover { color: #e3b341; }
+  .term .tooltip {
+    display: none;
+    position: absolute;
+    bottom: 130%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    width: 320px;
+    font-size: 0.85rem;
+    color: var(--text);
+    z-index: 100;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+    line-height: 1.5;
+  }
+  .term:hover .tooltip { display: block; }
+
+  /* Collapsible sections */
+  details {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    margin: 1rem 0;
+    padding: 0;
+    overflow: hidden;
+  }
+  summary {
+    padding: 0.75rem 1rem;
+    cursor: pointer;
+    font-weight: 600;
+    user-select: none;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  summary::before { content: '+ '; color: var(--accent); font-family: monospace; font-size: 1.2rem; }
+  details[open] summary::before { content: '- '; }
+  summary:hover { background: var(--accent-subtle); }
+  .details-body { padding: 0 1rem 1rem; }
+
+  /* Analogy boxes */
+  .analogy {
+    background: #1a2332;
+    border-left: 4px solid var(--accent);
+    padding: 1rem 1.25rem;
+    border-radius: 0 8px 8px 0;
+    margin: 1rem 0;
+  }
+  .analogy::before { content: '💡 Real-world analogy: '; font-weight: 700; color: var(--accent); }
+
+  /* Key insight boxes */
+  .insight {
+    background: #1a2a1a;
+    border-left: 4px solid var(--green);
+    padding: 1rem 1.25rem;
+    border-radius: 0 8px 8px 0;
+    margin: 1rem 0;
+  }
+  .insight::before { content: 'Key Insight: '; font-weight: 700; color: var(--green); }
+
+  /* Quiz */
+  .quiz {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1.25rem;
+    margin: 1.5rem 0;
+  }
+  .quiz-question { font-weight: 600; margin-bottom: 0.75rem; color: var(--purple); }
+  .quiz label {
+    display: block;
+    padding: 0.5rem 0.75rem;
+    margin: 0.25rem 0;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .quiz label:hover { background: var(--accent-subtle); }
+  .quiz input[type="radio"] { margin-right: 0.5rem; }
+  .quiz .feedback { display: none; margin-top: 0.75rem; padding: 0.75rem; border-radius: 6px; }
+  .quiz .feedback.correct { background: #1a2a1a; color: var(--green); }
+  .quiz .feedback.wrong { background: #2a1a1a; color: var(--red); }
+
+  .quiz-btn {
+    margin-top: 0.75rem;
+    padding: 0.5rem 1.25rem;
+    background: var(--accent);
+    color: var(--bg);
+    border: none;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .quiz-btn:hover { opacity: 0.9; }
+
+  /* Progress tracker */
+  .progress-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 3px;
+    background: var(--accent);
+    z-index: 1000;
+    transition: width 0.1s;
+  }
+
+  /* Glossary panel */
+  .glossary-toggle {
+    position: fixed;
+    bottom: 1.5rem;
+    right: 1.5rem;
+    width: 50px;
+    height: 50px;
+    background: var(--accent);
+    color: var(--bg);
+    border: none;
+    border-radius: 50%;
+    font-size: 1.3rem;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+    z-index: 999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .glossary-panel {
+    display: none;
+    position: fixed;
+    bottom: 5rem;
+    right: 1.5rem;
+    width: 380px;
+    max-height: 70vh;
+    overflow-y: auto;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.25rem;
+    z-index: 998;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.5);
+  }
+  .glossary-panel.open { display: block; }
+  .glossary-panel h3 { margin-top: 0; }
+  .glossary-panel input {
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    margin-bottom: 0.75rem;
+    font-size: 0.9rem;
+  }
+  .glossary-entry {
+    padding: 0.5rem 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .glossary-entry:last-child { border-bottom: none; }
+  .glossary-entry strong { color: var(--yellow); }
+  .glossary-entry p { font-size: 0.85rem; color: var(--text-muted); margin: 0.25rem 0 0; }
+
+  /* Diagram */
+  .diagram {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin: 1rem 0;
+    font-family: 'Courier New', monospace;
+    font-size: 0.8rem;
+    line-height: 1.4;
+    overflow-x: auto;
+    white-space: pre;
+    color: var(--text-muted);
+  }
+  .diagram .highlight { color: var(--accent); font-weight: bold; }
+  .diagram .label { color: var(--yellow); }
+  .diagram .arrow { color: var(--green); }
+
+  /* Architecture flow diagram */
+  .arch-flow {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+    margin: 1.5rem 0;
+  }
+  .arch-inputs {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 0;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .arch-input-tag {
+    font-size: 0.8rem;
+    font-weight: 600;
+    padding: 0.3rem 0.75rem;
+    border-radius: 20px;
+    border: 1px solid;
+  }
+  .arch-arrow-down {
+    width: 2px;
+    height: 20px;
+    background: var(--border);
+    position: relative;
+  }
+  .arch-arrow-down::after {
+    content: '';
+    position: absolute;
+    bottom: -4px;
+    left: -4px;
+    border: 5px solid transparent;
+    border-top: 6px solid var(--border);
+  }
+  .arch-component {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1.25rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    width: 100%;
+    max-width: 480px;
+  }
+  .arch-component.arch-core {
+    border-color: rgba(46,196,182,0.4);
+    background: linear-gradient(135deg, var(--surface) 0%, rgba(46,196,182,0.05) 100%);
+  }
+  .arch-icon { font-size: 1.5rem; flex-shrink: 0; }
+  .arch-comp-name {
+    font-size: 0.95rem;
+    font-weight: 700;
+  }
+  .arch-comp-desc {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    line-height: 1.3;
+    margin-top: 0.1rem;
+  }
+  .arch-output {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--green);
+    padding: 0.4rem 1rem;
+    border: 1px solid var(--green);
+    border-radius: 8px;
+    background: rgba(63,185,80,0.06);
+  }
+
+  /* Pipeline stages (training section) */
+  .pipeline-stages {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    margin: 1.5rem 0;
+    overflow-x: auto;
+    padding: 0.5rem 0;
+  }
+  .pipe-stage {
+    flex: 1;
+    min-width: 0;
+    text-align: center;
+    padding: 0.75rem 0.5rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+  }
+  .pipe-num {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 0.35rem;
+  }
+  .pipe-name {
+    font-size: 0.85rem;
+    font-weight: 700;
+    line-height: 1.2;
+    margin-bottom: 0.25rem;
+  }
+  .pipe-desc {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    font-style: italic;
+    line-height: 1.3;
+  }
+  .pipe-arrow {
+    flex-shrink: 0;
+    width: 28px;
+    height: 2px;
+    background: var(--border);
+    position: relative;
+  }
+  .pipe-arrow::after {
+    content: '';
+    position: absolute;
+    right: -3px;
+    top: -4px;
+    border: 5px solid transparent;
+    border-left: 7px solid var(--border);
+  }
+
+  /* Research page banner */
+  .research-banner {
+    background: linear-gradient(135deg, #011627 0%, #0d2137 50%, #1a1a3a 100%);
+    border: 1px solid #2EC4B6;
+    border-radius: 12px;
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 2rem;
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+  }
+  .research-banner .banner-icon {
+    font-size: 2.2rem;
+    flex-shrink: 0;
+  }
+  .research-banner .banner-text {
+    flex: 1;
+  }
+  .research-banner .banner-text p {
+    margin: 0;
+    font-size: 0.95rem;
+    color: var(--text-muted);
+    line-height: 1.5;
+  }
+  .research-banner .banner-text p:first-child {
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 0.25rem;
+  }
+  .research-banner a {
+    color: #2EC4B6;
+    text-decoration: none;
+    font-weight: 600;
+  }
+  .research-banner a:hover { text-decoration: underline; }
+  .banner-links {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: 0.5rem;
+  }
+  .banner-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.85rem;
+    padding: 0.35rem 0.75rem;
+    border-radius: 6px;
+    border: 1px solid;
+    text-decoration: none !important;
+    transition: background 0.2s;
+  }
+  .banner-link.primary { border-color: #2EC4B6; color: #2EC4B6; }
+  .banner-link.primary:hover { background: rgba(46,196,182,0.1); }
+  .banner-link.secondary { border-color: var(--border); color: var(--text-muted); }
+  .banner-link.secondary:hover { background: var(--accent-subtle); }
+
+  /* Demo video pairs */
+  .demo-pair {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+    margin: 1rem 0;
+  }
+  .demo-pair video {
+    width: 100%;
+    border-radius: 8px 8px 0 0;
+    border: 1px solid var(--border);
+    border-bottom: none;
+  }
+  .demo-label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-align: center;
+    padding: 0.35rem;
+    border-radius: 0 0 8px 8px;
+    border: 1px solid var(--border);
+    border-top: none;
+  }
+  .demo-label.ref { color: #778DA9; background: rgba(27,38,59,0.5); }
+  .demo-label.gen { color: #2EC4B6; background: rgba(46,196,182,0.05); }
+
+  .audio-hint {
+    text-align: center;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin: 0.5rem 0 1rem;
+    padding: 0.4rem 0.75rem;
+    background: var(--surface);
+    border-radius: 6px;
+    border: 1px solid var(--border);
+  }
+  .audio-hint strong { color: var(--yellow); }
+
+  /* Turing test interactive */
+  .turing-pair {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+    margin: 1rem 0;
+  }
+  .turing-option {
+    border: 2px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    transition: border-color 0.3s, box-shadow 0.3s;
+    position: relative;
+  }
+  .turing-option video { width: 100%; display: block; }
+  .turing-option .video-label {
+    text-align: center;
+    padding: 0.3rem;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+  }
+  .turing-pick-btn {
+    display: block;
+    width: 100%;
+    padding: 0.5rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    background: var(--surface);
+    border: none;
+    border-top: 1px solid var(--border);
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+  }
+  .turing-pick-btn:hover { background: var(--accent-subtle); color: var(--accent); }
+  .turing-pick-btn:disabled { cursor: default; opacity: 0.5; }
+  .turing-option.correct { border-color: var(--green); box-shadow: 0 0 12px rgba(63,185,80,0.2); }
+  .turing-option.correct .turing-pick-btn { color: var(--green); background: rgba(63,185,80,0.08); }
+  .turing-option.wrong { border-color: var(--red); box-shadow: 0 0 12px rgba(248,81,73,0.2); }
+  .turing-option.wrong .turing-pick-btn { color: var(--red); background: rgba(248,81,73,0.08); }
+  .turing-option.dimmed { opacity: 0.5; }
+  .turing-result {
+    text-align: center;
+    padding: 0.5rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+    display: none;
+    border-radius: 6px;
+    margin-top: 0.5rem;
+  }
+
+  /* Video embeds */
+  .video-embed {
+    margin: 1.5rem 0;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    background: #011627;
+  }
+  .video-embed video {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+  .video-caption {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    background: var(--surface);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .video-caption .badge {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0.2rem 0.6rem;
+    border-radius: 4px;
+    background: rgba(46,196,182,0.15);
+    color: #2EC4B6;
+    text-decoration: none;
+    white-space: nowrap;
+    line-height: 1.2;
+    transition: background 0.15s;
+  }
+  .video-caption .badge .badge-label {
+    font-size: 0.55rem;
+    font-weight: 400;
+    color: #778DA9;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .video-caption .badge .badge-name {
+    font-size: 0.75rem;
+    font-weight: 700;
+  }
+  .video-caption .badge:hover {
+    background: rgba(46,196,182,0.3);
+    text-decoration: none;
+  }
+
+  /* Vertical stepper */
+  .stepper {
+    margin: 1rem 0;
+    padding-left: 0.5rem;
+  }
+  .step {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    position: relative;
+  }
+  .step-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--accent);
+    flex-shrink: 0;
+    margin-top: 0.45rem;
+    position: relative;
+  }
+  .step-dot::after {
+    content: '';
+    position: absolute;
+    top: 12px;
+    left: 4px;
+    width: 2px;
+    height: calc(100% + 16px);
+    background: var(--border);
+  }
+  .step-dot.last::after { display: none; }
+  .step-content {
+    font-size: 0.9rem;
+    padding-bottom: 0.75rem;
+    line-height: 1.5;
+  }
+
+  /* Styled tables */
+  .metrics-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1rem 0;
+    font-size: 0.9rem;
+  }
+  .metrics-table th {
+    text-align: left;
+    padding: 0.6rem 0.75rem;
+    border-bottom: 2px solid var(--border);
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+  .metrics-table td {
+    padding: 0.6rem 0.75rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .metrics-table tr:last-child td { border-bottom: none; }
+  .metrics-table tr:hover { background: var(--accent-subtle); }
+  .metrics-table .val-best { color: var(--green); font-weight: 700; }
+  .metrics-table .val-center { text-align: center; }
+
+  ul, ol { margin: 0.5rem 0 1rem 1.5rem; }
+  li { margin-bottom: 0.35rem; }
+  code { background: #1a2332; padding: 0.15rem 0.4rem; border-radius: 4px; font-size: 0.9rem; color: var(--accent); }
+
+  .section-number {
+    display: inline-block;
+    background: var(--accent);
+    color: var(--bg);
+    width: 28px;
+    height: 28px;
+    text-align: center;
+    line-height: 28px;
+    border-radius: 50%;
+    font-size: 0.85rem;
+    font-weight: 700;
+    margin-right: 0.5rem;
+    vertical-align: middle;
+  }
+</style>
+</head>
+<body>
+
+<div class="progress-bar" id="progressBar"></div>
+<div class="mobile-overlay" id="mobileOverlay" onclick="closeMobileToc()"></div>
+<button class="mobile-toc-btn" id="mobileTocBtn" onclick="toggleMobileToc()" title="Table of Contents">&#x2630;</button>
+
+<!-- Sidebar TOC -->
+<nav class="sidebar" id="sidebar">
+  <div class="toc-title">On This Page</div>
+  <a href="#big-picture">1. The Big Picture</a>
+  <a href="#see-it" class="section-gap">See It In Action</a>
+  <a href="#prereqs" class="section-gap">2. Background Concepts</a>
+  <a href="#diffusion" class="indent">Diffusion Models</a>
+  <a href="#transformers" class="indent">Transformers &amp; Attention</a>
+  <a href="#vae" class="indent">VAE</a>
+  <a href="#flow-matching" class="indent">Flow Matching</a>
+  <a href="#embeddings" class="indent">Embeddings</a>
+  <a href="#architecture" class="section-gap">3. How Avatar V Works</a>
+  <a href="#sparse-attn" class="indent">Sparse Reference Attention</a>
+  <a href="#motion" class="indent">Motion Representation</a>
+  <a href="#super-res" class="indent">Super-Resolution</a>
+  <a href="#voice" class="indent">Voice Cloning</a>
+  <a href="#training" class="section-gap">4. Training Pipeline</a>
+  <a href="#inference" class="section-gap">5. Inference</a>
+  <a href="#data" class="section-gap">6. Data Curation</a>
+  <a href="#infra" class="section-gap">7. Infrastructure</a>
+  <a href="#results" class="section-gap">8. Evaluation</a>
+  <a href="#final-quiz" class="section-gap">9. Final Quiz</a>
+</nav>
+
+<!-- Main content -->
+<div class="main-content">
+
+<h1>Avatar V: The Paper, Explained</h1>
+<p class="subtitle">A beginner-friendly guide to HeyGen's Avatar V technical report.<br>Every AI term is defined. Every concept is grounded in analogy.</p>
+<p style="font-size:0.8rem; color:var(--text-muted); margin-top:-1rem; margin-bottom:1.5rem;">Published April 13, 2026 &middot; Terence Cho</p>
+
+<div class="research-banner">
+  <div class="banner-icon">&#x1F3AC;</div>
+  <div class="banner-text">
+    <p>This page is a companion to the official Avatar V research</p>
+    <p>The <a href="https://www.heygen.com/research/avatar-v-model" target="_blank">Avatar V project page</a> has live demos, side-by-side comparisons, and generated video examples. This page helps you understand the <em>science behind it</em> &mdash; every AI term explained, every architectural choice broken down at a college-freshman level.</p>
+    <div class="banner-links">
+      <a href="https://www.heygen.com/research/avatar-v-model" target="_blank" class="banner-link primary">&#x1F310; Project Page &amp; Demos</a>
+      <a href="https://dynamic.heygen.ai/www/Paper%20Links/avatarv_tech_report.pdf" target="_blank" class="banner-link secondary">&#x1F4C4; Read the Full Paper (PDF)</a>
+    </div>
+  </div>
+</div>
+
+
+<!-- ============================================================ -->
+<h2 id="big-picture"><span class="section-number">1</span> The Big Picture</h2>
+
+<p><strong>Avatar V</strong> is a system that takes a short video of a real person and generates new, high-quality talking-head videos of that person saying anything you want. The generated person doesn't just <em>look</em> like the original - they <em>move</em>, <em>talk</em>, and <em>gesture</em> like them too.</p>
+
+<div class="analogy">Imagine you film yourself for 30 seconds. Avatar V studies that clip and can then produce a video of "you" giving a presentation in a completely different setting - preserving your facial structure, skin texture, the way you move your mouth when you talk, your hand gestures, and even how you blink.</div>
+
+<h3>The Three Problems It Solves</h3>
+
+<p>Before Avatar V, existing systems had three big weaknesses:</p>
+
+<ol>
+  <li><strong>Shallow identity:</strong> They used a single photo as reference. One photo can't capture how you look from different angles, in different lighting, or with different expressions. So generated videos would "drift" - the person would start looking less like you over time.</li>
+  <li><strong>No personality:</strong> They could copy your face but not your <em>behavior</em>. Everyone's generated videos looked the same in terms of motion - generic head bobs and lip movements.</li>
+  <li><strong>Blurry faces:</strong> The AI spreads its learning effort evenly across the entire video frame. But the face (especially lips, teeth, and eyes) is what humans actually care about, and it's a tiny portion of the frame. So faces came out blurry or wrong.</li>
+</ol>
+
+<div class="insight">Avatar V's key innovation is using a <strong>video</strong> (not a single image) as the identity reference, and letting the AI look at the full reference video at every step of generation. More reference = richer identity information.</div>
+
+<!-- ============================================================ -->
+<h2 id="see-it">See It In Action</h2>
+
+
+<p>Before diving into the technical details, see what Avatar V actually produces. These demos are from the <a href="https://www.heygen.com/research/avatar-v-model" target="_blank" style="color:#2EC4B6;">official research page</a>.</p>
+
+<h3>Reference Video vs Generated Output</h3>
+<p>Given a short reference video of someone (left), Avatar V generates a new video of that person in a different scene, preserving their identity and talking style (right).</p>
+
+<div class="audio-hint">&#x1F50A; <strong>Turn on sound</strong> to hear the voice cloning &mdash; Avatar V reproduces the speaker's vocal timbre, prosody, and accent from just ~10 seconds of audio (Section 2.3)</div>
+
+<div class="demo-pair">
+  <div>
+    <video src="https://dynamic.heygen.ai/www/Research%20-%20Pages/demo1b_reference.mp4" controls loop playsinline crossorigin="anonymous"></video>
+    <div class="demo-label ref">Reference Video (input)</div>
+  </div>
+  <div>
+    <video src="https://dynamic.heygen.ai/www/Research%20-%20Pages/demo1b_avatarv.mp4" controls loop playsinline crossorigin="anonymous"></video>
+    <div class="demo-label gen">Avatar V Output</div>
+  </div>
+</div>
+
+<div class="demo-pair">
+  <div>
+    <video src="https://dynamic.heygen.ai/www/Research%20-%20Pages/demo2_refvideo.mp4" controls loop playsinline crossorigin="anonymous"></video>
+    <div class="demo-label ref">Reference Video (input)</div>
+  </div>
+  <div>
+    <video src="https://dynamic.heygen.ai/www/Research%20-%20Pages/demo2_avatarv.mp4" controls loop playsinline crossorigin="anonymous"></video>
+    <div class="demo-label gen">Avatar V Output</div>
+  </div>
+</div>
+
+<h3>Comparison with Other Models</h3>
+<p>Avatar V is evaluated against Kling O3 Pro, Veo 3.1, OmniHuman 1.5, and Seedance 2.0. These grid comparisons show all models generating from the same inputs.</p>
+
+<div class="video-embed">
+  <video src="https://dynamic.heygen.ai/www/Research%20-%20Pages/cmp_grid_01.mp4" controls loop playsinline crossorigin="anonymous"></video>
+  <div class="video-caption">Side-by-side comparison: Avatar V vs 4 competing systems on the same inputs (<a href="https://www.heygen.com/research/avatar-v-model" target="_blank" style="color:#2EC4B6;">source</a>)</div>
+</div>
+
+<h3>Can You Tell Real from AI? (Turing Test)</h3>
+<p>In the paper's Turing test, human annotators were shown a pair of videos &mdash; one real, one generated &mdash; and asked to pick the real one. <strong>Click the video you think is real:</strong></p>
+
+<p style="font-size:0.9rem; color:var(--text-muted); margin-bottom:0.75rem;">Watch both videos first, then click the button below the one you think is real.</p>
+
+<div class="turing-pair" id="turing1">
+  <div class="turing-option" id="t1-left">
+    <div class="video-label">Video A</div>
+    <video src="https://dynamic.heygen.ai/www/Research%20-%20Pages/turing_1_left.mp4" controls loop playsinline crossorigin="anonymous"></video>
+    <button class="turing-pick-btn" onclick="checkTuring('turing1', 'left', 'right')">&#x1F446; This one is real</button>
+  </div>
+  <div class="turing-option" id="t1-right">
+    <div class="video-label">Video B</div>
+    <video src="https://dynamic.heygen.ai/www/Research%20-%20Pages/turing_1_right.mp4" controls loop playsinline crossorigin="anonymous"></video>
+    <button class="turing-pick-btn" onclick="checkTuring('turing1', 'right', 'right')">&#x1F446; This one is real</button>
+  </div>
+</div>
+<div class="turing-result" id="turing1-result"></div>
+
+<div class="turing-pair" id="turing2">
+  <div class="turing-option" id="t2-left">
+    <div class="video-label">Video A</div>
+    <video src="https://dynamic.heygen.ai/www/Research%20-%20Pages/turing_2_left.mp4" controls loop playsinline crossorigin="anonymous"></video>
+    <button class="turing-pick-btn" onclick="checkTuring('turing2', 'left', 'left')">&#x1F446; This one is real</button>
+  </div>
+  <div class="turing-option" id="t2-right">
+    <div class="video-label">Video B</div>
+    <video src="https://dynamic.heygen.ai/www/Research%20-%20Pages/turing_2_right.mp4" controls loop playsinline crossorigin="anonymous"></video>
+    <button class="turing-pick-btn" onclick="checkTuring('turing2', 'right', 'left')">&#x1F446; This one is real</button>
+  </div>
+</div>
+<div class="turing-result" id="turing2-result"></div>
+
+<p style="font-size:0.85rem; color:var(--text-muted); margin-top:0.5rem;">In the paper's evaluation, 61% of test cases fooled at least one trained annotator. More Turing test pairs are on the <a href="https://www.heygen.com/research/avatar-v-model" target="_blank" style="color:#2EC4B6;">project page</a>.</p>
+
+<div class="insight">Now that you've seen what Avatar V can do, let's understand <em>how</em> it works. The sections below explain every concept the paper assumes you already know, then walk through each component of the system.</div>
+
+<!-- ============================================================ -->
+<h2 id="prereqs"><span class="section-number">2</span> Background Concepts You Need</h2>
+
+<p>The paper assumes you know these AI concepts. Let's build them up from scratch.</p>
+
+<!-- DIFFUSION -->
+<h3 id="diffusion">2a. Diffusion Models</h3>
+
+<div class="video-embed">
+  <video src="avatar-v-videos/diffusion-explainer.mp4" autoplay muted loop playsinline></video>
+  <div class="video-caption"><a href="https://github.com/heygen-com/hyperframes" target="_blank" class="badge" title="Made with HyperFrames — HeyGen's HTML-to-video composition framework"><span class="badge-label">made with</span><span class="badge-name">HyperFrames</span></a> The diffusion process: noise is progressively removed to reveal clean data</div>
+</div>
+
+<p>A <span class="term">diffusion model<span class="tooltip">An AI that generates images/video by learning to reverse a noise-adding process. Training: add noise to real data. Inference: start from pure noise and progressively remove it to create new data.</span></span> is the engine behind most modern image and video generation (DALL-E, Stable Diffusion, Sora, etc.).</p>
+
+<div class="analogy">Imagine you have a beautiful painting. You slowly sprinkle sand over it - grain by grain - until it's completely buried and all you see is a pile of sand. A diffusion model learns to do the <em>reverse</em>: given a pile of sand (random noise), it learns to carefully remove grains to reveal a painting underneath. During training, you show it millions of examples of "painting + sand at various stages" so it learns what to remove at each step.</div>
+
+<p><strong>Two phases:</strong></p>
+<ul>
+  <li><strong>Forward process (training):</strong> Take real data, gradually add random noise until it becomes pure static.</li>
+  <li><strong>Reverse process (generation):</strong> Start from pure noise, remove noise step-by-step. Each step, the model predicts "what noise is here?" and subtracts it.</li>
+</ul>
+
+<p>The number of noise-removal steps is called <span class="term">denoising steps<span class="tooltip">The number of times the model looks at the noisy image and removes a bit of noise. More steps = better quality but slower. Typical range: 20-1000 steps.</span></span>. More steps = better quality, but slower. Avatar V uses <strong>24 steps</strong> after optimization (down from hundreds).</p>
+
+<details>
+  <summary>Deep Dive: What is "noise" mathematically?</summary>
+  <div class="details-body">
+    <p>"Noise" here means <strong>Gaussian noise</strong> - random values drawn from a bell curve (normal distribution). Each pixel gets a random value added to it. At step 0, the image is clean. At the final step, it's completely random static - no trace of the original image remains.</p>
+    <p>The model is trained to predict the noise that was added at each step. During generation, it predicts the noise in the current noisy image and subtracts it, getting slightly closer to a clean image each time.</p>
+  </div>
+</details>
+
+<!-- TRANSFORMERS -->
+<h3 id="transformers">2b. Transformers & Attention</h3>
+
+<p>A <span class="term">Transformer<span class="tooltip">The dominant AI architecture since 2017. Used in ChatGPT, image generators, and now video generators. Its key innovation: the "attention" mechanism that lets every piece of input look at every other piece to understand context.</span></span> is the architecture (blueprint) that powers ChatGPT, DALL-E, and now Avatar V. Its superpower is the <span class="term">attention mechanism<span class="tooltip">A way for the model to decide "which parts of my input are relevant to the part I'm currently processing?" Each element computes a relevance score with every other element, then focuses on the most relevant ones.</span></span>.</p>
+
+<div class="analogy">You're reading a book, and you come across the word "she." Your brain automatically looks back to figure out who "she" refers to - maybe a character mentioned two paragraphs ago. <strong>Attention</strong> is the AI version of this: for every piece of data it processes, the model looks at <em>all</em> other pieces and asks "how relevant is this to what I'm working on right now?"</div>
+
+<p><strong>Key terms the paper uses:</strong></p>
+<ul>
+  <li><span class="term">DiT (Diffusion Transformer)<span class="tooltip">A Transformer architecture specifically designed for diffusion models. Instead of a U-Net (the older approach), it uses Transformer blocks to process the noisy image/video. More scalable and powerful at large sizes.</span></span> - A Transformer designed for diffusion. Avatar V's core architecture.</li>
+  <li><span class="term">Self-attention<span class="tooltip">Each element in the sequence looks at all other elements in the SAME sequence to gather context. "How does this video frame relate to other frames in this video?"</span></span> - Elements in the same sequence look at each other.</li>
+  <li><span class="term">Cross-attention<span class="tooltip">Elements from one sequence look at elements from a DIFFERENT sequence. Example: video frames "looking at" audio features to synchronize lip movements with speech sounds.</span></span> - Elements from one input look at elements from a <em>different</em> input (e.g., video looking at audio).</li>
+  <li><span class="term">Tokens<span class="tooltip">The basic units the Transformer processes. Text is split into word-pieces (tokens). Images are split into small patches (tokens). Video frames are split into space-time patches (tokens). Everything becomes a sequence of tokens.</span></span> - The basic units the model works with. Text gets split into word-tokens. Images get split into patch-tokens. Video gets split into space-time patch-tokens.</li>
+</ul>
+
+<details>
+  <summary>Deep Dive: Why "quadratic cost" matters</summary>
+  <div class="details-body">
+    <p>In standard attention, every token looks at every other token. If you have <code>N</code> tokens, that's <code>N x N</code> comparisons - this is <strong>quadratic</strong> growth. Double the tokens = 4x the computation.</p>
+    <p>A reference video might have <strong>thousands</strong> of tokens. If you naively let all reference + generation tokens attend to each other, the cost explodes. This is the problem Avatar V's "Sparse Reference Attention" solves.</p>
+  </div>
+</details>
+
+<details>
+  <summary>Deep Dive: KV Cache</summary>
+  <div class="details-body">
+    <p>In attention, each token produces three things: a <strong>Query</strong> (Q), a <strong>Key</strong> (K), and a <strong>Value</strong> (V).</p>
+    <ul>
+      <li><strong>Query:</strong> "I'm looking for information about X"</li>
+      <li><strong>Key:</strong> "I contain information about Y"</li>
+      <li><strong>Value:</strong> "Here's my actual content"</li>
+    </ul>
+    <p>The attention score is Q matched against K (like a search query hitting search results). High-scoring matches have their V content sent back.</p>
+    <p><strong>KV Caching:</strong> If the reference video never changes between denoising steps, you can compute its Keys and Values once, cache them, and reuse them for all 24 steps. This is a huge speed win.</p>
+  </div>
+</details>
+
+<!-- VAE -->
+<h3 id="vae">2c. VAE (Variational Autoencoder)</h3>
+
+<p>A <span class="term">VAE<span class="tooltip">Variational Autoencoder. Compresses high-resolution images/video into a smaller "latent" representation and can decompress back. Like JPEG compression but learned by AI, and much more powerful.</span></span> compresses data into a smaller representation and decompresses it back.</p>
+
+<div class="analogy">Think of JPEG compression: a 10MB photo becomes a 500KB file, then gets decompressed back to an image that looks almost identical. A VAE does this but with AI - it learns the most efficient way to compress visual data. The compressed version is called the <span class="term">latent space<span class="tooltip">The compressed, lower-dimensional space where the VAE stores its compact representation of images/video. The diffusion model works in this space for efficiency, then the VAE decoder converts results back to pixels.</span></span>.</div>
+
+<p><strong>Why this matters:</strong> Working with full 1080p video frames directly would be absurdly expensive computationally. Instead, the VAE compresses each frame into a tiny "latent" version, the diffusion model works in this compact space, and then the VAE decompresses the result back to full-size video.</p>
+
+<!-- FLOW MATCHING -->
+<h3 id="flow-matching">2d. Flow Matching</h3>
+
+<p><span class="term">Flow matching<span class="tooltip">A training method for diffusion models where instead of learning to predict noise, the model learns to predict a "velocity" - the direction and speed to move from noise toward clean data along a straight line. More stable and efficient than older methods.</span></span> is a modern alternative to the original diffusion training method (<span class="term">DDPM<span class="tooltip">Denoising Diffusion Probabilistic Models. The original (2020) method for training diffusion models. Uses a specific noise schedule and learns to predict the noise added at each step. Flow matching is a newer, often more efficient alternative.</span></span>).</p>
+
+<div class="analogy">Original diffusion is like navigating a maze from noise to image - the path is curvy and you need many steps. Flow matching draws a <strong>straight line</strong> from noise to image and teaches the model to follow it. Straighter path = fewer steps needed = faster generation.</div>
+
+<p>The model learns a <span class="term">velocity field<span class="tooltip">In flow matching, instead of predicting noise, the model predicts the "velocity" (direction + magnitude) needed to move from the current noisy state toward the clean data. Think of it as predicting which way to go at each point.</span></span> - at each point along the noise-to-data journey, it predicts which direction to go and how fast. Avatar V uses "rectified flow matching," which specifically encourages straight-line paths.</p>
+
+<!-- EMBEDDINGS -->
+<h3 id="embeddings">2e. Embeddings</h3>
+
+<p>An <span class="term">embedding<span class="tooltip">A list of numbers (vector) that represents something complex (a face, a voice, a word) in a way that captures its meaning. Similar things have similar number patterns. Used to measure similarity and as input to AI models.</span></span> is a list of numbers that represents something complex in a compact, meaningful way.</p>
+
+<div class="analogy">Imagine describing a person's face using just 512 numbers. Number 1 might relate to face shape, number 2 to skin tone, number 37 to nose width, etc. (The model figures out what each number means on its own.) Two people who look similar will have similar number lists. This is a face embedding.</div>
+
+<p>The paper mentions several types:</p>
+<ul>
+  <li><strong>Identity embedding:</strong> Numbers capturing someone's facial appearance</li>
+  <li><strong>Expression embedding:</strong> Numbers capturing facial expressions at a moment</li>
+  <li><strong>Speaker embedding:</strong> Numbers capturing someone's voice characteristics</li>
+  <li><strong>Text embedding:</strong> Numbers representing the meaning of a text prompt</li>
+  <li><span class="term">ArcFace embedding<span class="tooltip">A specific face recognition model (from 2019) that produces high-quality face embeddings. Used as a standard way to measure how similar two faces look. If cosine similarity between two ArcFace embeddings is high, the faces look alike.</span></span> - A specific, well-known face embedding used for measuring identity similarity</li>
+</ul>
+
+<!-- ============================================================ -->
+<h2 id="architecture"><span class="section-number">3</span> How Avatar V Works</h2>
+
+<p>Avatar V has four major components working together:</p>
+
+<div class="arch-flow">
+  <div class="arch-inputs">
+    <div class="arch-input-tag" style="border-color:#2EC4B6; color:#2EC4B6;">Reference Video</div>
+    <div class="arch-input-tag" style="border-color:#FF9F1C; color:#FF9F1C;">Audio Track</div>
+    <div class="arch-input-tag" style="border-color:#778DA9; color:#778DA9;">Text Prompt</div>
+  </div>
+  <div class="arch-arrow-down"></div>
+  <div class="arch-component">
+    <div class="arch-icon">&#x1F3AC;</div>
+    <div>
+      <div class="arch-comp-name">Image Engine</div>
+      <div class="arch-comp-desc">Generates a scene image preserving your face</div>
+    </div>
+  </div>
+  <div class="arch-arrow-down"></div>
+  <div class="arch-component arch-core">
+    <div class="arch-icon">&#x1F9E0;</div>
+    <div>
+      <div class="arch-comp-name">VideoRef DiT</div>
+      <div class="arch-comp-desc">Core video generator with Sparse Reference Attention</div>
+    </div>
+  </div>
+  <div class="arch-arrow-down"></div>
+  <div class="arch-component">
+    <div class="arch-icon">&#x1F50D;</div>
+    <div>
+      <div class="arch-comp-name">Super-Resolution Refiner</div>
+      <div class="arch-comp-desc">Upscales to 1080p with identity awareness</div>
+    </div>
+  </div>
+  <div class="arch-arrow-down"></div>
+  <div class="arch-component">
+    <div class="arch-icon">&#x1F4F9;</div>
+    <div>
+      <div class="arch-comp-name">Streaming VAE Decode</div>
+      <div class="arch-comp-desc">Converts from latent space back to pixels</div>
+    </div>
+  </div>
+  <div class="arch-arrow-down"></div>
+  <div class="arch-output">Your Avatar Video</div>
+</div>
+
+<h3 id="sparse-attn">3a. Sparse Reference Attention</h3>
+
+<div class="video-embed">
+  <video src="avatar-v-videos/sparse-attention.mp4" autoplay muted loop playsinline></video>
+  <div class="video-caption"><a href="https://github.com/heygen-com/hyperframes" target="_blank" class="badge" title="Made with HyperFrames — HeyGen's HTML-to-video composition framework"><span class="badge-label">made with</span><span class="badge-name">HyperFrames</span></a> Standard quadratic attention vs Avatar V's sparse linear attention</div>
+</div>
+
+<p>This is Avatar V's most important innovation. The core idea:</p>
+
+<div class="insight">Instead of squeezing your identity into a small set of numbers (which loses detail), Avatar V keeps the FULL reference video as tokens and lets the generated video "look at" all of them whenever it needs identity information.</div>
+
+<p>But there's a cost problem. With standard attention:</p>
+<ul>
+  <li>Reference video tokens: let's say 5,000</li>
+  <li>Generation video tokens: let's say 5,000</li>
+  <li>Standard attention: every token looks at every other = 10,000 x 10,000 = <strong>100 million</strong> comparisons</li>
+</ul>
+
+<p><strong>Sparse Reference Attention's trick:</strong></p>
+<ul>
+  <li>Generation tokens CAN look at reference tokens (they need identity info)</li>
+  <li>Reference tokens only look at OTHER reference tokens (they don't need anything from the generation)</li>
+  <li>This makes the cost <strong>linear</strong> in reference length instead of quadratic</li>
+</ul>
+
+<div class="analogy">Imagine a class of students (generation tokens) learning from a set of textbooks (reference tokens). In "standard attention," every student reads every textbook AND every textbook somehow reads every student's notes - wasteful. In <strong>Sparse Reference Attention</strong>, students read the textbooks, but textbooks don't read student notes. Half the work, same learning.</div>
+
+<details>
+  <summary>Deep Dive: What "asymmetric" means here</summary>
+  <div class="details-body">
+    <p>The attention is <strong>asymmetric</strong> because the two groups of tokens have different attention rules:</p>
+    <ul>
+      <li><strong>Reference tokens:</strong> Self-attention only (look at each other)</li>
+      <li><strong>Generation tokens:</strong> Attend to BOTH generation tokens AND reference tokens</li>
+    </ul>
+    <p>This asymmetry is what makes it "sparse" - not all possible attention connections exist. The missing connections (reference looking at generation) aren't useful anyway, so removing them is free performance.</p>
+  </div>
+</details>
+
+<h3 id="motion">3b. Motion Representation Stream</h3>
+
+<div class="video-embed">
+  <video src="avatar-v-videos/motion-loop.mp4" autoplay muted loop playsinline></video>
+  <div class="video-caption"><a href="https://github.com/heygen-com/hyperframes" target="_blank" class="badge" title="Made with HyperFrames — HeyGen's HTML-to-video composition framework"><span class="badge-label">made with</span><span class="badge-name">HyperFrames</span></a> The motion stream serves two roles simultaneously, creating a closed-loop learning signal</div>
+</div>
+
+<p>This component captures <em>how</em> a person moves, not just how they look.</p>
+
+<div class="analogy">Everyone has a unique "motion fingerprint." Some people barely move their head when talking. Others are very animated. Some smile with their whole face; others just slightly raise one corner of their mouth. The motion representation stream learns these individual patterns.</div>
+
+<p>It serves <strong>two roles simultaneously</strong> (called "closed-loop"):</p>
+<ol>
+  <li><strong>As a learning target:</strong> "Given this audio, predict how THIS specific person would move"</li>
+  <li><strong>As a conditioning signal:</strong> "Use these predicted motions to guide video generation"</li>
+</ol>
+
+<p>By doing both, the model develops a unified understanding of each person's motion style.</p>
+
+<h3 id="super-res">3c. Super-Resolution Refiner</h3>
+
+<p>The core model generates video at low resolution (for speed). The <span class="term">super-resolution<span class="tooltip">The process of taking a low-resolution image/video and generating a higher-resolution version with added detail. Like "enhance" in movies, except it actually works because the AI has learned what realistic detail looks like.</span></span> refiner upscales it to 1080p.</p>
+
+<p><strong>What makes it special:</strong> Unlike generic upscaling (which just makes pixels bigger), Avatar V's refiner has access to the same identity reference video. So when it's enhancing the face region, it can look at the reference to know exactly what your teeth, skin pores, and eye details should look like.</p>
+
+<p>It also uses <span class="term">sparse temporal attention<span class="tooltip">Instead of each frame looking at ALL other frames during upscaling (expensive), each frame only looks at nearby frames. Since the base model already established smooth motion, the refiner only needs to add local detail, not global consistency.</span></span> - since the low-resolution video already has smooth, consistent motion, the refiner only needs to look at nearby frames to add detail, not the entire video.</p>
+
+<h3 id="voice">3d. Voice Cloning Engine</h3>
+
+<p>From just ~10 seconds of audio, the voice cloning engine can reproduce someone's voice. It's built on an <span class="term">LLM<span class="tooltip">Large Language Model. A very large neural network trained on text (and sometimes audio) that can generate human-like text, translate, summarize, and more. ChatGPT is an LLM. Here, an LLM-like architecture is used for audio generation.</span></span> backbone and treats speech generation as predicting a sequence of <span class="term">audio tokens<span class="tooltip">Discrete codes representing small chunks of audio. Just like text can be broken into word-tokens, audio can be broken into audio-tokens using a codec. The LLM predicts these tokens one by one to generate speech.</span></span> - similar to how ChatGPT predicts the next word, but for sound.</p>
+
+<!-- ============================================================ -->
+<h2 id="training"><span class="section-number">4</span> How It Learns (Training Pipeline)</h2>
+
+<p>Avatar V doesn't learn everything at once. It follows a 5-stage curriculum, like going from elementary school through grad school:</p>
+
+<div class="pipeline-stages">
+  <div class="pipe-stage">
+    <div class="pipe-num" style="background:#415A77;">1</div>
+    <div class="pipe-name">Text-to-Video</div>
+    <div class="pipe-desc">"Learn what video is"</div>
+  </div>
+  <div class="pipe-arrow"></div>
+  <div class="pipe-stage">
+    <div class="pipe-num" style="background:#2EC4B6; color:#011627;">2</div>
+    <div class="pipe-name">Audio-to-Video</div>
+    <div class="pipe-desc">"Learn how lips sync to speech"</div>
+  </div>
+  <div class="pipe-arrow"></div>
+  <div class="pipe-stage">
+    <div class="pipe-num" style="background:#FF9F1C; color:#011627;">3</div>
+    <div class="pipe-name">Personality SFT</div>
+    <div class="pipe-desc">"Learn to copy someone's identity"</div>
+  </div>
+  <div class="pipe-arrow"></div>
+  <div class="pipe-stage">
+    <div class="pipe-num" style="background:#bc8cff; color:#011627;">4</div>
+    <div class="pipe-name">Distillation</div>
+    <div class="pipe-desc">"Learn to do it 10x faster"</div>
+  </div>
+  <div class="pipe-arrow"></div>
+  <div class="pipe-stage">
+    <div class="pipe-num" style="background:#E71D36;">5</div>
+    <div class="pipe-name">RLHF</div>
+    <div class="pipe-desc">"Learn what humans prefer"</div>
+  </div>
+</div>
+
+<details>
+  <summary>Stage 1: Text-to-Video Pre-Training</summary>
+  <div class="details-body">
+    <p>The model first learns general video understanding from millions of text-video pairs. "A dog runs across a field" → video of a dog running. This teaches:</p>
+    <ul>
+      <li>How objects move through space</li>
+      <li>How lighting and physics work</li>
+      <li>Basic scene composition</li>
+    </ul>
+    <p>Training uses <strong>progressive scaling</strong>: start with tiny, short videos, gradually increase resolution and duration. Like teaching a child to draw stick figures before oil paintings.</p>
+    <p><strong>Optimizer:</strong> <span class="term">Muon<span class="tooltip">A newer optimizer (2025) designed for training large neural networks. An optimizer is the algorithm that adjusts the model's numbers (weights) during training to make it better. Muon is more efficient than the widely-used Adam optimizer for large models.</span></span> for most parameters, <span class="term">AdamW<span class="tooltip">A widely-used optimization algorithm. "Adam" adapts learning rates for each parameter; "W" adds weight decay (a regularization technique that prevents parameters from growing too large). The standard choice for training Transformers.</span></span> for embeddings.</p>
+  </div>
+</details>
+
+<details>
+  <summary>Stage 2: Audio-to-Video Pre-Training</summary>
+  <div class="details-body">
+    <p>Now the model learns to synchronize lips with speech. Given a face image + audio track, generate a video where the person speaks those words. This stage adds the <strong>audio cross-attention modules</strong> that connect sound features to visual generation.</p>
+    <p>Trained on a huge corpus of talking-head videos covering diverse speakers, languages, and styles.</p>
+  </div>
+</details>
+
+<details>
+  <summary>Stage 3: Personality SFT (Supervised Fine-Tuning)</summary>
+  <div class="details-body">
+    <p><span class="term">SFT<span class="tooltip">Supervised Fine-Tuning. Taking a pre-trained model and training it further on a specific task with labeled examples. Like a medical student (pre-trained on general medicine) specializing in cardiology (fine-tuned on heart cases).</span></span> = taking the general model and specializing it for identity-preservation.</p>
+    <p>The training data is carefully constructed: each example has a <strong>target video</strong> (what to generate) paired with <strong>reference clips of the same person in different scenes</strong>. This forces the model to extract identity features that are <em>independent of the background</em>.</p>
+    <p>This is where Sparse Reference Attention and the motion representation stream are activated.</p>
+    <p><strong>Human-aware auxiliary losses</strong> are added here - extra training signals beyond pixel-level accuracy that specifically target face quality, lip sync, identity similarity, and motion fidelity.</p>
+  </div>
+</details>
+
+<details>
+  <summary>Stage 4: Distillation (Making It 10x Faster)</summary>
+  <div class="details-body">
+    <p><span class="term">Distillation<span class="tooltip">Training a smaller/faster "student" model to mimic a larger/slower "teacher" model. The student learns to produce similar outputs in fewer steps. Like a student learning shortcuts from an experienced teacher.</span></span> compresses the slow, high-quality model into a fast one.</p>
+    <p><strong>Phase 1: CFG Distillation</strong></p>
+    <p><span class="term">Classifier-Free Guidance (CFG)<span class="tooltip">A technique where the model runs twice per step: once with the conditioning (e.g., "a cat") and once without. The difference between the two is amplified to make the output more closely match the condition. Problem: doubles (or more) the computation per step.</span></span> normally requires multiple forward passes per step (one with the condition, one without). CFG distillation teaches the model to internalize this, needing only ONE pass.</p>
+    <p><strong>Phase 2: DMD (Distribution Matching Distillation)</strong></p>
+    <p>This reduces the number of denoising steps. Uses a three-model setup:</p>
+    <ul>
+      <li><strong>Student:</strong> Learns to generate in fewer steps</li>
+      <li><strong>Fake teacher:</strong> Models what the student's outputs look like (trainable)</li>
+      <li><strong>Real teacher:</strong> The original slow model (frozen - doesn't change)</li>
+    </ul>
+    <p>The student learns to make its output distribution match the real teacher's, even though it uses far fewer steps.</p>
+    <p>Combined result: <strong>10x+ faster</strong> inference.</p>
+  </div>
+</details>
+
+<details>
+  <summary>Stage 5: RLHF (Learning from Human Preferences)</summary>
+  <div class="details-body">
+    <p><span class="term">RLHF<span class="tooltip">Reinforcement Learning from Human Feedback. Humans rate outputs (or compare pairs), and the model learns to produce outputs that score higher. This is how ChatGPT was trained to be helpful and harmless. Here, it's used to make videos look more natural to human eyes.</span></span> = letting humans judge the outputs and training the model to score higher.</p>
+    <p>Two approaches are combined:</p>
+    <ul>
+      <li><span class="term">GRPO<span class="tooltip">Group Relative Policy Optimization. An RL algorithm that generates a group of outputs, scores them all, then improves the model by learning from the relative rankings within the group. More stable than traditional policy gradient methods.</span></span> (Group Relative Policy Optimization): Generate multiple videos, score them with reward functions (identity similarity, motion naturalness, visual quality), improve based on relative rankings.</li>
+      <li><span class="term">DPO<span class="tooltip">Direct Preference Optimization. Instead of training a separate reward model, DPO directly learns from human preference pairs ("I prefer video A over video B"). Simpler than RLHF with reward models, and often equally effective.</span></span> (Direct Preference Optimization): Learn directly from human-annotated pairs ("this video is better than that one").</li>
+    </ul>
+    <p><span class="term">KL regularization<span class="tooltip">A mathematical constraint that prevents the model from changing too much during RLHF. Without it, the model might "hack" the reward function by producing weird outputs that score high but look terrible. KL divergence measures how different the new model is from the old one.</span></span> prevents the model from drifting too far from its pre-RLHF capabilities.</p>
+  </div>
+</details>
+
+<!-- ============================================================ -->
+<h2 id="inference"><span class="section-number">5</span> How It Generates Video (Inference)</h2>
+
+<p><span class="term">Inference<span class="tooltip">The process of using a trained model to generate new outputs. Training = learning. Inference = doing. When you type a prompt into ChatGPT, the response is generated during "inference."</span></span> is when the trained model actually generates a video. Here's how:</p>
+
+<h3>Chunk-Based Generation</h3>
+
+<div class="video-embed">
+  <video src="avatar-v-videos/chunk-generation.mp4" autoplay muted loop playsinline></video>
+  <div class="video-caption"><a href="https://github.com/heygen-com/hyperframes" target="_blank" class="badge" title="Made with HyperFrames — HeyGen's HTML-to-video composition framework"><span class="badge-label">made with</span><span class="badge-name">HyperFrames</span></a> Overlapping chunks enable unlimited-duration video generation</div>
+</div>
+
+<p>Avatar V generates video in <strong>chunks</strong> of ~6.4 seconds each. For longer videos, chunks are stitched together:</p>
+<ol>
+  <li><strong>First chunk:</strong> Uses the reference video for identity ("ref2v" mode)</li>
+  <li><strong>Subsequent chunks:</strong> Use the last frames of the previous chunk as a bridge ("prefix2v" mode)</li>
+  <li>A <strong>global appearance anchor</strong> from the first chunk keeps identity consistent across all chunks</li>
+</ol>
+
+<div class="analogy">Like writing a long essay in paragraphs. Each new paragraph starts by referencing the end of the previous one to maintain flow. And you keep a photo of the main character on your desk to stay consistent.</div>
+
+<h3>Speed Optimizations</h3>
+<p>The paper describes several clever tricks to make generation fast enough for production:</p>
+<ul>
+  <li><strong>Context caching:</strong> The reference video never changes between denoising steps, so compute it once and reuse it for all 24 steps</li>
+  <li><strong>Sequence parallelism:</strong> Spread the long token sequence across 8 GPUs using <span class="term">Ulysses Sequence Parallelism<span class="tooltip">A method for splitting a long sequence across multiple GPUs. Each GPU processes a portion of the sequence, with all-to-all communication when attention needs to see tokens on other GPUs. Named after the long novel by James Joyce.</span></span></li>
+  <li><strong>Agentic kernel synthesis:</strong> They used an <em>LLM</em> to write custom GPU code (CUDA/Triton kernels) that fuses many small operations into single large operations, reducing overhead by 3x</li>
+  <li><strong>NVSHMEM communication:</strong> Fine-grained GPU-to-GPU data transfer that overlaps communication with computation</li>
+  <li><strong>GPU clock locking:</strong> In distributed inference, the slowest GPU determines speed. They lock all GPUs to a stable frequency to eliminate variance.</li>
+</ul>
+
+<!-- ============================================================ -->
+<h2 id="data"><span class="section-number">6</span> Data: Fuel for the Model</h2>
+
+<p>Avatar V was trained on a massive dataset: <strong>100M+ clips</strong> curated from <strong>50M raw videos</strong>.</p>
+
+<h3>The Data Pipeline</h3>
+<p>Raw videos go through a 10-stage filtering cascade:</p>
+<div class="stepper">
+  <div class="step"><div class="step-dot"></div><div class="step-content"><strong>Normalize</strong> resolution (640px) and frame rate (25fps)</div></div>
+  <div class="step"><div class="step-dot"></div><div class="step-content"><strong>Reject</strong> static/choppy content via frame-difference analysis</div></div>
+  <div class="step"><div class="step-dot"></div><div class="step-content"><strong>Detect</strong> humans and faces using joint object + face models</div></div>
+  <div class="step"><div class="step-dot"></div><div class="step-content"><strong>Score</strong> visual quality using AI (Q-Align calibrated to human opinion)</div></div>
+  <div class="step"><div class="step-dot"></div><div class="step-content"><strong>Smart clipping</strong> &mdash; optimize clip boundaries as a constrained optimization problem</div></div>
+  <div class="step"><div class="step-dot"></div><div class="step-content"><strong>Scene-cut detection</strong> and content filtering (reject screencasts, games, static photos)</div></div>
+  <div class="step"><div class="step-dot last"></div><div class="step-content"><strong>Categorize</strong> across 15 dimensions and <strong>deduplicate</strong> via GPU-accelerated nearest-neighbor search</div></div>
+</div>
+
+<h3>Cross-Clip Identity Connectivity</h3>
+<p>A critical data innovation: they build a <strong>graph</strong> connecting video clips of the same person across different scenes. Two clips are linked if:</p>
+<ul>
+  <li>Same person (high face similarity)</li>
+  <li>Different scene (low background similarity)</li>
+  <li>Long enough to capture motion patterns</li>
+</ul>
+<p>This lets the model learn "this is the same person even though the background, lighting, and camera angle are completely different" - essential for identity that doesn't depend on the scene.</p>
+
+<!-- ============================================================ -->
+<h2 id="infra"><span class="section-number">7</span> Infrastructure at Scale</h2>
+
+<p>Avatar V runs on <strong>5,000+ GPUs</strong> across multiple cloud providers. Two key infrastructure pieces:</p>
+
+<h3>HELIOS</h3>
+<p>A unified platform that makes GPUs from 5+ providers and 10+ regions act as a single pool. Key ideas:</p>
+<ul>
+  <li><strong>Cell-based architecture:</strong> GPUs organized into standardized "cells" (Kubernetes clusters). Problems in one cell don't spread.</li>
+  <li><strong>QoS-aware scheduling:</strong> Inference (user-facing) gets highest priority. Training gets large stable blocks. Data processing fills the gaps.</li>
+  <li>Improved GPU utilization by 15% and reduced wasted GPU time by ~20%.</li>
+</ul>
+
+<h3>Custom Data Processing Engine</h3>
+<p>They outgrew <span class="term">Ray<span class="tooltip">A popular open-source framework for distributed computing in Python. Good for moderate scale, but its centralized coordination (Global Control Store) becomes a bottleneck at very large scale (2000+ nodes).</span></span> (a popular distributed computing framework) at 2,000+ nodes. Built a replacement using <strong>declarative reconciliation</strong> - inspired by how Kubernetes works:</p>
+
+<div class="analogy">Instead of the boss calling each worker and saying "do task X" (imperative/command model), the boss posts a bulletin board saying "I need X done" and workers independently check the board and do what's needed (declarative model). If a worker crashes and restarts, they just check the board again. No messages get lost.</div>
+
+<!-- ============================================================ -->
+<h2 id="results"><span class="section-number">8</span> How Good Is It?</h2>
+
+<h3>Automated Metrics</h3>
+<p>Compared against Kling O3 Pro, Veo 3.1, OmniHuman 1.5, and Seedance 2.0:</p>
+
+<table class="metrics-table">
+  <tr>
+    <th>Metric</th>
+    <th>What It Measures</th>
+    <th class="val-center">Avatar V</th>
+    <th class="val-center">Best Competitor</th>
+  </tr>
+  <tr>
+    <td><span class="term">SyncNet<span class="tooltip">A model that measures how well lip movements match audio. Higher confidence = better lip sync. A standard benchmark in talking-head research.</span></span> Confidence</td>
+    <td>Lip-audio sync quality</td>
+    <td class="val-center val-best">8.97</td>
+    <td class="val-center">8.86 (Seedance)</td>
+  </tr>
+  <tr>
+    <td>Face Similarity</td>
+    <td>Identity preservation</td>
+    <td class="val-center val-best">0.840</td>
+    <td class="val-center">0.838 (Kling)</td>
+  </tr>
+  <tr>
+    <td><span class="term">Q-Align<span class="tooltip">A vision-language model that scores image/video quality on a scale calibrated to human opinion. Essentially an AI that rates visual quality like a human would.</span></span></td>
+    <td>Visual quality</td>
+    <td class="val-center">4.85</td>
+    <td class="val-center">4.95 (Veo 3.1*)</td>
+  </tr>
+</table>
+<p style="font-size: 0.85rem; color: var(--text-muted);">*Veo 3.1 wins on visual quality but severely sacrifices identity (Face Sim = 0.714). Over-sharpening inflates its quality score.</p>
+
+<h3>Human Evaluation</h3>
+<p>Avatar V scored <strong>highest on all 6 dimensions</strong> rated by trained human annotators (5-point scale):</p>
+<ul>
+  <li>Identity: <strong>4.98</strong>/5 (near perfect)</li>
+  <li>Lip Sync: <strong>4.69</strong>/5</li>
+  <li>Motion Naturalness: <strong>4.48</strong>/5</li>
+  <li>Visual Quality: <strong>4.78</strong>/5</li>
+</ul>
+
+<h3>The Turing Test</h3>
+<p>In a "is it real?" test, human annotators correctly identified the real video 77.8% of the time. But in <strong>61% of test cases</strong>, at least one of three annotators was fooled by the AI-generated video.</p>
+
+<div class="quiz" id="quiz1">
+  <div class="quiz-question">Quick Check: Why does Avatar V use a video reference instead of a single image?</div>
+  <label><input type="radio" name="q1" value="a"> A single image is too low resolution</label>
+  <label><input type="radio" name="q1" value="b"> A video captures both static appearance AND dynamic behavioral patterns (talking style, expressions, gestures)</label>
+  <label><input type="radio" name="q1" value="c"> Videos are easier to process than images</label>
+  <label><input type="radio" name="q1" value="d"> A video provides more pixels for the model to copy</label>
+  <button class="quiz-btn" onclick="checkQuiz('q1', 'b', 'quiz1')">Check Answer</button>
+  <div class="feedback correct" id="quiz1-correct">Correct! A single image can only show one angle, one expression, one lighting condition. A video shows how the person actually moves, talks, and emotes - their behavioral "fingerprint."</div>
+  <div class="feedback wrong" id="quiz1-wrong">Not quite. The key advantage is that video captures dynamic behavioral patterns - talking rhythm, micro-expressions, gestural tendencies - that a single photo simply cannot represent.</div>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="final-quiz"><span class="section-number">9</span> Final Comprehension Quiz</h2>
+
+<div class="quiz" id="quiz2">
+  <div class="quiz-question">1. What does "Sparse Reference Attention" solve?</div>
+  <label><input type="radio" name="q2" value="a"> The model is too small to generate video</label>
+  <label><input type="radio" name="q2" value="b"> The quadratic cost of attending to all reference tokens by making attention asymmetric (generation tokens look at reference, but not vice versa)</label>
+  <label><input type="radio" name="q2" value="c"> Audio-visual synchronization</label>
+  <label><input type="radio" name="q2" value="d"> The model forgets training data</label>
+  <button class="quiz-btn" onclick="checkQuiz('q2', 'b', 'quiz2')">Check Answer</button>
+  <div class="feedback correct" id="quiz2-correct">Correct! It makes attending to long reference videos computationally feasible by removing unnecessary attention connections.</div>
+  <div class="feedback wrong" id="quiz2-wrong">Not quite. Sparse Reference Attention specifically addresses the quadratic attention cost by making attention asymmetric - generation tokens attend to reference tokens, but reference tokens only self-attend.</div>
+</div>
+
+<div class="quiz" id="quiz3">
+  <div class="quiz-question">2. Why does the training pipeline have 5 stages instead of training everything at once?</div>
+  <label><input type="radio" name="q3" value="a"> They didn't have enough GPUs to do it all at once</label>
+  <label><input type="radio" name="q3" value="b"> Each stage builds on the previous one - the model needs general video understanding before it can learn lip sync, identity preservation, speed optimization, and human preference alignment</label>
+  <label><input type="radio" name="q3" value="c"> Each stage uses a different programming language</label>
+  <label><input type="radio" name="q3" value="d"> Regulations require staged training</label>
+  <button class="quiz-btn" onclick="checkQuiz('q3', 'b', 'quiz3')">Check Answer</button>
+  <div class="feedback correct" id="quiz3-correct">Correct! Like a curriculum - you learn basic math before calculus. The model needs to understand video before it can specialize in talking heads, identity, etc.</div>
+  <div class="feedback wrong" id="quiz3-wrong">The correct answer is B. Progressive training is a curriculum approach where each stage builds on the last. You can't learn identity preservation before understanding what video is.</div>
+</div>
+
+<div class="quiz" id="quiz4">
+  <div class="quiz-question">3. What is "distillation" in the context of this paper?</div>
+  <label><input type="radio" name="q4" value="a"> Removing impurities from the training data</label>
+  <label><input type="radio" name="q4" value="b"> Compressing a slow, high-quality model into a fast one that produces similar-quality output in fewer steps</label>
+  <label><input type="radio" name="q4" value="c"> Converting video to audio</label>
+  <label><input type="radio" name="q4" value="d"> Reducing the number of GPUs needed</label>
+  <button class="quiz-btn" onclick="checkQuiz('q4', 'b', 'quiz4')">Check Answer</button>
+  <div class="feedback correct" id="quiz4-correct">Correct! Distillation trains a fast "student" model to mimic a slow "teacher" model, achieving 10x+ speedup.</div>
+  <div class="feedback wrong" id="quiz4-wrong">Distillation = training a faster student model to match the quality of a slower teacher model. Avatar V combines CFG distillation and DMD to achieve 10x+ speedup.</div>
+</div>
+
+<div class="quiz" id="quiz5">
+  <div class="quiz-question">4. What does RLHF do for Avatar V?</div>
+  <label><input type="radio" name="q5" value="a"> Makes the model generate videos faster</label>
+  <label><input type="radio" name="q5" value="b"> Reduces the model's size</label>
+  <label><input type="radio" name="q5" value="c"> Aligns the model's outputs with human perceptual preferences for identity, motion naturalness, and visual quality</label>
+  <label><input type="radio" name="q5" value="d"> Adds audio to silent videos</label>
+  <button class="quiz-btn" onclick="checkQuiz('q5', 'c', 'quiz5')">Check Answer</button>
+  <div class="feedback correct" id="quiz5-correct">Correct! RLHF is the final polish - making the output match what humans actually consider "good" across identity, motion, and visual quality dimensions.</div>
+  <div class="feedback wrong" id="quiz5-wrong">RLHF (Reinforcement Learning from Human Feedback) tunes the model based on human judgments about what looks natural, preserves identity well, and has good visual quality.</div>
+</div>
+
+<div class="quiz" id="quiz6">
+  <div class="quiz-question">5. Why did HeyGen replace Ray with a custom data processing engine?</div>
+  <label><input type="radio" name="q6" value="a"> Ray was too expensive</label>
+  <label><input type="radio" name="q6" value="b"> Ray's centralized coordination (GCS) couldn't scale past 2000+ nodes - it consumed 100GB+ RAM and crashed under load</label>
+  <label><input type="radio" name="q6" value="c"> Ray doesn't support Python</label>
+  <label><input type="radio" name="q6" value="d"> They wanted to use Kubernetes instead</label>
+  <button class="quiz-btn" onclick="checkQuiz('q6', 'b', 'quiz6')">Check Answer</button>
+  <div class="feedback correct" id="quiz6-correct">Correct! Ray's centralized Global Control Store became a bottleneck at their scale, leading them to build a declarative, Kubernetes-inspired system.</div>
+  <div class="feedback wrong" id="quiz6-wrong">The answer is B. Ray's GCS is a centralized coordination point where every state change must be broadcast to every node. At 2000+ nodes, it consumed 100GB+ RSS and crashed.</div>
+</div>
+
+<!-- Close main-content div -->
+</div>
+
+<!-- Glossary floating panel -->
+<button class="glossary-toggle" id="glossaryBtn" title="Open Glossary">&#x1F4D6;</button>
+<div class="glossary-panel" id="glossaryPanel">
+  <h3 style="color: var(--accent); margin-bottom: 0.75rem;">AI Glossary</h3>
+  <input type="text" id="glossarySearch" placeholder="Search terms..." oninput="filterGlossary()">
+  <div id="glossaryEntries">
+    <div class="glossary-entry"><strong>Attention</strong><p>Mechanism where each element looks at all others to determine relevance. The core innovation of Transformers.</p></div>
+    <div class="glossary-entry"><strong>AdaLN (Adaptive Layer Normalization)</strong><p>A normalization technique where the scaling/shifting parameters come from external conditioning (like a timestep). Lets the model adjust its behavior based on context.</p></div>
+    <div class="glossary-entry"><strong>AdamW</strong><p>Popular optimizer for training neural networks. Adapts learning rates per-parameter and adds weight decay regularization.</p></div>
+    <div class="glossary-entry"><strong>ArcFace</strong><p>A face recognition model that produces embeddings optimized for identity comparison. The standard for measuring face similarity in research.</p></div>
+    <div class="glossary-entry"><strong>Autoregressive</strong><p>Generating output one piece at a time, where each new piece depends on previous ones. Like writing a sentence word by word.</p></div>
+    <div class="glossary-entry"><strong>CFG (Classifier-Free Guidance)</strong><p>Technique that improves conditional generation by comparing conditional and unconditional outputs. Requires extra forward passes (2x or more cost).</p></div>
+    <div class="glossary-entry"><strong>Cross-Attention</strong><p>Attention between two different sequences (e.g., video looking at audio features). Lets one modality gather information from another.</p></div>
+    <div class="glossary-entry"><strong>CUDA</strong><p>NVIDIA's programming platform for writing code that runs on GPUs. Custom CUDA kernels are hand-optimized GPU programs.</p></div>
+    <div class="glossary-entry"><strong>DAG (Directed Acyclic Graph)</strong><p>A flowchart-like structure where data flows in one direction with no loops. Used to represent multi-step processing pipelines.</p></div>
+    <div class="glossary-entry"><strong>DDPM</strong><p>Denoising Diffusion Probabilistic Models. The original 2020 framework for diffusion-based generation. Flow matching is a more modern alternative.</p></div>
+    <div class="glossary-entry"><strong>Denoising</strong><p>The process of removing noise from data. In diffusion models, this is the generation process: starting from pure noise and progressively cleaning it up.</p></div>
+    <div class="glossary-entry"><strong>Diffusion Model</strong><p>AI that generates data by learning to reverse a noise-adding process. Train by adding noise to real data; generate by removing noise from random static.</p></div>
+    <div class="glossary-entry"><strong>DiT (Diffusion Transformer)</strong><p>A Transformer architecture designed for diffusion models. Replaced U-Net as the dominant backbone for large-scale image/video generation.</p></div>
+    <div class="glossary-entry"><strong>Distillation</strong><p>Training a fast "student" model to mimic a slow "teacher" model. Achieves similar quality at a fraction of the computation.</p></div>
+    <div class="glossary-entry"><strong>DMD (Distribution Matching Distillation)</strong><p>A distillation method that reduces the number of denoising steps needed. Uses a 3-model architecture: student, fake teacher, and frozen real teacher.</p></div>
+    <div class="glossary-entry"><strong>DPO (Direct Preference Optimization)</strong><p>An alignment method that learns from human preference pairs ("A is better than B") without needing a separate reward model. Simpler than full RLHF.</p></div>
+    <div class="glossary-entry"><strong>Embedding</strong><p>A compact numerical representation (vector) of something complex. Similar items have similar embeddings. Used for faces, text, audio, etc.</p></div>
+    <div class="glossary-entry"><strong>Feed-Forward Network (FFN)</strong><p>A simple neural network layer that processes each token independently (no looking at other tokens). Appears in every Transformer block after attention.</p></div>
+    <div class="glossary-entry"><strong>Fine-Tuning</strong><p>Taking a pre-trained model and training it further on a specific task or dataset. Adapts general knowledge to a particular use case.</p></div>
+    <div class="glossary-entry"><strong>Flash Attention</strong><p>An optimized implementation of attention that's much faster and uses less memory than the naive version. Standard in modern Transformers.</p></div>
+    <div class="glossary-entry"><strong>Flow Matching</strong><p>A training method where the model learns to transport noise to data along straight lines. More efficient than DDPM and requires fewer denoising steps.</p></div>
+    <div class="glossary-entry"><strong>FSDP (Fully Sharded Data Parallelism)</strong><p>A method for training models too large for a single GPU by splitting (sharding) model parameters across multiple GPUs.</p></div>
+    <div class="glossary-entry"><strong>Gaussian Noise</strong><p>Random values drawn from a normal (bell curve) distribution. The type of noise used in diffusion models to corrupt and then denoise data.</p></div>
+    <div class="glossary-entry"><strong>GEMM (General Matrix Multiplication)</strong><p>The fundamental math operation in neural networks. GPUs are optimized for this operation; cuBLAS is NVIDIA's optimized GEMM library.</p></div>
+    <div class="glossary-entry"><strong>GRPO (Group Relative Policy Optimization)</strong><p>An RL algorithm that generates a group of outputs, scores them, and improves based on relative rankings within the group.</p></div>
+    <div class="glossary-entry"><strong>Identity Drift</strong><p>When a generated character gradually stops looking like the reference person over time. A major failure mode in video generation.</p></div>
+    <div class="glossary-entry"><strong>Inference</strong><p>Using a trained model to generate new outputs. Training = learning. Inference = doing the thing. The production phase.</p></div>
+    <div class="glossary-entry"><strong>KL Divergence / KL Regularization</strong><p>A mathematical measure of how different two probability distributions are. Used as a constraint to prevent models from changing too dramatically during fine-tuning.</p></div>
+    <div class="glossary-entry"><strong>KV Cache</strong><p>Storing pre-computed Key and Value matrices from attention so they don't need to be recomputed. Essential optimization for sequence generation.</p></div>
+    <div class="glossary-entry"><strong>Latent Space</strong><p>The compressed representation space where a VAE stores its encoded data. Diffusion models work here for efficiency rather than in pixel space.</p></div>
+    <div class="glossary-entry"><strong>Likert Scale</strong><p>A rating scale (typically 1-5 or 1-7) used in surveys. "Rate this video's quality from 1 (very poor) to 5 (excellent)."</p></div>
+    <div class="glossary-entry"><strong>LLM (Large Language Model)</strong><p>A very large neural network trained on text that can generate, translate, and understand language. ChatGPT, Claude, etc.</p></div>
+    <div class="glossary-entry"><strong>Loss Function</strong><p>A mathematical formula that measures how wrong the model's predictions are. Training tries to minimize this. Different losses target different aspects of quality.</p></div>
+    <div class="glossary-entry"><strong>MOS (Mean Opinion Score)</strong><p>The average human rating of a system's quality. A standard evaluation metric in multimedia research.</p></div>
+    <div class="glossary-entry"><strong>Muon Optimizer</strong><p>A newer (2025) optimizer for large neural networks, more efficient than Adam for 2D+ weight tensors in very large models.</p></div>
+    <div class="glossary-entry"><strong>NCCL / NVSHMEM</strong><p>NVIDIA communication libraries for GPU-to-GPU data transfer. NCCL works at operation level; NVSHMEM enables finer-grained, tile-level communication.</p></div>
+    <div class="glossary-entry"><strong>NUMA (Non-Uniform Memory Access)</strong><p>A computer architecture where memory access speed depends on which CPU/GPU the memory is closest to. Pinning processes to the right NUMA node improves performance.</p></div>
+    <div class="glossary-entry"><strong>NVLink</strong><p>NVIDIA's high-speed direct GPU-to-GPU connection. Much faster than going through the CPU.</p></div>
+    <div class="glossary-entry"><strong>Patchify</strong><p>Breaking an image/video into small patches (e.g., 16x16 pixel squares) that become tokens for the Transformer. The visual equivalent of word tokenization.</p></div>
+    <div class="glossary-entry"><strong>Perceptual Loss</strong><p>A loss function that measures image similarity using a pre-trained network's features rather than raw pixels. Better matches human perception of quality.</p></div>
+    <div class="glossary-entry"><strong>Phoneme</strong><p>The smallest unit of speech sound. "cat" has 3 phonemes: /k/, /ae/, /t/. Lip sync must align visual mouth shapes to these.</p></div>
+    <div class="glossary-entry"><strong>Pre-Training</strong><p>The initial training phase on a large, general dataset. Builds foundational knowledge before specialization through fine-tuning.</p></div>
+    <div class="glossary-entry"><strong>Progressive Training</strong><p>Gradually increasing difficulty during training (low→high resolution, short→long videos). More stable than starting at full difficulty.</p></div>
+    <div class="glossary-entry"><strong>RLHF (Reinforcement Learning from Human Feedback)</strong><p>Training a model to produce outputs humans prefer. Humans rate outputs; the model learns to maximize these ratings.</p></div>
+    <div class="glossary-entry"><strong>RoPE (Rotary Position Embedding)</strong><p>A way to encode position information (where a token is in the sequence) into the attention computation. Used in modern Transformers.</p></div>
+    <div class="glossary-entry"><strong>Self-Attention</strong><p>Attention within a single sequence. Each element looks at all other elements in the same sequence to gather context.</p></div>
+    <div class="glossary-entry"><strong>Sequence Parallelism</strong><p>Splitting a long sequence across multiple GPUs, each processing a portion. Required when sequences are too long for one GPU's memory.</p></div>
+    <div class="glossary-entry"><strong>SFT (Supervised Fine-Tuning)</strong><p>Fine-tuning with labeled examples showing the correct output for each input. "Here's the input; here's what you should produce."</p></div>
+    <div class="glossary-entry"><strong>SM (Streaming Multiprocessor)</strong><p>The basic processing unit inside an NVIDIA GPU. A GPU has many SMs that run in parallel. Allocating SMs between tasks is a key optimization.</p></div>
+    <div class="glossary-entry"><strong>Stochastic</strong><p>Involving randomness. "Stochastic sampling" means adding controlled randomness to the generation process, which can improve detail quality.</p></div>
+    <div class="glossary-entry"><strong>Super-Resolution</strong><p>Upscaling low-resolution content to higher resolution while adding realistic detail. The AI version of "enhance."</p></div>
+    <div class="glossary-entry"><strong>SyncNet</strong><p>A standard model for measuring audio-visual lip sync quality. Reports confidence (higher = better sync) and distance (lower = better).</p></div>
+    <div class="glossary-entry"><strong>Tokens</strong><p>The basic units a Transformer processes. Text → word-piece tokens. Images → patch tokens. Video → space-time patch tokens.</p></div>
+    <div class="glossary-entry"><strong>Transformer</strong><p>The dominant neural network architecture (since 2017). Uses attention to process sequences. Powers ChatGPT, image generators, and video generators.</p></div>
+    <div class="glossary-entry"><strong>Triton</strong><p>A programming language by OpenAI for writing GPU kernels in Python-like syntax. Easier than raw CUDA but still highly optimized.</p></div>
+    <div class="glossary-entry"><strong>Trimmed Mean</strong><p>An average that discards the extreme values (e.g., top and bottom 10%). More robust to outliers than a regular average.</p></div>
+    <div class="glossary-entry"><strong>U-Net</strong><p>The older backbone architecture for diffusion models (before DiT). Has an encoder-decoder structure with skip connections. Being replaced by Transformers.</p></div>
+    <div class="glossary-entry"><strong>VAE (Variational Autoencoder)</strong><p>A neural network that compresses data to a compact latent representation and decompresses back. Used in diffusion models to work in latent space for efficiency.</p></div>
+    <div class="glossary-entry"><strong>Velocity Field</strong><p>In flow matching, the model predicts the direction and speed to move from noise toward data at each point. Like predicting wind currents to navigate from A to B.</p></div>
+    <div class="glossary-entry"><strong>VLM (Vision-Language Model)</strong><p>An AI that understands both images and text together. Can describe images, answer questions about them, or filter content. Used in data curation.</p></div>
+  </div>
+</div>
+
+<script>
+// Progress bar + active section tracking
+var sidebarLinks = document.querySelectorAll('.sidebar a[href^="#"]');
+var sections = [];
+sidebarLinks.forEach(function(link) {
+  var id = link.getAttribute('href').slice(1);
+  var el = document.getElementById(id);
+  if (el) sections.push({ id: id, el: el, link: link });
+});
+
+function updateActiveSection() {
+  var scrollY = window.scrollY + 100;
+  var active = sections[0];
+  for (var i = 0; i < sections.length; i++) {
+    if (sections[i].el.offsetTop <= scrollY) active = sections[i];
+  }
+  sidebarLinks.forEach(function(l) { l.classList.remove('active'); });
+  if (active) active.link.classList.add('active');
+}
+
+window.addEventListener('scroll', function() {
+  var h = document.documentElement;
+  var pct = (h.scrollTop / (h.scrollHeight - h.clientHeight)) * 100;
+  document.getElementById('progressBar').style.width = pct + '%';
+  updateActiveSection();
+});
+updateActiveSection();
+
+// Mobile TOC
+function toggleMobileToc() {
+  document.getElementById('sidebar').classList.toggle('mobile-open');
+  document.getElementById('mobileOverlay').classList.toggle('active');
+}
+function closeMobileToc() {
+  document.getElementById('sidebar').classList.remove('mobile-open');
+  document.getElementById('mobileOverlay').classList.remove('active');
+}
+// Close mobile TOC when a link is clicked
+sidebarLinks.forEach(function(link) {
+  link.addEventListener('click', closeMobileToc);
+});
+
+// Glossary toggle
+document.getElementById('glossaryBtn').addEventListener('click', () => {
+  document.getElementById('glossaryPanel').classList.toggle('open');
+});
+
+// Glossary search
+function filterGlossary() {
+  const q = document.getElementById('glossarySearch').value.toLowerCase();
+  document.querySelectorAll('.glossary-entry').forEach(e => {
+    e.style.display = e.textContent.toLowerCase().includes(q) ? '' : 'none';
+  });
+}
+
+// Turing test checker
+function checkTuring(pairId, picked, answer) {
+  var pair = document.getElementById(pairId);
+  if (pair.dataset.answered) return;
+  pair.dataset.answered = 'true';
+  var prefix = pairId.replace('turing', 't');
+  var leftEl = document.getElementById(prefix + '-left');
+  var rightEl = document.getElementById(prefix + '-right');
+  var resultEl = document.getElementById(pairId + '-result');
+  // Disable all buttons in this pair
+  pair.querySelectorAll('.turing-pick-btn').forEach(function(btn) { btn.disabled = true; });
+  var pickedEl = picked === 'left' ? leftEl : rightEl;
+  var otherEl = picked === 'left' ? rightEl : leftEl;
+  var answerEl = answer === 'left' ? leftEl : rightEl;
+  if (picked === answer) {
+    pickedEl.classList.add('correct');
+    otherEl.classList.add('dimmed');
+    resultEl.style.display = 'block';
+    resultEl.style.background = '#1a2a1a';
+    resultEl.style.color = '#3fb950';
+    resultEl.textContent = 'Correct! You spotted the real video. Not everyone can \u2014 trained annotators got it wrong 22% of the time.';
+  } else {
+    pickedEl.classList.add('wrong');
+    answerEl.classList.add('correct');
+    resultEl.style.display = 'block';
+    resultEl.style.background = '#2a1a1a';
+    resultEl.style.color = '#f85149';
+    resultEl.textContent = 'Fooled! Video ' + (answer === 'left' ? 'A' : 'B') + ' was real. You\'re in good company \u2014 in the paper\'s Turing test, 61% of cases fooled at least one annotator.';
+  }
+}
+
+// Quiz checker
+function checkQuiz(name, correct, quizId) {
+  const selected = document.querySelector(`input[name="${name}"]:checked`);
+  if (!selected) return;
+  const isCorrect = selected.value === correct;
+  document.getElementById(quizId + '-correct').style.display = isCorrect ? 'block' : 'none';
+  document.getElementById(quizId + '-wrong').style.display = isCorrect ? 'none' : 'block';
+}
+</script>
+
+<script data-goatcounter="https://tcho.goatcounter.com/count"
+        async src="//gc.zgo.at/count.js"></script>
+</body>
+</html>
