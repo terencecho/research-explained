@@ -44,17 +44,19 @@ If a project page URL is provided:
 Create a single `index.html` file with all CSS and JS inline. Follow this structure exactly:
 
 #### Page Layout
-- **Sticky sidebar TOC** (left, 240px) with active section tracking on scroll
-- **Main content** (860px max-width) to the right
-- **Mobile responsive**: sidebar becomes slide-out drawer under 900px
-- **Progress bar** fixed at top of page
-- **Glossary button** fixed bottom-right, opens searchable panel
+- **Flex body** (`display: flex`, `max-width: 1200px`, centered) with sticky sidebar + `.main-content` div. NOT fixed-position sidebar with margin-left.
+- **Sticky sidebar TOC** (`.sidebar`, left, 240px, `border-right` divider, no background fill) with active section tracking on scroll. Links use **border-left indicator** for active state (not rounded background). Include `<a href="../" class="sidebar-home">&larr; All Papers</a>` at the top before the TOC title.
+- **Main content** (`.main-content`, 860px max-width) to the right
+- **No section numbering** — sidebar TOC and headings use plain text labels, not "1. The Big Picture"
+- **Mobile responsive**: sidebar becomes slide-out drawer (`.mobile-open`) with dark overlay under 900px. Toggle button is round accent-colored button at bottom-left.
+- **Progress bar** (`.progress-bar`) fixed at top of page
+- **Glossary button** (`.glossary-toggle`) fixed bottom-right, accent blue with book emoji (&#x1F4D6;), opens searchable panel
 
 #### Top Section
 - `<h1>` title: "[Paper Name]: The Paper, Explained"
-- Subtitle: "A beginner-friendly guide to [paper]. Every AI term is defined. Every concept is grounded in analogy."
-- Published date and author
-- **Research banner**: teal-bordered callout linking to the project page and PDF, explaining this is a companion explainer
+- Subtitle: `<p class="subtitle">` "A beginner-friendly guide to [paper]. Every AI term is defined. Every concept is grounded in analogy."
+- Meta line: `<p class="meta">` with paper authors, affiliation, explainer publish date, and author name
+- **Research banner**: gradient background (`linear-gradient(135deg, #011627, #0d2137, #1a1a3a)`), teal border, icon on left (`.banner-icon`), text + pill-style link buttons (`.banner-link.primary` / `.banner-link.secondary`) linking to the paper PDF, project page, and any related posts
 
 #### Content Sections (in order)
 1. **The Big Picture** — What the paper does in plain language, the problems it solves (numbered list), key insight callout
@@ -69,12 +71,12 @@ Create a single `index.html` file with all CSS and JS inline. Follow this struct
 10. **Final Quiz** — 5-6 multiple choice questions covering key concepts
 
 #### Interactive Elements
-- **Term tooltips**: `<span class="term">term<span class="tooltip">definition</span></span>` — yellow dashed underline, hover to show
-- **Analogy boxes**: blue left-border callout with "Real-world analogy:" prefix
-- **Insight boxes**: green left-border callout with "Key Insight:" prefix
-- **Collapsible deep-dives**: `<details>` with styled `<summary>`
-- **Quizzes**: radio buttons + check button + correct/wrong feedback div
-- **Searchable glossary**: fixed panel with text filter, every AI term from the paper alphabetically sorted
+- **Term tooltips**: `<span class="term">term<span class="tooltip">definition</span></span>` — `color: var(--yellow)` on the term text itself, `1px dashed` underline. Tooltip uses `background: var(--surface)` with `border: 1px solid var(--border)` (NOT yellow border).
+- **Analogy boxes**: `background: #1a2332` (solid dark blue-gray, not rgba), blue left-border, "Real-world analogy:" prefix
+- **Insight boxes**: `background: #1a2a1a` (solid dark green-gray, not rgba), green left-border, "Key Insight:" prefix
+- **Collapsible deep-dives**: `<details>` with `background: var(--surface)`, border, rounded corners, `overflow: visible` (NOT `overflow: hidden` — that clips tooltips inside). Summary uses `+ / -` monospace prefix (not triangle ▶). Hover uses `var(--accent-subtle)`.
+- **Quizzes**: radio buttons + check button + feedback. Correct = `background: #1a2a1a`, wrong = `background: #2a1a1a`.
+- **Searchable glossary**: fixed panel, entries use `<strong>` for term + `<p>` for definition, separated by `border-bottom`
 - **Turing test** (if applicable): side-by-side videos with separate "This one is real" buttons below each video (NOT on the video itself — clicking video should only play it)
 
 ### 5. Create HyperFrames Videos
@@ -91,22 +93,59 @@ Bad candidates (don't make videos for these):
 - Anything that restates what the text already says clearly
 
 For each HyperFrames video:
+
+**Composition HTML format** (required structure):
+```html
+<div data-composition-id="my-video" data-width="1920" data-height="540" data-start="0" data-duration="10">
+  <!-- Content here -->
+  <style>/* Scoped styles */</style>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+  <script>
+    window.__timelines = window.__timelines || {};
+    var root = document.currentScript.parentElement;
+    var tl = gsap.timeline({ paused: true });
+    // Build animations with tl.from() / tl.to()...
+    window.__timelines["my-video"] = tl;
+  </script>
+</div>
+```
+
+**Design rules:**
 - Canvas: 1920x540 (wide format)
 - Use Space Mono for all text
 - Dark background: #011627
-- Keep text LARGE — minimum 28px for labels, 48px for titles
+- Keep text LARGE — minimum 28px for labels, 48px for titles. Common mistake: using 12-16px text that's unreadable when the video is embedded. When in doubt, go bigger.
+- Watch for bottom clipping — the 540px canvas height is tight. Leave 30px+ margin at the bottom for text below bar charts or diagrams.
 - No description paragraphs in the video — labels and tags only
 - The page text provides the detail; the video provides the visual
-- Lint with `npx hyperframes lint` before rendering
+
+**Build process:**
+- Create the HTML in a directory (e.g., `/tmp/my-vid/index.html`)
+- Lint with `npx hyperframes lint .` from that directory
 - Render with `npx hyperframes render --output <path>.mp4 --fps 30`
-- Verify with ffmpeg screenshot: `ffmpeg -y -i video.mp4 -ss 00:00:08 -frames:v 1 -update 1 /tmp/check.png` then Read the image
-- Video caption should include HyperFrames badge: `<a href="https://github.com/heygen-com/hyperframes" target="_blank" class="badge" title="Made with HyperFrames — HeyGen's HTML-to-video composition framework"><span class="badge-label">made with</span><span class="badge-name">HyperFrames</span></a>`
+
+**Verification (required before embedding):**
+- Take screenshots at **multiple timestamps** (midpoint and near-end) since content animates in
+- `ffmpeg -y -i video.mp4 -ss 00:00:05 -frames:v 1 -update 1 /tmp/check-mid.png` then Read image
+- `ffmpeg -y -i video.mp4 -ss 00:00:09 -frames:v 1 -update 1 /tmp/check-end.png` then Read image
+- Confirm: all text visible (not clipped), labels legible, animations completed, final state correct
+- If anything is cut off or misaligned, fix and re-render before embedding
+
+**Embedding in the page** (use `autoplay muted loop playsinline`, NOT `controls`):
+```html
+<div class="video-embed">
+  <video src="videos/my-video.mp4" autoplay muted loop playsinline></video>
+  <div class="video-caption"><a href="https://github.com/heygen-com/hyperframes" target="_blank" class="badge" title="Made with HyperFrames — HeyGen's HTML-to-video composition framework"><span class="badge-label">made with</span><span class="badge-name">HyperFrames</span></a> Short description of what the video shows</div>
+</div>
+```
+Badge is a stacked teal pill (small "made with" on top, bold "HyperFrames" below), always first child in `.video-caption`.
 
 ### 6. Deploy to GitHub Pages
 
 If the user wants to deploy:
 - Create or use existing repo (suggest `research-explained` for multiple papers)
-- Structure: `<paper-slug>/index.html` + `<paper-slug>/avatar-v-videos/*.mp4`
+- Structure: `<paper-slug>/index.html` + `<paper-slug>/videos/*.mp4`
+- Update the homepage `index.html` to add a paper card for the new explainer
 - Push to main branch, enable Pages with legacy build from root
 - If first deploy doesn't trigger, push an empty commit to kick it off
 
@@ -120,11 +159,12 @@ If the user wants to deploy:
   --border: #30363d;
   --text: #e6edf3;
   --text-muted: #8b949e;
-  --accent: #58a6ff;     /* links, active sidebar, section headers */
-  --green: #3fb950;      /* correct answers, insight boxes, best metrics */
-  --yellow: #d29922;     /* term highlights, glossary entries */
-  --red: #f85149;        /* wrong answers */
-  --purple: #bc8cff;     /* h3 headings, quiz questions */
+  --accent: #58a6ff;        /* links, active sidebar, section headers */
+  --accent-subtle: #1f6feb22; /* hover backgrounds on interactive elements */
+  --green: #3fb950;         /* correct answers, insight boxes, best metrics */
+  --yellow: #d29922;        /* term highlights, glossary entries */
+  --red: #f85149;           /* wrong answers */
+  --purple: #bc8cff;        /* h3 headings, quiz questions */
 }
 ```
 
@@ -158,25 +198,43 @@ Accent colors: #2EC4B6 (teal), #FF9F1C (orange), #bc8cff (purple), #E71D36 (red)
 - Don't use inline styles on tables — use CSS classes
 - Don't put description paragraphs in HyperFrames videos — text at that scale is unreadable
 - Don't make HyperFrames videos that just duplicate what the text says
-- Don't use section number `~` or other placeholder characters
+- Don't number sections — no "1. The Big Picture" or "3a. Sparse Attention". The sidebar provides structure.
 - Don't autoplay demo videos with sound — use `controls` attribute so users can play manually
 - Don't put answer selection on video elements in Turing tests — use separate buttons
+- Don't use `overflow: hidden` on `<details>` elements — it clips tooltips. Use `overflow: visible`.
+- Don't use fixed pixel widths on content elements without mobile overrides — tooltips, glossary panel, and grids must work on 375px screens
+- Don't use a fixed-position sidebar with `margin-left` on main content — use flex layout with sticky sidebar
+
+## Mobile Responsiveness
+
+Every page must work on 375px screens. The `@media (max-width: 900px)` block must handle:
+- Sidebar: slides from left with `.mobile-open` + dark overlay
+- Glossary panel: `width: calc(100vw - 3rem)` (never fixed width exceeding viewport)
+- Term tooltips: `width: calc(100vw - 4rem); max-width: 320px; left: 0; transform: none;`
+- Two-column grids: collapse to `grid-template-columns: 1fr`
+- Pipeline stages: `overflow-x: auto` with `-webkit-overflow-scrolling: touch`
+- Architecture components: `max-width: 100%`
+- Metrics tables: `display: block; overflow-x: auto;`
 
 ## Output Checklist
 
 - [ ] Single HTML file with all CSS/JS inline
-- [ ] Sidebar TOC with active section tracking
-- [ ] All AI terms have hover tooltips
-- [ ] Searchable glossary with every term
-- [ ] Real-world analogy for each major concept
+- [ ] Flex body layout with sticky sidebar (not fixed sidebar)
+- [ ] "← All Papers" home link at top of sidebar
+- [ ] Sidebar TOC with active section tracking (no section numbers)
+- [ ] All AI terms have yellow-colored hover tooltips
+- [ ] Searchable glossary (accent blue button with 📖 emoji)
+- [ ] Real-world analogy for each major concept (solid dark bg, not rgba)
 - [ ] Architecture diagram as styled HTML (not ASCII)
 - [ ] Pipeline as styled horizontal cards (not ASCII)
+- [ ] Collapsible sections with +/- prefix, `overflow: visible`
 - [ ] HyperFrames videos only for visually-hard-to-explain concepts
-- [ ] All HyperFrames videos verified with screenshot before embedding
+- [ ] All HyperFrames videos verified at multiple timestamps before embedding
+- [ ] HyperFrames videos embedded with `autoplay muted loop playsinline` + teal badge
 - [ ] Demo videos (if available) with playback controls and audio
 - [ ] Interactive Turing test (if applicable) with separate answer buttons
-- [ ] Comprehension quizzes
-- [ ] Published date shown
-- [ ] GoatCounter script (if provided)
-- [ ] Research banner linking to project page and PDF
-- [ ] Mobile responsive (sidebar drawer, no horizontal overflow)
+- [ ] Comprehension quizzes (no numbered questions)
+- [ ] Meta line with paper authors, publish date
+- [ ] Research banner with gradient bg, icon, pill-style link buttons
+- [ ] Mobile responsive (sidebar drawer, no horizontal overflow on 375px)
+- [ ] Homepage updated with new paper card
