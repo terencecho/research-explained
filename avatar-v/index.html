@@ -805,7 +805,7 @@
 
 
 <!-- ============================================================ -->
-<h2 id="big-picture"><span class="section-number">1</span> The Big Picture</h2>
+<h2 id="big-picture">The Big Picture</h2>
 
 <p><strong>Avatar V</strong> is a system that takes a short video of a real person and generates new, high-quality talking-head videos of that person saying anything you want. The generated person doesn't just <em>look</em> like the original - they <em>move</em>, <em>talk</em>, and <em>gesture</em> like them too.</p>
 
@@ -902,7 +902,7 @@
 <div class="insight">Now that you've seen what Avatar V can do, let's understand <em>how</em> it works. The sections below explain every concept the paper assumes you already know, then walk through each component of the system.</div>
 
 <!-- ============================================================ -->
-<h2 id="prereqs"><span class="section-number">2</span> Background Concepts You Need</h2>
+<h2 id="prereqs">Background Concepts You Need</h2>
 
 <p>The paper assumes you know these AI concepts. Let's build them up from scratch.</p>
 
@@ -1006,7 +1006,7 @@
 </ul>
 
 <!-- ============================================================ -->
-<h2 id="architecture"><span class="section-number">3</span> How Avatar V Works</h2>
+<h2 id="architecture">How Avatar V Works</h2>
 
 <p>Avatar V has four major components working together:</p>
 
@@ -1123,7 +1123,7 @@
 <p>From just ~10 seconds of audio, the voice cloning engine can reproduce someone's voice. It's built on an <span class="term">LLM<span class="tooltip">Large Language Model. A very large neural network trained on text (and sometimes audio) that can generate human-like text, translate, summarize, and more. ChatGPT is an LLM. Here, an LLM-like architecture is used for audio generation.</span></span> backbone and treats speech generation as predicting a sequence of <span class="term">audio tokens<span class="tooltip">Discrete codes representing small chunks of audio. Just like text can be broken into word-tokens, audio can be broken into audio-tokens using a codec. The LLM predicts these tokens one by one to generate speech.</span></span> - similar to how ChatGPT predicts the next word, but for sound.</p>
 
 <!-- ============================================================ -->
-<h2 id="training"><span class="section-number">4</span> How It Learns (Training Pipeline)</h2>
+<h2 id="training">How It Learns (Training Pipeline)</h2>
 
 <p>Avatar V doesn't learn everything at once. It follows a 5-stage curriculum, like going from elementary school through grad school:</p>
 
@@ -1223,7 +1223,7 @@
 </details>
 
 <!-- ============================================================ -->
-<h2 id="inference"><span class="section-number">5</span> How It Generates Video (Inference)</h2>
+<h2 id="inference">How It Generates Video (Inference)</h2>
 
 <p><span class="term">Inference<span class="tooltip">The process of using a trained model to generate new outputs. Training = learning. Inference = doing. When you type a prompt into ChatGPT, the response is generated during "inference."</span></span> is when the trained model actually generates a video. Here's how:</p>
 
@@ -1254,7 +1254,7 @@
 </ul>
 
 <!-- ============================================================ -->
-<h2 id="data"><span class="section-number">6</span> Data: Fuel for the Model</h2>
+<h2 id="data">Data: Fuel for the Model</h2>
 
 <p>Avatar V was trained on a massive dataset: <strong>100M+ clips</strong> curated from <strong>50M raw videos</strong>.</p>
 
@@ -1280,7 +1280,7 @@
 <p>This lets the model learn "this is the same person even though the background, lighting, and camera angle are completely different" - essential for identity that doesn't depend on the scene.</p>
 
 <!-- ============================================================ -->
-<h2 id="infra"><span class="section-number">7</span> Infrastructure at Scale</h2>
+<h2 id="infra">Infrastructure at Scale</h2>
 
 <p>Avatar V runs on <strong>5,000+ GPUs</strong> across multiple cloud providers. Two key infrastructure pieces:</p>
 
@@ -1298,7 +1298,7 @@
 <div class="analogy">Instead of the boss calling each worker and saying "do task X" (imperative/command model), the boss posts a bulletin board saying "I need X done" and workers independently check the board and do what's needed (declarative model). If a worker crashes and restarts, they just check the board again. No messages get lost.</div>
 
 <!-- ============================================================ -->
-<h2 id="results"><span class="section-number">8</span> How Good Is It?</h2>
+<h2 id="results">How Good Is It?</h2>
 
 <h3>Automated Metrics</h3>
 <p>Compared against Kling O3 Pro, Veo 3.1, OmniHuman 1.5, and Seedance 2.0:</p>
@@ -1355,7 +1355,7 @@
 </div>
 
 <!-- ============================================================ -->
-<h2 id="final-quiz"><span class="section-number">9</span> Final Comprehension Quiz</h2>
+<h2 id="final-quiz">Final Comprehension Quiz</h2>
 
 <div class="quiz" id="quiz2">
   <div class="quiz-question">What does "Sparse Reference Attention" solve?</div>
