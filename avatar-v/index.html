@@ -1236,8 +1236,8 @@
 
 <p>Avatar V generates video in <strong>chunks</strong> of ~6.4 seconds each. For longer videos, chunks are stitched together:</p>
 <ol>
-  <li><strong>First chunk:</strong> Uses the reference video for identity ("ref2v" mode)</li>
-  <li><strong>Subsequent chunks:</strong> Use the last frames of the previous chunk as a bridge ("prefix2v" mode)</li>
+  <li><strong>First chunk:</strong> Uses the reference video directly to establish identity</li>
+  <li><strong>Subsequent chunks:</strong> Use the last frames of the previous chunk as a bridge to maintain continuity</li>
   <li>A <strong>global appearance anchor</strong> from the first chunk keeps identity consistent across all chunks</li>
 </ol>
 
