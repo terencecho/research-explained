@@ -132,11 +132,27 @@
     border: 1px solid rgba(88,166,255,0.2);
   }
 
+  .search-box {
+    width: 100%;
+    padding: 0.6rem 1rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-size: 0.95rem;
+    margin-bottom: 1.25rem;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .search-box:focus { border-color: var(--accent); }
+  .search-box::placeholder { color: var(--text-muted); }
+
   .empty-state {
     color: var(--text-muted);
     font-size: 0.9rem;
     font-style: italic;
     padding: 1rem 0;
+    display: none;
   }
 
   footer {
@@ -164,7 +180,9 @@
 
 <div class="section-label">Papers</div>
 
-<div class="paper-list">
+<input type="text" class="search-box" id="search" placeholder="Search papers..." oninput="filterPapers()">
+
+<div class="paper-list" id="paper-list">
   <a href="mem0/" class="paper-card">
     <div class="paper-title">
       Mem0: Building Production-Ready AI Agents with Scalable Long-Term Memory
@@ -205,12 +223,28 @@
     </div>
   </a>
 </div>
+<div class="empty-state" id="empty-state">No papers match your search.</div>
 
 <footer>
   <a href="https://github.com/terencecho/research-explained" target="_blank">GitHub</a>
   <a href="skill/">Build your own</a>
   <span>By Terence Cho</span>
 </footer>
+
+<script>
+function filterPapers() {
+  var q = document.getElementById('search').value.toLowerCase();
+  var cards = document.querySelectorAll('.paper-card');
+  var visible = 0;
+  cards.forEach(function(card) {
+    var text = card.textContent.toLowerCase();
+    var show = !q || text.indexOf(q) >= 0;
+    card.style.display = show ? '' : 'none';
+    if (show) visible++;
+  });
+  document.getElementById('empty-state').style.display = visible === 0 ? 'block' : 'none';
+}
+</script>
 
 <script data-goatcounter="https://tcho.goatcounter.com/count"
         async src="//gc.zgo.at/count.js"></script>
