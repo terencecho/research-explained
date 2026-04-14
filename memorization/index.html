@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>How Much Do Language Models Memorize? &mdash; The Paper, Explained</title>
+<style>
+:root {
+  --bg: #0d1117; --surface: #161b22; --border: #30363d; --text: #e6edf3; --text-muted: #8b949e;
+  --accent: #58a6ff; --accent-subtle: #1f6feb22; --green: #3fb950; --yellow: #d29922; --red: #f85149; --purple: #bc8cff;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; background: var(--bg); color: var(--text); line-height: 1.7; max-width: 1200px; margin: 0 auto; padding: 2rem 1.5rem; display: flex; gap: 0; }
+.progress-bar { position: fixed; top: 0; left: 0; height: 3px; background: var(--accent); z-index: 1000; transition: width 0.1s; }
+.sidebar { position: sticky; top: 1rem; align-self: flex-start; width: 240px; flex-shrink: 0; max-height: calc(100vh - 2rem); overflow-y: auto; padding-right: 1.25rem; border-right: 1px solid var(--border); margin-right: 2rem; scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
+.sidebar::-webkit-scrollbar { width: 4px; } .sidebar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; } .sidebar::-webkit-scrollbar-track { background: transparent; }
+.sidebar .toc-title { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); margin-bottom: 0.75rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border); }
+.sidebar a { display: block; color: var(--text-muted); text-decoration: none; font-size: 0.8rem; padding: 0.2rem 0; line-height: 1.4; transition: color 0.15s, border-color 0.15s; border-left: 2px solid transparent; padding-left: 0.6rem; }
+.sidebar a:hover { color: var(--text); } .sidebar a.active { color: var(--accent); border-left-color: var(--accent); font-weight: 600; }
+.sidebar a.section-gap { margin-top: 0.4rem; }
+.sidebar-home { display: block; font-size: 0.8rem; color: var(--text-muted); text-decoration: none; padding: 0.3rem 0.6rem; margin-bottom: 0.75rem; border-left: none !important; transition: color 0.15s; }
+.sidebar-home:hover { color: var(--accent); }
+.main-content { flex: 1; min-width: 0; max-width: 860px; }
+@media (max-width: 900px) {
+  body { display: block; max-width: 860px; overflow-x: hidden; }
+  .sidebar { position: fixed; top: 0; left: -280px; width: 260px; height: 100vh; max-height: 100vh; background: var(--surface); border-right: 1px solid var(--border); padding: 1rem; margin-right: 0; z-index: 1001; transition: left 0.25s ease; }
+  .sidebar.mobile-open { left: 0; } .main-content { max-width: 100%; } .mobile-toc-btn { display: flex !important; }
+  .mobile-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; } .mobile-overlay.active { display: block; }
+  .compare-row { grid-template-columns: 1fr; } .glossary-panel { width: calc(100vw - 3rem); right: 1.5rem; }
+  .term .tooltip { width: calc(100vw - 4rem); max-width: 320px; left: 0; transform: none; }
+  .metrics-table { display: block; overflow-x: auto; }
+  .pipeline { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .arch-card { max-width: 100%; }
+}
+.mobile-toc-btn { display: none; position: fixed; bottom: 1.5rem; left: 1.5rem; width: 44px; height: 44px; background: var(--accent); color: var(--bg); border: none; border-radius: 50%; font-size: 1.1rem; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.4); z-index: 999; align-items: center; justify-content: center; }
+h1 { font-size: 2rem; margin-bottom: 0.5rem; } .subtitle { color: var(--text-muted); margin-bottom: 2rem; font-size: 1.05rem; }
+.meta { color: var(--text-muted); font-size: 0.8rem; margin-top: -1rem; margin-bottom: 1.5rem; }
+h2 { font-size: 1.5rem; margin: 2.5rem 0 1rem; color: var(--accent); border-bottom: 1px solid var(--border); padding-bottom: 0.5rem; }
+h3 { font-size: 1.2rem; margin: 1.5rem 0 0.75rem; color: var(--purple); } p { margin-bottom: 1rem; } a { color: var(--accent); }
+ul, ol { margin-bottom: 1rem; padding-left: 1.5rem; } li { margin-bottom: 0.35rem; }
+.research-banner { background: linear-gradient(135deg, #011627 0%, #0d2137 50%, #1a1a3a 100%); border: 1px solid #2EC4B6; border-radius: 12px; padding: 1.25rem 1.5rem; margin-bottom: 2rem; display: flex; align-items: center; gap: 1.25rem; }
+.research-banner .banner-icon { font-size: 2.2rem; flex-shrink: 0; } .research-banner .banner-text { flex: 1; }
+.research-banner .banner-text p { margin: 0; font-size: 0.95rem; color: var(--text-muted); line-height: 1.5; }
+.research-banner .banner-text p:first-child { font-size: 1.05rem; font-weight: 600; color: var(--text); margin-bottom: 0.25rem; }
+.banner-links { display: flex; gap: 0.75rem; margin-top: 0.5rem; flex-wrap: wrap; }
+.banner-link { display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.85rem; padding: 0.35rem 0.75rem; border-radius: 6px; border: 1px solid; text-decoration: none !important; transition: background 0.2s; }
+.banner-link.primary { border-color: #2EC4B6; color: #2EC4B6; } .banner-link.primary:hover { background: rgba(46,196,182,0.1); }
+.banner-link.secondary { border-color: var(--border); color: var(--text-muted); } .banner-link.secondary:hover { background: var(--accent-subtle); }
+.term { color: var(--yellow); cursor: help; border-bottom: 1px dashed var(--yellow); position: relative; } .term:hover { color: #e3b341; }
+.term .tooltip { display: none; position: absolute; bottom: 130%; left: 50%; transform: translateX(-50%); background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 0.75rem 1rem; width: 320px; font-size: 0.85rem; color: var(--text); z-index: 100; box-shadow: 0 4px 20px rgba(0,0,0,0.5); line-height: 1.5; }
+.term:hover .tooltip { display: block; }
+.analogy { background: #1a2332; border-left: 4px solid var(--accent); padding: 1rem 1.25rem; border-radius: 0 8px 8px 0; margin: 1rem 0; }
+.analogy::before { content: "Real-world analogy: "; font-weight: 700; color: var(--accent); }
+.insight { background: #1a2a1a; border-left: 4px solid var(--green); padding: 1rem 1.25rem; border-radius: 0 8px 8px 0; margin: 1rem 0; }
+.insight::before { content: "Key Insight: "; font-weight: 700; color: var(--green); }
+details { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; margin: 1rem 0; padding: 0; overflow: visible; }
+details summary { padding: 0.75rem 1.5rem; cursor: pointer; font-weight: 600; user-select: none; list-style: none; display: flex; align-items: center; gap: 0.5rem; }
+details summary::before { content: '+ '; color: var(--accent); font-family: monospace; font-size: 1.2rem; }
+details[open] summary::before { content: '- '; } details summary:hover { background: var(--accent-subtle); border-radius: 8px; }
+details .content { padding: 0 1.5rem 1.25rem; } details .content ul, details .content ol { padding-left: 2.5rem; }
+.arch-flow { display: flex; flex-direction: column; align-items: center; gap: 0; margin: 1.5rem 0; }
+.arch-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 1rem 1.5rem; width: 100%; max-width: 500px; text-align: center; }
+.arch-card.highlight { border-color: #2EC4B6; background: linear-gradient(135deg, var(--surface) 0%, rgba(46,196,182,0.05) 100%); }
+.arch-card .name { font-weight: 700; font-size: 1em; } .arch-card .desc { color: var(--text-muted); font-size: 0.85em; margin-top: 0.25rem; }
+.arrow-down { width: 2px; height: 20px; background: var(--border); position: relative; }
+.arrow-down::after { content: ''; position: absolute; bottom: -4px; left: -4px; border: 5px solid transparent; border-top: 6px solid var(--border); }
+.tag-row { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-bottom: 8px; }
+.tag { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 0.8em; font-weight: 600; }
+.tag-teal { background: rgba(46,196,182,0.15); color: #2EC4B6; } .tag-orange { background: rgba(255,159,28,0.15); color: #FF9F1C; }
+.tag-purple { background: rgba(188,140,255,0.15); color: #bc8cff; } .tag-green { background: rgba(63,185,80,0.15); color: var(--green); }
+.tag-red { background: rgba(248,81,73,0.15); color: var(--red); }
+.compare-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 1rem 0; }
+.compare-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 1.25rem; }
+.compare-card h4 { margin-bottom: 0.5rem; } .compare-card.good { border-color: var(--green); } .compare-card.good h4 { color: var(--green); }
+.compare-card.bad { border-color: var(--red); } .compare-card.bad h4 { color: var(--red); }
+.metrics-table { width: 100%; border-collapse: collapse; margin: 1.25rem 0; font-size: 0.9rem; }
+.metrics-table th { text-transform: uppercase; font-size: 0.7rem; letter-spacing: 1px; color: var(--text-muted); padding: 0.6rem 0.75rem; text-align: left; border-bottom: 2px solid var(--border); }
+.metrics-table td { padding: 0.6rem 0.75rem; border-bottom: 1px solid var(--border); }
+.metrics-table tr:hover td { background: rgba(88,166,255,0.04); } .val-best { color: var(--green); font-weight: 700; }
+.quiz { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 1.25rem; margin: 1.5rem 0; }
+.quiz-q { font-weight: 600; margin-bottom: 0.75rem; color: var(--purple); }
+.quiz label { display: block; padding: 0.5rem 0.75rem; margin: 0.25rem 0; border-radius: 6px; cursor: pointer; transition: background 0.2s; }
+.quiz label:hover { background: var(--accent-subtle); }
+.quiz .check-btn { background: var(--accent); color: var(--bg); border: none; padding: 0.5rem 1.25rem; border-radius: 6px; cursor: pointer; font-weight: 600; margin-top: 0.75rem; transition: opacity 0.2s; }
+.quiz .check-btn:hover { opacity: 0.85; }
+.quiz .feedback { margin-top: 0.75rem; padding: 0.75rem 1rem; border-radius: 6px; font-size: 0.9rem; display: none; }
+.quiz .feedback.correct { background: #1a2a1a; color: var(--green); display: block; }
+.quiz .feedback.wrong { background: #2a1a1a; color: var(--red); display: block; }
+.pipeline { display: flex; gap: 0; align-items: stretch; margin: 1.5rem 0; }
+.pipe-stage { flex: 1; text-align: center; padding: 1rem 0.75rem; position: relative; min-width: 140px; }
+.pipe-num { width: 32px; height: 32px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.85rem; margin-bottom: 0.5rem; }
+.pipe-num.c1 { background: rgba(46,196,182,0.2); color: #2EC4B6; }
+.pipe-num.c2 { background: rgba(255,159,28,0.2); color: #FF9F1C; }
+.pipe-num.c3 { background: rgba(188,140,255,0.2); color: #bc8cff; }
+.pipe-num.c4 { background: rgba(63,185,80,0.2); color: var(--green); }
+.pipe-num.c5 { background: rgba(248,81,73,0.2); color: var(--red); }
+.pipe-name { font-weight: 700; font-size: 0.9rem; margin-bottom: 0.25rem; }
+.pipe-desc { color: var(--text-muted); font-size: 0.8rem; font-style: italic; }
+.pipe-arrow { width: 24px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; color: var(--border); font-size: 1.2rem; }
+.stepper { margin: 1.5rem 0; padding-left: 1.5rem; border-left: 2px solid var(--accent); }
+.step { position: relative; padding: 0.5rem 0 1.25rem 1.25rem; }
+.step::before { content: ''; position: absolute; left: -1.85rem; top: 0.7rem; width: 10px; height: 10px; border-radius: 50%; background: var(--accent); border: 2px solid var(--bg); }
+.step-title { font-weight: 700; } .step-desc { color: var(--text-muted); font-size: 0.9rem; }
+.video-embed { margin: 1.5rem 0; border-radius: 10px; overflow: hidden; border: 1px solid var(--border); }
+.video-embed video { width: 100%; display: block; }
+.video-caption { padding: 0.75rem 1rem; background: var(--surface); font-size: 0.85rem; color: var(--text-muted); display: flex; align-items: center; gap: 0.75rem; }
+.badge { display: inline-flex; flex-direction: column; align-items: center; background: rgba(46,196,182,0.1); border: 1px solid rgba(46,196,182,0.3); border-radius: 6px; padding: 0.15rem 0.5rem; text-decoration: none !important; flex-shrink: 0; line-height: 1.2; transition: background 0.2s; }
+.badge:hover { background: rgba(46,196,182,0.2); }
+.badge-label { font-size: 0.55rem; color: #2EC4B6; text-transform: uppercase; letter-spacing: 0.05em; }
+.badge-name { font-size: 0.75rem; color: #2EC4B6; font-weight: 700; }
+.glossary-toggle { position: fixed; bottom: 1.5rem; right: 1.5rem; width: 44px; height: 44px; background: var(--accent); color: var(--bg); border: none; border-radius: 50%; font-size: 1.3rem; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.4); z-index: 999; display: flex; align-items: center; justify-content: center; }
+.glossary-panel { display: none; position: fixed; bottom: 4.5rem; right: 1.5rem; width: 380px; max-height: 60vh; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; z-index: 1000; box-shadow: 0 8px 30px rgba(0,0,0,0.5); }
+.glossary-panel.open { display: flex; flex-direction: column; }
+.glossary-search { width: 100%; padding: 0.75rem 1rem; background: var(--bg); border: none; border-bottom: 1px solid var(--border); color: var(--text); font-size: 0.9rem; outline: none; }
+.glossary-search::placeholder { color: var(--text-muted); }
+.glossary-entries { overflow-y: auto; padding: 0.5rem; flex: 1; }
+.glossary-entry { padding: 0.6rem 0.75rem; border-bottom: 1px solid var(--border); }
+.glossary-entry:last-child { border-bottom: none; }
+.glossary-entry strong { color: var(--yellow); font-size: 0.9rem; }
+.glossary-entry p { color: var(--text-muted); font-size: 0.8rem; margin: 0.25rem 0 0; }
+.equation { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 1rem 1.25rem; margin: 1rem 0; font-family: 'Georgia', serif; font-size: 1.05rem; text-align: center; color: var(--text); overflow-x: auto; }
+.equation var { font-style: italic; color: #2EC4B6; }
+.equation sub { font-size: 0.75em; }
+</style>
+</head>
+<body>
+
+<div class="progress-bar" id="progress"></div>
+<div class="mobile-overlay" id="mobile-overlay" onclick="toggleSidebar()"></div>
+
+<nav class="sidebar" id="sidebar">
+  <a href="../" class="sidebar-home">&larr; All Papers</a>
+  <div class="toc-title">Contents</div>
+  <a href="#big-picture">The Big Picture</a>
+  <a href="#background">Background Concepts</a>
+  <a href="#how-it-works" class="section-gap">How It Works</a>
+  <a href="#experiments">Experiments</a>
+  <a href="#double-descent" class="section-gap">Double Descent</a>
+  <a href="#membership">Membership Inference</a>
+  <a href="#results">Results</a>
+  <a href="#quiz" class="section-gap">Final Quiz</a>
+  <a href="#why-matters">Why This Matters</a>
+</nav>
+
+<button class="mobile-toc-btn" onclick="toggleSidebar()">&#9776;</button>
+
+<div class="main-content">
+
+<h1>How Much Do Language Models Memorize? The Paper, Explained</h1>
+<p class="subtitle">A beginner-friendly guide to measuring what language models actually remember. Every AI term is defined. Every concept is grounded in analogy.</p>
+<p class="meta">Paper by John X. Morris, Chawin Sitawarin, Chuan Guo, Narine Kokhlikyan, G. Edward Suh, Alexander M. Rush, Kamalika Chaudhuri, Saeed Mahloujifar (FAIR at Meta, Google DeepMind, Cornell, NVIDIA, 2025) &middot; Explainer published April 2026</p>
+
+<div class="research-banner">
+  <div class="banner-icon">&#x1F9E0;</div>
+  <div class="banner-text">
+    <p>Original Research Paper</p>
+    <p>This explainer breaks down a paper that proposes a new way to measure exactly how many bits of information a language model memorizes about its training data &mdash; and discovers that GPT-style models store approximately 3.6 bits per parameter.</p>
+    <div class="banner-links">
+      <a href="https://arxiv.org/pdf/2505.24832" class="banner-link primary" target="_blank">&#x1F4C4; Paper PDF</a>
+      <a href="https://arxiv.org/abs/2505.24832" class="banner-link secondary" target="_blank">&#x1F517; arXiv Page</a>
+    </div>
+  </div>
+</div>
+
+<!-- ========== THE BIG PICTURE ========== -->
+<section id="big-picture">
+<h2>The Big Picture</h2>
+
+<p>When you train a <span class="term">language model<span class="tooltip">A computer program that learns to predict the next word in a sequence, trained on massive amounts of text. GPT, Llama, and Claude are all language models.</span></span> on billions of sentences, does it actually <em>remember</em> specific training examples? Or does it just learn general patterns? This paper proposes a rigorous way to answer that question &mdash; and the answer reveals a fundamental constant of how neural networks store information.</p>
+
+<p>Here's what the researchers found:</p>
+<ol>
+  <li><strong>A new way to measure memorization.</strong> They define memorization in terms of <span class="term">compression<span class="tooltip">Representing data in fewer bits. If a model helps you compress a specific datapoint more, it has memorized more about that datapoint.</span></span> &mdash; how many fewer bits does it take to describe a training example when you have the model available? This cleanly separates what the model <em>memorized</em> from what it <em>learned</em> generally.</li>
+  <li><strong>A universal capacity constant.</strong> GPT-style <span class="term">transformer<span class="tooltip">The neural network architecture behind most modern language models. It processes text using an attention mechanism that lets every word consider every other word.</span></span> models can store approximately <strong>3.6 bits of information per parameter</strong>. A 1-billion-parameter model can memorize about 3.6 billion bits (roughly 430 megabytes) of data.</li>
+  <li><strong>Capacity fills, then generalization begins.</strong> Models first memorize training data until their capacity is full. Once capacity is exhausted, they start <em>generalizing</em> &mdash; learning reusable patterns instead of storing individual examples. This transition explains the mysterious <span class="term">double descent<span class="tooltip">A surprising phenomenon where a model's test performance first gets worse, then better again as dataset size increases. It contradicts the classical expectation that more data always helps.</span></span> phenomenon.</li>
+  <li><strong>Scaling laws for privacy.</strong> They produce equations predicting when <span class="term">membership inference<span class="tooltip">An attack that tries to determine whether a specific data sample was used to train a model. If successful, it reveals private information about the training data.</span></span> attacks can succeed, showing that modern LLMs are trained on far too much data for such attacks to work on average.</li>
+</ol>
+
+<div class="insight">GPT-style models have a hard capacity limit of ~3.6 bits per parameter. Once that fills up, models stop memorizing and start generalizing. This single number predicts double descent, extraction success, and membership inference vulnerability.</div>
+
+</section>
+
+<!-- ========== BACKGROUND CONCEPTS ========== -->
+<section id="background">
+<h2>Background Concepts</h2>
+
+<h3>Information Theory Basics</h3>
+<p>Before we can measure memorization, we need to understand how to measure <em>information</em> itself. <span class="term">Information theory<span class="tooltip">A branch of mathematics founded by Claude Shannon in 1948 that quantifies information using bits. It defines how much data is needed to represent or communicate something.</span></span>, founded by Claude Shannon in 1948, gives us the tools.</p>
+
+<div class="analogy">Think of information like surprise. If someone tells you "the sun rose this morning," that's not very informative &mdash; you expected it. But if they say "it snowed in Miami in July," that's very informative because it's surprising. Information theory measures exactly how surprising (and therefore informative) each piece of data is, in <strong>bits</strong>.</div>
+
+<details>
+  <summary>Entropy: measuring uncertainty</summary>
+  <div class="content">
+    <p><span class="term">Entropy<span class="tooltip">A measure of uncertainty or randomness in data. Higher entropy means more unpredictable data, requiring more bits to represent. Denoted H(X).</span></span> measures how unpredictable a data source is. A fair coin has 1 bit of entropy &mdash; each flip is completely unpredictable and requires exactly 1 bit to record. A loaded coin that lands heads 99% of the time has very low entropy &mdash; it's mostly predictable.</p>
+    <p>For a dataset X, <strong>H(X)</strong> tells you the minimum number of bits needed to represent all the data. A dataset of completely random strings has maximum entropy &mdash; each string is equally likely, so there's no shortcut to compress them.</p>
+  </div>
+</details>
+
+<details>
+  <summary>Mutual information: shared knowledge</summary>
+  <div class="content">
+    <p><span class="term">Mutual information<span class="tooltip">A measure of how much knowing one thing tells you about another. I(X,Y) = H(X) - H(X|Y): how much uncertainty about X is reduced by knowing Y.</span></span> measures how much knowing one variable tells you about another. If knowing a model's parameters lets you compress a datapoint into fewer bits, the mutual information between the model and that datapoint tells you exactly how many bits of "knowledge" the model has about it.</p>
+    <p>The key equation: <strong>I(X, &theta;&#770;) = H(X) &minus; H(X | &theta;&#770;)</strong></p>
+    <p>In words: the information a model &theta;&#770; has about dataset X equals the total information in X minus whatever information remains unknown even after looking at the model.</p>
+  </div>
+</details>
+
+<h3>Kolmogorov Complexity</h3>
+<p>Shannon's entropy works for <em>distributions</em> (random variables), but we need to measure memorization of <em>specific</em> datapoints. This is where <span class="term">Kolmogorov complexity<span class="tooltip">The length of the shortest computer program that produces a given string. It measures the inherent complexity of a specific piece of data, regardless of probability distributions.</span></span> comes in &mdash; it measures the complexity of a single string, not a distribution.</p>
+
+<div class="analogy">Imagine you need to describe a painting to someone over the phone. A painting of a solid blue square can be described in a few words ("10x10 blue square"). A Jackson Pollock painting requires describing every splatter. Kolmogorov complexity is like the length of that phone call &mdash; the shortest possible description for that specific piece of data.</div>
+
+<details>
+  <summary>Why compression = memorization</summary>
+  <div class="content">
+    <p>Here's the key insight that makes this paper work: if a trained model helps you <em>compress</em> a datapoint into fewer bits than you could without the model, then the model must have <em>memorized</em> something about that datapoint.</p>
+    <p>How much was memorized? Exactly the difference in compression: <strong>mem(x, &theta;&#770;) = H<sup>K</sup>(x) &minus; H<sup>K</sup>(x | &theta;&#770;)</strong></p>
+    <p>The number of bits a datapoint x can be shortened when the model &theta;&#770; is available to help compress it. If the model knows nothing about x, it can't help compress it, and memorization is zero.</p>
+  </div>
+</details>
+
+<h3>Arithmetic Coding</h3>
+<p><span class="term">Arithmetic coding<span class="tooltip">A compression algorithm that encodes data using the probabilities assigned by a model. The better the model's predictions, the shorter the encoded message. The code length equals the negative log-likelihood under the model.</span></span> is the bridge between theory and practice. It turns model predictions into actual compression. If a language model assigns high probability to the next token, arithmetic coding uses fewer bits to represent it. This means the <span class="term">negative log-likelihood<span class="tooltip">-log(p(x)): the number of bits needed to encode data x using a model's probability assignments. Lower loss = better predictions = fewer bits = better compression.</span></span> of a datapoint under a model directly estimates how many bits are needed to compress it.</p>
+
+<div class="analogy">Arithmetic coding works like a smart filing system. If you told a librarian "the next book will probably be about cooking" and you're right, filing it is quick &mdash; it goes in the cooking section. If you said "cooking" but it's about astrophysics, filing takes longer because the librarian was looking in the wrong place. The model's prediction accuracy directly determines compression efficiency.</div>
+
+<h3>Membership Inference Attacks</h3>
+<p>A <span class="term">membership inference attack<span class="tooltip">A privacy attack that tries to determine whether a specific data point was used to train a machine learning model. It exploits the fact that models typically assign lower loss (higher probability) to data they were trained on.</span></span> tries to determine whether a particular data sample was used to train a model. The basic idea is simple: models tend to assign <em>lower loss</em> to data they were trained on. By setting a threshold on the loss, an attacker can guess whether a sample was in the training set.</p>
+
+<details>
+  <summary>How loss-based membership inference works</summary>
+  <div class="content">
+    <p>The attack is straightforward: compute the model's loss on a target sample. If the loss is below a threshold, guess "member" (in training set). If above, guess "non-member."</p>
+    <p>This works because models overfit slightly to training data, giving those samples lower loss. The paper measures attack success using <span class="term">F1 score<span class="tooltip">A metric combining precision and recall into a single number between 0 and 1. F1 = 0.5 means random guessing (useless), F1 = 1.0 means perfect classification.</span></span> &mdash; a score of 0.5 means the attack is no better than random guessing, while 1.0 means perfect detection.</p>
+  </div>
+</details>
+
+</section>
+
+<!-- ========== HOW IT WORKS ========== -->
+<section id="how-it-works">
+<h2>How It Works</h2>
+
+<p>The paper's central contribution is a practical framework for measuring memorization. Here's the complete architecture of their approach:</p>
+
+<div class="arch-flow">
+  <div class="arch-card">
+    <div class="tag-row"><span class="tag tag-teal">Input</span></div>
+    <div class="name">Training Dataset x</div>
+    <div class="desc">A collection of text sequences (or synthetic bitstrings)</div>
+  </div>
+  <div class="arrow-down"></div>
+  <div class="arch-card">
+    <div class="tag-row"><span class="tag tag-orange">Training</span></div>
+    <div class="name">Train Target Model &theta;&#770;</div>
+    <div class="desc">GPT-style transformer trained from scratch on x</div>
+  </div>
+  <div class="arrow-down"></div>
+  <div class="arch-card highlight">
+    <div class="tag-row"><span class="tag tag-teal">Core Measurement</span></div>
+    <div class="name">Compute Compression Rates</div>
+    <div class="desc">For each sample x<sub>i</sub>: compute &minus;log p(x<sub>i</sub> | &theta;&#770;) and &minus;log p(x<sub>i</sub> | &theta;)</div>
+  </div>
+  <div class="arrow-down"></div>
+  <div class="arch-card">
+    <div class="tag-row"><span class="tag tag-purple">Decomposition</span></div>
+    <div class="name">Separate Memorization Components</div>
+    <div class="desc">Total = Unintended Memorization + Generalization</div>
+  </div>
+  <div class="arrow-down"></div>
+  <div class="arch-card">
+    <div class="tag-row"><span class="tag tag-green">Output</span></div>
+    <div class="name">Per-Sample Memorization (in bits)</div>
+    <div class="desc">Exact measurement of how much &theta;&#770; "knows" about each datapoint</div>
+  </div>
+</div>
+
+<h3>The Two-Model Trick</h3>
+<p>The key challenge is distinguishing <strong>memorization</strong> from <strong>generalization</strong>. If a model gives a low loss on "2 + 2 = 4", is that because it memorized that specific example, or because it learned arithmetic? The paper solves this with a <span class="term">reference model<span class="tooltip">A model (&theta;) representing the "true" data distribution. For synthetic data, it's the known random distribution. For text, it's a larger model trained on a much bigger superset of the data. Any compression the reference model achieves is attributed to generalization, not memorization.</span></span>.</p>
+
+<div class="compare-row">
+  <div class="compare-card">
+    <h4>Total Memorization</h4>
+    <p>How much better does the trained model &theta;&#770; compress x<sub>i</sub> compared to encoding it from scratch?</p>
+    <div class="equation"><var>mem</var>(<var>x</var>, <var>&theta;&#770;</var>) = <var>H</var><sup>K</sup>(<var>x</var>) &minus; <var>H</var><sup>K</sup>(<var>x</var> | <var>&theta;&#770;</var>)</div>
+  </div>
+  <div class="compare-card">
+    <h4>Unintended Memorization</h4>
+    <p>How much better does &theta;&#770; compress x<sub>i</sub> compared to the reference model &theta;?</p>
+    <div class="equation"><var>mem</var><sub>U</sub>(<var>x</var>, <var>&theta;</var>, <var>&theta;&#770;</var>) = <var>H</var><sup>K</sup>(<var>x</var> | <var>&theta;</var>) &minus; <var>H</var><sup>K</sup>(<var>x</var> | <var>&theta;</var>, <var>&theta;&#770;</var>)</div>
+  </div>
+</div>
+
+<p>In practice, the reference model is either:</p>
+<ul>
+  <li><strong>For synthetic data:</strong> the known uniform distribution (since random bitstrings have no patterns to generalize)</li>
+  <li><strong>For real text:</strong> a larger model of the same architecture, trained on a much larger superset of the data. Anything this "oracle" model can also predict is generalization, not memorization.</li>
+</ul>
+
+<div class="insight">The compression gap between the trained model and the reference model is pure "unintended memorization" &mdash; information the model absorbed about specific training samples that goes beyond general language patterns.</div>
+
+<h3>From Theory to Practice</h3>
+<p>While Kolmogorov complexity is <em>uncomputable</em> in theory (you can't find the shortest possible program for arbitrary data), the paper uses arithmetic coding to approximate it. The beauty is that arithmetic coding's code length equals the negative log-likelihood under the model &mdash; a quantity we can compute directly.</p>
+
+<div class="pipeline">
+  <div class="pipe-stage"><div class="pipe-num c1">1</div><div class="pipe-name">Feed x<sub>i</sub> to &theta;&#770;</div><div class="pipe-desc">Get trained model's loss</div></div>
+  <div class="pipe-arrow">&rarr;</div>
+  <div class="pipe-stage"><div class="pipe-num c2">2</div><div class="pipe-name">Feed x<sub>i</sub> to &theta;</div><div class="pipe-desc">Get reference model's loss</div></div>
+  <div class="pipe-arrow">&rarr;</div>
+  <div class="pipe-stage"><div class="pipe-num c3">3</div><div class="pipe-name">Best compression</div><div class="pipe-desc">max(prob) = min(loss)</div></div>
+  <div class="pipe-arrow">&rarr;</div>
+  <div class="pipe-stage"><div class="pipe-num c4">4</div><div class="pipe-name">Subtract</div><div class="pipe-desc">loss<sub>&theta;</sub> &minus; min loss</div></div>
+  <div class="pipe-arrow">&rarr;</div>
+  <div class="pipe-stage"><div class="pipe-num c5">5</div><div class="pipe-name">Sum</div><div class="pipe-desc">&Sigma; per-sample bits</div></div>
+</div>
+
+</section>
+
+<!-- ========== EXPERIMENTS ========== -->
+<section id="experiments">
+<h2>Experiments</h2>
+
+<h3>Synthetic Data: Pure Capacity Measurement</h3>
+<p>The researchers first eliminate generalization entirely by training on <strong>random bitstrings</strong> &mdash; sequences where each token is uniformly random and independent. With no patterns to learn, every bit the model absorbs is pure memorization.</p>
+
+<p>They trained hundreds of GPT-2 style transformers from 100K to 20M parameters, each on datasets ranging from thousands to millions of random sequences.</p>
+
+<div class="video-embed">
+  <video src="videos/capacity-filling.mp4" autoplay muted loop playsinline></video>
+  <div class="video-caption"><a href="https://github.com/heygen-com/hyperframes" target="_blank" class="badge" title="Made with HyperFrames"><span class="badge-label">made with</span><span class="badge-name">HyperFrames</span></a> How models fill their bit capacity with memorized data, then hit the 3.6 bits-per-parameter wall</div>
+</div>
+
+<p>The results were strikingly clean:</p>
+<ul>
+  <li>Small datasets are completely memorized by models with enough capacity</li>
+  <li>As datasets grow, memorization hits a <strong>hard plateau</strong> regardless of how much more data you provide</li>
+  <li>This plateau scales linearly with parameter count at approximately <strong>3.6 bits per parameter</strong> (in bfloat16 precision)</li>
+</ul>
+
+<table class="metrics-table">
+  <thead><tr><th>Model Depth</th><th>Dimensions</th><th>Parameters</th><th>Capacity (bf16)</th><th>Bits/Param</th></tr></thead>
+  <tbody>
+    <tr><td>1 layer</td><td>128</td><td>469K</td><td>1.69M bits</td><td>3.61</td></tr>
+    <tr><td>2 layers</td><td>128</td><td>667K</td><td>2.60M bits</td><td>3.89</td></tr>
+    <tr><td>4 layers</td><td>128</td><td>1.06M</td><td>3.75M bits</td><td>3.53</td></tr>
+    <tr><td>8 layers</td><td>128</td><td>1.86M</td><td>6.49M bits</td><td>3.49</td></tr>
+    <tr><td>8 layers</td><td>256</td><td>6.86M</td><td>25.1M bits</td><td class="val-best">3.65</td></tr>
+  </tbody>
+</table>
+
+<details>
+  <summary>Does precision matter?</summary>
+  <div class="content">
+    <p>The researchers also trained in full fp32 precision (32-bit floating point vs 16-bit bfloat16). Doubling the precision from bf16 to fp32 only increased capacity from 3.51 to 3.83 bits per parameter on average &mdash; far less than the 2x you might expect. Most of the extra precision bits aren't used for raw storage.</p>
+    <div class="analogy">It's like upgrading from a pocket notebook to a full-size legal pad. You get some extra space, but you don't write twice as many notes &mdash; your handwriting stays about the same size, so you only use a fraction of the extra room.</div>
+  </div>
+</details>
+
+<h3>Real Text: Memorization vs. Generalization</h3>
+<p>Next, the researchers repeated their experiments with real text from the <span class="term">FineWeb<span class="tooltip">A large-scale, high-quality web text dataset with state-of-the-art deduplication. Used as the source of real-world text in this paper's experiments.</span></span> dataset. Unlike random bitstrings, real text has learnable patterns &mdash; grammar, common phrases, factual knowledge. Now the model's storage splits between memorization and generalization.</p>
+
+<p>Using a larger "oracle" model as the reference, they observed:</p>
+<ul>
+  <li><strong>Small datasets:</strong> The trained model memorizes extensively, achieving better compression than even the oracle (because the oracle hasn't seen those specific examples)</li>
+  <li><strong>Medium datasets:</strong> Unintended memorization peaks, then declines as the model starts substituting generalization for raw memorization</li>
+  <li><strong>Large datasets:</strong> Most of the model's knowledge becomes general language understanding, and per-sample memorization drops to near zero</li>
+</ul>
+
+<div class="insight">When dataset size exceeds model capacity, models are <em>forced</em> to generalize. They can no longer afford to memorize each sample individually, so they find shared patterns to compress information more efficiently.</div>
+
+</section>
+
+<!-- ========== DOUBLE DESCENT ========== -->
+<section id="double-descent">
+<h2>Double Descent</h2>
+
+<p>One of the paper's most compelling findings is a clean explanation for <span class="term">double descent<span class="tooltip">A phenomenon where test loss decreases, then increases (gets worse), then decreases again as training set size or model size grows. It was previously observed but lacked a clean explanation.</span></span> &mdash; a phenomenon that has puzzled researchers for years.</p>
+
+<div class="video-embed">
+  <video src="videos/double-descent.mp4" autoplay muted loop playsinline></video>
+  <div class="video-caption"><a href="https://github.com/heygen-com/hyperframes" target="_blank" class="badge" title="Made with HyperFrames"><span class="badge-label">made with</span><span class="badge-name">HyperFrames</span></a> How test loss behaves as dataset size crosses the model's capacity threshold</div>
+</div>
+
+<p>In classical machine learning, the expectation is simple: more data = better performance. But researchers observed that as datasets grow, performance sometimes gets <em>worse</em> before getting better again. The paper shows this happens at a very specific point:</p>
+
+<div class="compare-row">
+  <div class="compare-card good">
+    <h4>Dataset &lt; Capacity</h4>
+    <p>The model has enough capacity to memorize every sample. Training loss goes to zero. Test loss is decent because memorization helps with similar test samples.</p>
+  </div>
+  <div class="compare-card bad">
+    <h4>Dataset &asymp; Capacity</h4>
+    <p>The danger zone. The model can't memorize everything but hasn't learned to generalize efficiently yet. It's stretched thin, doing neither well. Test loss spikes.</p>
+  </div>
+</div>
+
+<div class="compare-row">
+  <div class="compare-card good">
+    <h4>Dataset &gt;&gt; Capacity</h4>
+    <p>The model is forced to find efficient, reusable patterns. It generalizes well and test loss drops below the original level. This is where real learning happens.</p>
+  </div>
+  <div class="compare-card">
+    <h4>The Critical Ratio</h4>
+    <p>Double descent begins exactly when the dataset-to-capacity ratio crosses 1.0. For a model with capacity C bits and a dataset of D bits of information: the transition happens at D/C &asymp; 1.</p>
+  </div>
+</div>
+
+<div class="analogy">Imagine a student cramming for an exam. With 10 flashcards, they can memorize all 10 perfectly. With 100 flashcards but only room in their head for 50, they're in trouble &mdash; they half-remember everything and fully remember nothing. But with 1,000 flashcards, they realize they need to learn the <em>patterns</em> (this type of question always works like this), and suddenly they understand the material at a deeper level.</div>
+
+</section>
+
+<!-- ========== MEMBERSHIP INFERENCE ========== -->
+<section id="membership">
+<h2>Membership Inference</h2>
+
+<p>The paper's final major contribution is a <span class="term">scaling law<span class="tooltip">A mathematical relationship that predicts how a quantity (like model performance or memorization) changes as you scale up model size, data size, or compute. Scaling laws let researchers predict the behavior of larger systems from smaller experiments.</span></span> for membership inference &mdash; an equation that predicts exactly when privacy attacks will succeed based on model capacity and dataset size.</p>
+
+<div class="video-embed">
+  <video src="videos/membership-inference.mp4" autoplay muted loop playsinline></video>
+  <div class="video-caption"><a href="https://github.com/heygen-com/hyperframes" target="_blank" class="badge" title="Made with HyperFrames"><span class="badge-label">made with</span><span class="badge-name">HyperFrames</span></a> How membership inference success scales with the capacity-to-dataset ratio</div>
+</div>
+
+<h3>The Scaling Law</h3>
+<p>For a fixed model capacity, membership inference follows a <span class="term">sigmoidal<span class="tooltip">An S-shaped curve. In this context, membership inference success transitions from near-perfect (1.0) for tiny datasets to random guessing (0.5) for very large datasets, with a smooth S-shaped transition in between.</span></span> curve with respect to dataset size:</p>
+
+<div class="equation">
+  MembershipF1(&theta;, D) = &frac12;(1 + <var>c</var><sub>1</sub> &middot; &sigma;(<var>c</var><sub>2</sub> &middot; (Capacity(&theta;) / |D| + <var>c</var><sub>3</sub>)))
+</div>
+
+<p>Where &sigma; is the sigmoid function and the fitted constants are c<sub>1</sub> = 1.34, c<sub>2</sub> = &minus;0.034, c<sub>3</sub> = &minus;33.14.</p>
+
+<p>The intuitive reading:</p>
+<ul>
+  <li><strong>Large model, tiny dataset</strong> &rarr; Capacity/|D| is huge &rarr; F1 near 1.0 (attack easily succeeds)</li>
+  <li><strong>Small model, huge dataset</strong> &rarr; Capacity/|D| is tiny &rarr; F1 near 0.5 (attack is random guessing)</li>
+  <li>The transition between these regimes is smooth and predictable</li>
+</ul>
+
+<h3>Validation on Larger Models</h3>
+<p>The researchers validated their scaling law by training GPT-2 Medium (124M params) and GPT-2 XL (1.5B params) on dataset sizes predicted to give specific F1 scores:</p>
+
+<table class="metrics-table">
+  <thead><tr><th>Model</th><th>Parameters</th><th>Dataset Size</th><th>Predicted F1</th><th>Observed F1</th></tr></thead>
+  <tbody>
+    <tr><td>GPT-2 XL</td><td>1.56B</td><td>170.7M</td><td>0.55</td><td>0.546 &plusmn; 0.013</td></tr>
+    <tr><td>GPT-2 XL</td><td>1.56B</td><td>76.8M</td><td>0.75</td><td>0.711 &plusmn; 0.004</td></tr>
+    <tr><td>GPT-2 XL</td><td>1.56B</td><td>18.9M</td><td>0.95</td><td class="val-best">0.959 &plusmn; 0.008</td></tr>
+    <tr><td>GPT-2 Med</td><td>124M</td><td>13.6M</td><td>0.55</td><td>0.534 &plusmn; 0.011</td></tr>
+    <tr><td>GPT-2 Med</td><td>124M</td><td>6.1M</td><td>0.75</td><td>0.657 &plusmn; 0.006</td></tr>
+    <tr><td>GPT-2 Med</td><td>124M</td><td>1.5M</td><td>0.95</td><td class="val-best">0.980 &plusmn; 0.003</td></tr>
+  </tbody>
+</table>
+
+<p>Predictions were generally within 1&ndash;2 percentage points of actual values. The largest discrepancy was at the predicted F1 of 0.75, where the sigmoid is steepest (small changes in the ratio produce large changes in F1).</p>
+
+<h3>Implications for Modern LLMs</h3>
+<p>Contemporary language models are trained with a tokens-per-parameter ratio of 100x or more (e.g., Llama 3 with 8B parameters was trained on 15 trillion tokens). According to this scaling law, that puts their predicted membership inference F1 at essentially 0.5 &mdash; <strong>random guessing</strong>.</p>
+
+<div class="insight">This paper provides formal evidence for why membership inference attacks fail on modern LLMs: the ratio of data to model capacity is so enormous that individual training samples leave no detectable trace.</div>
+
+</section>
+
+<!-- ========== RESULTS ========== -->
+<section id="results">
+<h2>Results</h2>
+
+<h3>Key Findings Summary</h3>
+
+<table class="metrics-table">
+  <thead><tr><th>Finding</th><th>Value</th><th>Significance</th></tr></thead>
+  <tbody>
+    <tr><td>Bits-per-parameter (bf16)</td><td class="val-best">3.51 &plusmn; 0.1 (avg) / ~3.6 (large models)</td><td>Universal capacity constant for GPT-style models</td></tr>
+    <tr><td>Bits-per-parameter (fp32)</td><td>3.83 &plusmn; 0.1</td><td>Only 9% increase despite 2x precision</td></tr>
+    <tr><td>Double descent onset</td><td>Dataset/Capacity &asymp; 1</td><td>First precise prediction of the transition point</td></tr>
+    <tr><td>Scaling law accuracy</td><td>&plusmn; 1.5% F1</td><td>Predictions match observations on 125M&ndash;1.5B param models</td></tr>
+    <tr><td>Modern LLM MI vulnerability</td><td class="val-best">F1 &asymp; 0.5</td><td>Attacks are no better than random guessing</td></tr>
+  </tbody>
+</table>
+
+<h3>Extraction vs. Membership Inference</h3>
+<p>An interesting finding: membership inference is <em>strictly easier</em> than data extraction. In some cases, membership inference achieved F1 of 0.97 while the extraction rate for the same model-dataset pair was 0.0. This makes sense &mdash; detecting a statistical trace of training data is easier than reproducing it verbatim.</p>
+
+<p>For very small training sets with 32-token prefixes, 100% of sequences were extractable. But as datasets grow, extraction converges to the <em>test set extraction rate</em> &mdash; meaning all remaining "extraction" is just generalization (the model can produce the text because it learned the underlying patterns, not because it memorized that specific sample).</p>
+
+<h3>Deduplication Matters</h3>
+<p>The researchers found that careful <span class="term">deduplication<span class="tooltip">The process of removing duplicate or near-duplicate entries from a dataset. Critical for accurate memorization measurement, since duplicated data is artificially easier to extract.</span></span> was "extremely important for faithfully measuring extraction rates." When sequences are truncated to 64 tokens, 1&ndash;2% become duplicates &mdash; enough to significantly bias results. They performed an additional deduplication step on top of FineWeb's existing deduplication.</p>
+
+</section>
+
+<!-- ========== QUIZ ========== -->
+<section id="quiz">
+<h2>Final Quiz</h2>
+
+<div class="quiz" id="q1">
+  <div class="quiz-q">A GPT-style model with 1 billion parameters trained in bfloat16 can memorize approximately how much data?</div>
+  <label><input type="radio" name="q1" value="a"> 1 billion bits (125 MB)</label>
+  <label><input type="radio" name="q1" value="b"> 3.5 billion bits (~430 MB)</label>
+  <label><input type="radio" name="q1" value="c"> 16 billion bits (2 GB)</label>
+  <label><input type="radio" name="q1" value="d"> 32 billion bits (4 GB)</label>
+  <button class="check-btn" onclick="checkQuiz('q1','b')">Check Answer</button>
+  <div class="feedback" id="q1-fb"></div>
+</div>
+
+<div class="quiz" id="q2">
+  <div class="quiz-q">What is the purpose of the reference model (&theta;) in this paper's framework?</div>
+  <label><input type="radio" name="q2" value="a"> To generate new training data</label>
+  <label><input type="radio" name="q2" value="b"> To separate memorization from generalization</label>
+  <label><input type="radio" name="q2" value="c"> To speed up training</label>
+  <label><input type="radio" name="q2" value="d"> To measure model size in bits</label>
+  <button class="check-btn" onclick="checkQuiz('q2','b')">Check Answer</button>
+  <div class="feedback" id="q2-fb"></div>
+</div>
+
+<div class="quiz" id="q3">
+  <div class="quiz-q">When does double descent begin, according to this paper?</div>
+  <label><input type="radio" name="q3" value="a"> When the learning rate is too high</label>
+  <label><input type="radio" name="q3" value="b"> When the model has too many layers</label>
+  <label><input type="radio" name="q3" value="c"> When the dataset size exceeds the model's capacity</label>
+  <label><input type="radio" name="q3" value="d"> When training runs for too many epochs</label>
+  <button class="check-btn" onclick="checkQuiz('q3','c')">Check Answer</button>
+  <div class="feedback" id="q3-fb"></div>
+</div>
+
+<div class="quiz" id="q4">
+  <div class="quiz-q">Why are modern LLMs (like Llama 3) essentially immune to membership inference attacks?</div>
+  <label><input type="radio" name="q4" value="a"> They use differential privacy during training</label>
+  <label><input type="radio" name="q4" value="b"> Their datasets are encrypted</label>
+  <label><input type="radio" name="q4" value="c"> They are trained on so much data relative to their capacity that individual samples leave no trace</label>
+  <label><input type="radio" name="q4" value="d"> They use special model architectures that prevent memorization</label>
+  <button class="check-btn" onclick="checkQuiz('q4','c')">Check Answer</button>
+  <div class="feedback" id="q4-fb"></div>
+</div>
+
+<div class="quiz" id="q5">
+  <div class="quiz-q">How does this paper measure memorization?</div>
+  <label><input type="radio" name="q5" value="a"> By checking if the model can generate training examples verbatim</label>
+  <label><input type="radio" name="q5" value="b"> By measuring how much a model helps compress a datapoint (in bits)</label>
+  <label><input type="radio" name="q5" value="c"> By counting the number of parameters that change during training</label>
+  <label><input type="radio" name="q5" value="d"> By comparing model outputs to a database of training examples</label>
+  <button class="check-btn" onclick="checkQuiz('q5','b')">Check Answer</button>
+  <div class="feedback" id="q5-fb"></div>
+</div>
+
+<div class="quiz" id="q6">
+  <div class="quiz-q">Doubling the numerical precision from bfloat16 to float32 does what to model capacity?</div>
+  <label><input type="radio" name="q6" value="a"> Exactly doubles it</label>
+  <label><input type="radio" name="q6" value="b"> Has no effect</label>
+  <label><input type="radio" name="q6" value="c"> Increases it by only about 9%</label>
+  <label><input type="radio" name="q6" value="d"> Decreases it due to overhead</label>
+  <button class="check-btn" onclick="checkQuiz('q6','c')">Check Answer</button>
+  <div class="feedback" id="q6-fb"></div>
+</div>
+
+</section>
+
+<!-- ========== WHY THIS MATTERS ========== -->
+<section id="why-matters">
+<h2>Why This Paper Matters</h2>
+
+<h3>For Practitioners and Builders</h3>
+<p>If you're building systems with language models, this paper gives you a practical rule of thumb: a model can store about <strong>3.6 bits per parameter</strong>. That's roughly 0.45 bytes per parameter, or about 430 MB for a 1B-parameter model. This means:</p>
+<ul>
+  <li><strong>Fine-tuning budget:</strong> If you're fine-tuning a model on proprietary data, you now know roughly how much it can absorb. A 7B model can memorize about 3 GB of information &mdash; but in practice, you want the model to generalize, not memorize, so your dataset should be significantly larger than this capacity.</li>
+  <li><strong>Privacy engineering:</strong> The scaling law provides a quantitative framework for assessing whether your training data is at risk. If your data-to-capacity ratio is above ~100x, membership inference is essentially impossible on the average sample.</li>
+  <li><strong>Model sizing:</strong> If you need a model that memorizes specific knowledge (like a knowledge base), this paper tells you exactly how many parameters you need per bit of knowledge.</li>
+</ul>
+
+<h3>For the Research Community</h3>
+<p>This paper makes several contributions that change how we think about language models:</p>
+<ul>
+  <li><strong>A rigorous definition of memorization.</strong> Previous definitions (can the model generate it? can an attacker extract it?) conflated memorization with generalization. This paper's compression-based definition cleanly separates the two using Kolmogorov complexity.</li>
+  <li><strong>A clean explanation of double descent.</strong> Instead of hand-waving about "interpolation thresholds," the paper shows double descent begins at a precise, measurable point: when dataset information exceeds model capacity in bits.</li>
+  <li><strong>Quantitative privacy analysis.</strong> The scaling law moves privacy discussions from qualitative ("is it possible to extract data?") to quantitative ("the F1 score at this model/data ratio is exactly X").</li>
+</ul>
+
+<h3>The Bigger Picture</h3>
+<p>This paper sits at the intersection of information theory, privacy, and deep learning scaling laws &mdash; three fields that are converging as AI systems grow. The key insight &mdash; that neural networks have a measurable, finite capacity for storing information &mdash; has implications far beyond this paper:</p>
+<ul>
+  <li><strong>Scaling laws meet information theory.</strong> The ~3.6 bits-per-parameter constant suggests there's a fundamental limit to how efficiently gradient-descent-trained networks can use their parameters for storage. Future architectures might push this limit higher.</li>
+  <li><strong>The memorization-generalization spectrum.</strong> This paper reframes the classic machine learning debate as a capacity allocation problem: models have finite bits, and they choose (via gradient descent) how to spend them between memorizing specifics and learning patterns.</li>
+  <li><strong>Data governance at scale.</strong> As regulations like GDPR require understanding what models "know" about individuals, having a rigorous, quantitative measure of per-sample memorization becomes legally and ethically important.</li>
+</ul>
+
+</section>
+
+</div><!-- end main-content -->
+
+<button class="glossary-toggle" onclick="toggleGlossary()" title="Glossary">&#x1F4D6;</button>
+<div class="glossary-panel" id="glossary-panel">
+  <input type="text" class="glossary-search" id="glossary-search" placeholder="Search terms..." oninput="filterGlossary()">
+  <div class="glossary-entries" id="glossary-entries">
+    <div class="glossary-entry"><strong>Arithmetic Coding</strong><p>A compression algorithm that encodes data using model probabilities. The code length equals the negative log-likelihood, connecting compression to model loss.</p></div>
+    <div class="glossary-entry"><strong>Bits-per-Parameter (BPP)</strong><p>The ratio of a model's total memorization capacity (in bits) to its parameter count. GPT-style models achieve ~3.6 BPP in bfloat16 precision.</p></div>
+    <div class="glossary-entry"><strong>Compression</strong><p>Representing data in fewer bits. If a model helps compress a datapoint more, it has memorized information about that datapoint.</p></div>
+    <div class="glossary-entry"><strong>Deduplication</strong><p>Removing duplicate or near-duplicate entries from a dataset. Critical for accurate memorization measurement since duplicates are artificially easier to extract.</p></div>
+    <div class="glossary-entry"><strong>Double Descent</strong><p>A phenomenon where test loss first decreases, then increases, then decreases again as dataset size or model size grows. This paper shows it begins when dataset information exceeds model capacity.</p></div>
+    <div class="glossary-entry"><strong>Entropy</strong><p>A measure of uncertainty or randomness in data, denoted H(X). Higher entropy means more unpredictable data requiring more bits to represent.</p></div>
+    <div class="glossary-entry"><strong>F1 Score</strong><p>A metric combining precision and recall. F1 = 0.5 means random guessing, F1 = 1.0 means perfect classification. Used here to measure membership inference success.</p></div>
+    <div class="glossary-entry"><strong>FineWeb</strong><p>A large-scale web text dataset with state-of-the-art deduplication practices. Used as the real-world text data source in this paper.</p></div>
+    <div class="glossary-entry"><strong>Generalization</strong><p>Learning reusable patterns from data (grammar rules, arithmetic, common knowledge) as opposed to memorizing specific training examples.</p></div>
+    <div class="glossary-entry"><strong>Information Theory</strong><p>A branch of mathematics founded by Claude Shannon in 1948 that quantifies information using bits. Provides the foundation for measuring memorization.</p></div>
+    <div class="glossary-entry"><strong>Kolmogorov Complexity</strong><p>The length of the shortest computer program that produces a given string. Measures inherent complexity of specific data, not distributions.</p></div>
+    <div class="glossary-entry"><strong>Language Model</strong><p>A program that predicts the next word in a sequence, trained on massive text. GPT, Llama, and Claude are language models.</p></div>
+    <div class="glossary-entry"><strong>Membership Inference</strong><p>A privacy attack that determines whether a specific sample was used to train a model by exploiting the model's lower loss on training data.</p></div>
+    <div class="glossary-entry"><strong>Model Capacity</strong><p>The maximum amount of information (in bits) a model can memorize. Computed as the maximum memorization across all dataset sizes.</p></div>
+    <div class="glossary-entry"><strong>Mutual Information</strong><p>A measure of how much knowing one thing tells you about another. I(X,Y) = H(X) - H(X|Y): uncertainty about X reduced by knowing Y.</p></div>
+    <div class="glossary-entry"><strong>Negative Log-Likelihood</strong><p>-log(p(x)): the number of bits needed to encode data x using a model's probability assignments. Lower = better predictions = better compression.</p></div>
+    <div class="glossary-entry"><strong>Reference Model</strong><p>A model representing the "true" data distribution, used to separate memorization from generalization. For text, it's a larger model trained on more data.</p></div>
+    <div class="glossary-entry"><strong>Scaling Law</strong><p>A mathematical relationship predicting how a quantity changes as you scale up model size, data, or compute. This paper derives a scaling law for membership inference.</p></div>
+    <div class="glossary-entry"><strong>Sigmoid Function</strong><p>An S-shaped function &sigma;(x) = 1/(1+e^(-x)) that maps any real number to a value between 0 and 1. Used to model the transition in membership inference success.</p></div>
+    <div class="glossary-entry"><strong>Transformer</strong><p>The neural network architecture behind most modern language models. Uses attention mechanisms to process text by letting every word consider every other word.</p></div>
+    <div class="glossary-entry"><strong>Unintended Memorization</strong><p>Information a model retains about specific training samples beyond general language patterns. The "privacy-sensitive" part of what a model knows.</p></div>
+  </div>
+</div>
+
+<script>
+// Progress bar
+window.addEventListener('scroll', function() {
+  var h = document.documentElement;
+  var pct = (h.scrollTop / (h.scrollHeight - h.clientHeight)) * 100;
+  document.getElementById('progress').style.width = pct + '%';
+});
+
+// Sidebar active tracking
+var tocLinks = document.querySelectorAll('.sidebar a:not(.sidebar-home)');
+var sections = [];
+tocLinks.forEach(function(a) {
+  var id = a.getAttribute('href');
+  if (id && id.startsWith('#')) {
+    var el = document.querySelector(id);
+    if (el) sections.push({ id: id.slice(1), el: el });
+  }
+});
+window.addEventListener('scroll', function() {
+  var current = '';
+  sections.forEach(function(s) {
+    if (s.el.getBoundingClientRect().top <= 120) current = s.id;
+  });
+  if ((window.innerHeight + window.scrollY) >= document.documentElement.scrollHeight - 50) {
+    current = sections[sections.length - 1].id;
+  }
+  tocLinks.forEach(function(a) {
+    var href = a.getAttribute('href');
+    if (href === '#' + current) a.classList.add('active');
+    else a.classList.remove('active');
+  });
+});
+
+// Mobile sidebar
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('mobile-open');
+  document.getElementById('mobile-overlay').classList.toggle('active');
+}
+
+// Glossary
+function toggleGlossary() {
+  document.getElementById('glossary-panel').classList.toggle('open');
+}
+function filterGlossary() {
+  var q = document.getElementById('glossary-search').value.toLowerCase();
+  var entries = document.querySelectorAll('.glossary-entry');
+  entries.forEach(function(e) {
+    e.style.display = e.textContent.toLowerCase().indexOf(q) >= 0 ? '' : 'none';
+  });
+}
+
+// Quiz
+function checkQuiz(qid, correct) {
+  var selected = document.querySelector('input[name="' + qid + '"]:checked');
+  var fb = document.getElementById(qid + '-fb');
+  if (!selected) { fb.className = 'feedback wrong'; fb.textContent = 'Please select an answer.'; return; }
+  if (selected.value === correct) {
+    fb.className = 'feedback correct';
+    fb.textContent = 'Correct!';
+  } else {
+    fb.className = 'feedback wrong';
+    fb.textContent = 'Not quite. Try again!';
+  }
+}
+</script>
+
+<script data-goatcounter="https://tcho.goatcounter.com/count"
+        async src="//gc.zgo.at/count.js"></script>
+</body>
+</html>

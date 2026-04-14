@@ -1,0 +1,320 @@
+<!DOCTYPE html><html><head><meta charset="UTF-8"></head><body>
+<div data-composition-id="membership-inference" data-width="1920" data-height="540" data-start="0" data-duration="12">
+  <div class="container">
+    <div class="title">Membership Inference: When Privacy Attacks Fail</div>
+
+    <div class="visual-area">
+      <!-- Left: the scale/ratio visual -->
+      <div class="scale-section">
+        <div class="scale">
+          <div class="scale-side left">
+            <div class="scale-icon" id="model-icon">&#x1F9E0;</div>
+            <div class="scale-value" id="model-label">Model Capacity</div>
+            <div class="scale-detail" id="model-detail">Small model</div>
+          </div>
+          <div class="scale-vs">vs</div>
+          <div class="scale-side right">
+            <div class="scale-icon" id="data-icon">&#x1F4DA;</div>
+            <div class="scale-value" id="data-label">Dataset Size</div>
+            <div class="scale-detail" id="data-detail">Small data</div>
+          </div>
+        </div>
+
+        <div class="ratio-display">
+          <span class="ratio-label">Capacity / Data = </span>
+          <span class="ratio-value" id="ratio-value">10x</span>
+        </div>
+
+        <div class="attack-meter">
+          <div class="meter-label">Attack Success (F1)</div>
+          <div class="meter-bar-bg">
+            <div class="meter-bar" id="meter-bar"></div>
+            <div class="meter-marks">
+              <span class="meter-mark" style="left:0%">0.5</span>
+              <span class="meter-mark" style="left:50%">0.75</span>
+              <span class="meter-mark" style="left:100%">1.0</span>
+            </div>
+          </div>
+          <div class="meter-result" id="meter-result">F1 = 0.95</div>
+        </div>
+      </div>
+
+      <!-- Right: scenario cards -->
+      <div class="scenarios">
+        <div class="scenario" id="s1">
+          <div class="scenario-header">
+            <div class="s-dot" style="background:#E71D36"></div>
+            <span>Tiny data, big model</span>
+          </div>
+          <div class="s-desc">Capacity &gt;&gt; Data<br>Attack succeeds easily</div>
+          <div class="s-f1">F1 &asymp; 0.95</div>
+        </div>
+        <div class="scenario" id="s2">
+          <div class="scenario-header">
+            <div class="s-dot" style="background:#FF9F1C"></div>
+            <span>Balanced</span>
+          </div>
+          <div class="s-desc">Capacity &asymp; Data<br>Attack partially works</div>
+          <div class="s-f1">F1 &asymp; 0.75</div>
+        </div>
+        <div class="scenario" id="s3">
+          <div class="scenario-header">
+            <div class="s-dot" style="background:#3fb950"></div>
+            <span>Modern LLMs</span>
+          </div>
+          <div class="s-desc">Data &gt;&gt;&gt; Capacity<br>Attack = random guess</div>
+          <div class="s-f1">F1 &asymp; 0.50</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom: the punchline -->
+    <div class="punchline" id="punchline">
+      Modern LLMs: 15T tokens on 8B params &rarr; ratio &gt; 100x &rarr; membership inference is impossible
+    </div>
+  </div>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap');
+
+    .container {
+      position: absolute;
+      inset: 0;
+      background: #011627;
+      font-family: 'Space Mono', monospace;
+      color: #FDFFFC;
+      padding: 24px 50px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .title {
+      font-size: 32px;
+      font-weight: 700;
+      text-align: center;
+      margin-bottom: 16px;
+      color: #2EC4B6;
+    }
+
+    .visual-area {
+      flex: 1;
+      display: flex;
+      gap: 40px;
+    }
+
+    .scale-section {
+      flex: 2;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      justify-content: center;
+    }
+
+    .scale {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      justify-content: center;
+    }
+
+    .scale-side {
+      text-align: center;
+      min-width: 200px;
+    }
+
+    .scale-icon { font-size: 48px; margin-bottom: 6px; }
+    .scale-value { font-size: 20px; font-weight: 700; }
+    .scale-detail { font-size: 16px; color: #8b949e; margin-top: 4px; }
+    .scale-vs { font-size: 28px; color: #415A77; font-weight: 700; }
+
+    .ratio-display {
+      text-align: center;
+      margin-top: 8px;
+    }
+
+    .ratio-label { font-size: 20px; color: #8b949e; }
+    .ratio-value { font-size: 36px; font-weight: 700; color: #E71D36; }
+
+    .attack-meter {
+      margin-top: 8px;
+    }
+
+    .meter-label {
+      font-size: 18px;
+      color: #8b949e;
+      margin-bottom: 8px;
+      text-align: center;
+    }
+
+    .meter-bar-bg {
+      width: 100%;
+      height: 28px;
+      background: #0d2137;
+      border: 1px solid #415A77;
+      border-radius: 14px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .meter-bar {
+      height: 100%;
+      width: 90%;
+      background: linear-gradient(90deg, #3fb950, #FF9F1C, #E71D36);
+      border-radius: 14px;
+      transition: width 0.5s;
+    }
+
+    .meter-marks {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 10px;
+      pointer-events: none;
+    }
+
+    .meter-mark {
+      font-size: 12px;
+      color: #FDFFFC;
+      font-weight: 700;
+    }
+
+    .meter-result {
+      text-align: center;
+      font-size: 24px;
+      font-weight: 700;
+      color: #E71D36;
+      margin-top: 8px;
+    }
+
+    .scenarios {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      justify-content: center;
+      min-width: 280px;
+    }
+
+    .scenario {
+      background: #0d2137;
+      border: 1px solid #415A77;
+      border-radius: 10px;
+      padding: 12px 16px;
+      opacity: 0;
+      transform: translateX(20px);
+    }
+
+    .scenario-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .s-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+    }
+
+    .s-desc { font-size: 14px; color: #8b949e; }
+    .s-f1 { font-size: 16px; font-weight: 700; margin-top: 6px; color: #2EC4B6; }
+
+    .punchline {
+      text-align: center;
+      font-size: 20px;
+      font-weight: 700;
+      color: #3fb950;
+      margin-top: 12px;
+      opacity: 0;
+      padding: 10px;
+      background: rgba(63,185,80,0.08);
+      border: 1px solid rgba(63,185,80,0.3);
+      border-radius: 10px;
+    }
+  </style>
+
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+  <script>
+    window.__timelines = window.__timelines || {};
+    var root = document.currentScript.parentElement;
+    var tl = gsap.timeline({ paused: true });
+
+    var ratioValue = root.querySelector('#ratio-value');
+    var modelDetail = root.querySelector('#model-detail');
+    var dataDetail = root.querySelector('#data-detail');
+    var meterBar = root.querySelector('#meter-bar');
+    var meterResult = root.querySelector('#meter-result');
+
+    // Phase 1: Tiny data, big model
+    tl.to(root.querySelector('#s1'), { opacity: 1, x: 0, duration: 0.4 }, 0.5);
+    tl.to(root.querySelector('#s1'), { borderColor: '#E71D36', duration: 0.3 }, 0.5);
+
+    // Phase 2: Balanced (transition)
+    tl.to({}, {
+      duration: 1.5,
+      onUpdate: function() {
+        var p = this.progress();
+        var ratio = 10 - p * 9;
+        ratioValue.textContent = ratio.toFixed(1) + 'x';
+        var barW = 40 + (1 - p) * 50;
+        meterBar.style.width = barW + '%';
+        var f1 = 0.95 - p * 0.2;
+        meterResult.textContent = 'F1 = ' + f1.toFixed(2);
+      }
+    }, 3);
+
+    tl.to(ratioValue, { color: '#FF9F1C', duration: 0.2 }, 4);
+    tl.to(meterResult, { color: '#FF9F1C', duration: 0.2 }, 4);
+    tl.to(root.querySelector('#s1'), { borderColor: '#415A77', duration: 0.2 }, 4);
+    tl.to(root.querySelector('#s2'), { opacity: 1, x: 0, duration: 0.4 }, 4);
+    tl.to(root.querySelector('#s2'), { borderColor: '#FF9F1C', duration: 0.3 }, 4);
+
+    tl.to({}, {
+      duration: 0.01,
+      onComplete: function() {
+        modelDetail.textContent = 'Medium model';
+        dataDetail.textContent = 'Medium data';
+      }
+    }, 4);
+
+    // Phase 3: Modern LLM (transition)
+    tl.to({}, {
+      duration: 2,
+      onUpdate: function() {
+        var p = this.progress();
+        var ratio = 1 - p * 0.99;
+        if (ratio < 0.01) ratio = 0.01;
+        ratioValue.textContent = ratio < 0.1 ? '<0.01x' : ratio.toFixed(2) + 'x';
+        var barW = 40 - p * 40;
+        meterBar.style.width = Math.max(barW, 0) + '%';
+        var f1 = 0.75 - p * 0.25;
+        meterResult.textContent = 'F1 = ' + f1.toFixed(2);
+      }
+    }, 5.5);
+
+    tl.to(ratioValue, { color: '#3fb950', duration: 0.2 }, 7);
+    tl.to(meterResult, { color: '#3fb950', duration: 0.2 }, 7);
+    tl.to(root.querySelector('#s2'), { borderColor: '#415A77', duration: 0.2 }, 7);
+    tl.to(root.querySelector('#s3'), { opacity: 1, x: 0, duration: 0.4 }, 7);
+    tl.to(root.querySelector('#s3'), { borderColor: '#3fb950', duration: 0.3 }, 7);
+
+    tl.to({}, {
+      duration: 0.01,
+      onComplete: function() {
+        modelDetail.textContent = '8B parameters';
+        dataDetail.textContent = '15T tokens';
+      }
+    }, 7);
+
+    // Punchline
+    tl.to(root.querySelector('#punchline'), { opacity: 1, duration: 0.5 }, 9);
+
+    window.__timelines["membership-inference"] = tl;
+  </script>
+</div>
+</body></html>
