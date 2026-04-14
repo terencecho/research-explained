@@ -832,7 +832,7 @@
 <h3>Reference Video vs Generated Output</h3>
 <p>Given a short reference video of someone (left), Avatar V generates a new video of that person in a different scene, preserving their identity and talking style (right).</p>
 
-<div class="audio-hint">&#x1F50A; <strong>Turn on sound</strong> to hear the voice cloning &mdash; Avatar V reproduces the speaker's vocal timbre, prosody, and accent from just ~10 seconds of audio (<a href="#voice" style="color:inherit;">Voice Cloning section</a>)</div>
+<div class="audio-hint">&#x1F50A; <strong>Turn on sound</strong> to hear the voice cloning &mdash; Avatar V reproduces the speaker's vocal tone, speech rhythm, and accent from just ~10 seconds of audio (<a href="#voice" style="color:inherit;">Voice Cloning section</a>)</div>
 
 <div class="demo-pair">
   <div>
@@ -1142,7 +1142,7 @@
   <div class="pipe-arrow"></div>
   <div class="pipe-stage">
     <div class="pipe-num" style="background:#FF9F1C; color:#011627;">3</div>
-    <div class="pipe-name">Personality SFT</div>
+    <div class="pipe-name">Personality Fine-Tuning</div>
     <div class="pipe-desc">"Learn to copy someone's identity"</div>
   </div>
   <div class="pipe-arrow"></div>
@@ -1154,7 +1154,7 @@
   <div class="pipe-arrow"></div>
   <div class="pipe-stage">
     <div class="pipe-num" style="background:#E71D36;">5</div>
-    <div class="pipe-name">RLHF</div>
+    <div class="pipe-name">Human Feedback</div>
     <div class="pipe-desc">"Learn what humans prefer"</div>
   </div>
 </div>
@@ -1248,8 +1248,8 @@
 <ul>
   <li><strong>Context caching:</strong> The reference video never changes between denoising steps, so compute it once and reuse it for all 24 steps</li>
   <li><strong>Sequence parallelism:</strong> Spread the long token sequence across 8 GPUs using <span class="term">Ulysses Sequence Parallelism<span class="tooltip">A method for splitting a long sequence across multiple GPUs. Each GPU processes a portion of the sequence, with all-to-all communication when attention needs to see tokens on other GPUs. Named after the long novel by James Joyce.</span></span></li>
-  <li><strong>Agentic kernel synthesis:</strong> They used an <em>LLM</em> to write custom GPU code (CUDA/Triton kernels) that fuses many small operations into single large operations, reducing overhead by 3x</li>
-  <li><strong>NVSHMEM communication:</strong> Fine-grained GPU-to-GPU data transfer that overlaps communication with computation</li>
+  <li><strong>AI-written GPU code:</strong> They used an <em>LLM</em> to write optimized low-level GPU programs that fuse many small operations into single large ones, reducing overhead by 3x</li>
+  <li><strong>Overlapped communication:</strong> GPUs transfer data to each other at the same time as they compute, hiding the communication cost</li>
   <li><strong>GPU clock locking:</strong> In distributed inference, the slowest GPU determines speed. They lock all GPUs to a stable frequency to eliminate variance.</li>
 </ul>
 
@@ -1261,13 +1261,13 @@
 <h3>The Data Pipeline</h3>
 <p>Raw videos go through a multi-stage filtering cascade:</p>
 <div class="stepper">
-  <div class="step"><div class="step-dot"></div><div class="step-content"><strong>Normalize</strong> resolution (640px) and frame rate (25fps)</div></div>
-  <div class="step"><div class="step-dot"></div><div class="step-content"><strong>Reject</strong> static/choppy content via frame-difference analysis</div></div>
-  <div class="step"><div class="step-dot"></div><div class="step-content"><strong>Detect</strong> humans and faces using joint object + face models</div></div>
-  <div class="step"><div class="step-dot"></div><div class="step-content"><strong>Score</strong> visual quality using AI (Q-Align calibrated to human opinion)</div></div>
-  <div class="step"><div class="step-dot"></div><div class="step-content"><strong>Smart clipping</strong> &mdash; optimize clip boundaries as a constrained optimization problem</div></div>
+  <div class="step"><div class="step-dot"></div><div class="step-content"><strong>Normalize</strong> resolution (640px) and frame rate (25 frames per second)</div></div>
+  <div class="step"><div class="step-dot"></div><div class="step-content"><strong>Reject</strong> static or choppy content by measuring how much changes between frames</div></div>
+  <div class="step"><div class="step-dot"></div><div class="step-content"><strong>Detect</strong> humans and faces using AI detection models</div></div>
+  <div class="step"><div class="step-dot"></div><div class="step-content"><strong>Score</strong> visual quality using an AI model trained to match human quality judgments</div></div>
+  <div class="step"><div class="step-dot"></div><div class="step-content"><strong>Smart clipping</strong> &mdash; automatically find the best start and end points for each clip</div></div>
   <div class="step"><div class="step-dot"></div><div class="step-content"><strong>Scene-cut detection</strong> and content filtering (reject screencasts, games, static photos)</div></div>
-  <div class="step"><div class="step-dot last"></div><div class="step-content"><strong>Categorize</strong> across 15 dimensions and <strong>deduplicate</strong> via GPU-accelerated nearest-neighbor search</div></div>
+  <div class="step"><div class="step-dot last"></div><div class="step-content"><strong>Categorize</strong> across 15 dimensions and <strong>deduplicate</strong> by finding near-identical clips and removing copies</div></div>
 </div>
 
 <h3>Cross-Clip Identity Connectivity</h3>
@@ -1287,13 +1287,13 @@
 <h3>HELIOS</h3>
 <p>A unified platform that makes GPUs from 5+ providers and 10+ regions act as a single pool. Key ideas:</p>
 <ul>
-  <li><strong>Cell-based architecture:</strong> GPUs organized into standardized "cells" (Kubernetes clusters). Problems in one cell don't spread.</li>
-  <li><strong>QoS-aware scheduling:</strong> Inference (user-facing) gets highest priority. Training gets large stable blocks. Data processing fills the gaps.</li>
+  <li><strong>Cell-based architecture:</strong> GPUs organized into standardized isolated groups called "cells." Problems in one cell don't spread to others.</li>
+  <li><strong>Priority-aware scheduling:</strong> User-facing video generation gets highest priority. Training gets large stable blocks. Data processing fills the gaps.</li>
   <li>Improved GPU utilization by 15% and reduced wasted GPU time by ~20%.</li>
 </ul>
 
 <h3>Custom Data Processing Engine</h3>
-<p>They outgrew <span class="term">Ray<span class="tooltip">A popular open-source framework for distributed computing in Python. Good for moderate scale, but its centralized coordination (Global Control Store) becomes a bottleneck at very large scale (2000+ nodes).</span></span> (a popular distributed computing framework) at 2,000+ nodes. Built a replacement using <strong>declarative reconciliation</strong> - inspired by how Kubernetes works:</p>
+<p>They outgrew <span class="term">Ray<span class="tooltip">A popular open-source framework for distributed computing in Python. Good for moderate scale, but its centralized coordination (Global Control Store) becomes a bottleneck at very large scale (2000+ nodes).</span></span> (a popular distributed computing framework) at 2,000+ nodes. Built a replacement using a different coordination model:</p>
 
 <div class="analogy">Instead of the boss calling each worker and saying "do task X" (imperative/command model), the boss posts a bulletin board saying "I need X done" and workers independently check the board and do what's needed (declarative model). If a worker crashes and restarts, they just check the board again. No messages get lost.</div>
 
