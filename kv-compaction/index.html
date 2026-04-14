@@ -391,6 +391,7 @@ ol.big li::before {
   <a href="#results">Results</a>
   <a href="#latent-briefing-results">Latent Briefing Results</a>
   <a href="#quiz">Final Quiz</a>
+  <a href="#why-it-matters" class="section-gap">Why It Matters</a>
 </nav>
 
 <div class="main-content">
@@ -398,7 +399,7 @@ ol.big li::before {
 <!-- Title -->
 <h1>Fast KV Compaction via Attention Matching: The Paper, Explained</h1>
 <p class="subtitle">A beginner-friendly guide to KV cache compaction and its application in multi-agent systems. Every AI term is defined. Every concept is grounded in analogy.</p>
-<p class="meta">Paper by Adam Zweiger, Xinghong Fu, Han Guo, Yoon Kim (MIT) &bull; Blog post by Ramp Labs &bull; Explainer published April 13, 2026 &bull; Terence Cho</p>
+<p class="meta">Paper by Adam Zweiger, Xinghong Fu, Han Guo, Yoon Kim (MIT, 2026) &bull; Blog post by Ramp Labs &bull; Explainer published April 13, 2026 &bull; Terence Cho</p>
 
 <div class="research-banner">
   <div class="banner-icon">&#x1F9E0;</div>
@@ -850,6 +851,18 @@ ol.big li::before {
   <div class="quiz-feedback"></div>
 </div>
 
+<!-- ========== WHY IT MATTERS ========== -->
+<h2 id="why-it-matters">Why This Paper Matters</h2>
+
+<h3>For AI Infrastructure Engineers</h3>
+<p>KV cache memory is one of the biggest operational costs in serving language models. Every request to a long-context model like Claude or GPT-4 allocates gigabytes of GPU memory just for the cache. This paper provides a <strong>drop-in compaction primitive</strong> that reduces that footprint by up to 50x with minimal quality loss and no model changes. For companies running thousands of concurrent requests, this translates directly to serving more users on the same hardware &mdash; or using significantly cheaper hardware for the same workload.</p>
+
+<h3>For the Research Community</h3>
+<p>The paper challenges the assumption that high-quality cache compaction requires expensive gradient-based optimization. By decomposing the problem into closed-form subproblems (key selection, bias fitting, value reconstruction), it shows that <strong>simple linear algebra can match or beat end-to-end optimization</strong> while being orders of magnitude faster. The finding that nonuniform head budgets are the single most important component &mdash; more than learned biases or values &mdash; provides actionable insight for anyone building KV cache reduction systems.</p>
+
+<h3>The Bigger Picture</h3>
+<p>As AI systems move toward long-horizon use cases &mdash; multi-session conversations, agentic coding, persistent assistants &mdash; the question of how to manage context efficiently becomes critical. Today's solutions (summarization, token dropping, larger context windows) are either lossy, brittle, or expensive. Attention Matching offers a principled alternative: compress the model's internal representations while preserving their mathematical behavior. Combined with Ramp Labs' Latent Briefing work showing how this enables efficient memory sharing between agents, it points toward a future where AI systems can maintain rich context over arbitrarily long interactions without proportional cost increases.</p>
+
 </div>
 
 <!-- Glossary -->
@@ -931,6 +944,9 @@ window.addEventListener('scroll', () => {
   sections.forEach(s => {
     if (window.scrollY >= s.offsetTop - 120) current = s.id;
   });
+  if ((window.innerHeight + window.scrollY) >= document.documentElement.scrollHeight - 50) {
+    current = sections[sections.length - 1].id;
+  }
   links.forEach(a => {
     a.classList.toggle('active', a.getAttribute('href') === '#' + current);
   });

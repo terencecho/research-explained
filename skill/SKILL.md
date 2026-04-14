@@ -55,7 +55,7 @@ Create a single `index.html` file with all CSS and JS inline. Follow this struct
 #### Top Section
 - `<h1>` title: "[Paper Name]: The Paper, Explained"
 - Subtitle: `<p class="subtitle">` "A beginner-friendly guide to [paper]. Every AI term is defined. Every concept is grounded in analogy."
-- Meta line: `<p class="meta">` with paper authors, affiliation, explainer publish date, and author name
+- Meta line: `<p class="meta">` with paper authors, affiliation, **paper publication year**, explainer publish date, and author name. Format: "Paper by [Authors] ([Affiliation], [Year])"
 - **Research banner**: gradient background (`linear-gradient(135deg, #011627, #0d2137, #1a1a3a)`), teal border, icon on left (`.banner-icon`), text + pill-style link buttons (`.banner-link.primary` / `.banner-link.secondary`) linking to the paper PDF, project page, and any related posts
 
 #### Content Sections (in order)
@@ -69,6 +69,7 @@ Create a single `index.html` file with all CSS and JS inline. Follow this struct
 8. **Infrastructure** (if covered) — Brief section on scale
 9. **Results** — Styled table with proper CSS classes (not inline styles), human eval highlights, link back to Turing test in section 2
 10. **Final Quiz** — 5-6 multiple choice questions covering key concepts
+11. **Why This Paper Matters** — Three subsections: (a) practical impact for builders/practitioners, (b) significance for the research community (key findings, what it changes), (c) the bigger picture (where this fits in the trajectory of the field). This section should connect the paper's contributions to real-world applications and explain why someone should care.
 
 #### Interactive Elements
 - **Term tooltips**: `<span class="term">term<span class="tooltip">definition</span></span>` — `color: var(--yellow)` on the term text itself, `1px dashed` underline. Tooltip uses `background: var(--surface)` with `border: 1px solid var(--border)` (NOT yellow border).
@@ -81,9 +82,13 @@ Create a single `index.html` file with all CSS and JS inline. Follow this struct
 
 ### 5. Create HyperFrames Videos
 
-Only create videos for concepts that are **genuinely hard to explain with text alone**. Good candidates:
+Create videos proactively for every concept that genuinely benefits from visual animation. **Don't ask whether to add more videos — identify all good candidates upfront and build them all in the first pass.** Aim for 2-4 videos per paper. If a concept is spatial, structural, or involves information flow that's hard to picture from text, make a video for it.
+
+Good candidates:
 - Process visualizations (noise → clean image for diffusion)
 - Structural comparisons (dense vs sparse attention grids)
+- Information flow / routing (tokens moving through a system, retrieval paths)
+- Network/graph traversals (following relationships between entities)
 - Feedback loops (closed-loop systems)
 - Temporal/spatial mechanisms (chunk stitching, sliding windows)
 
@@ -125,11 +130,13 @@ For each HyperFrames video:
 - Render with `npx hyperframes render --output <path>.mp4 --fps 30`
 
 **Verification (required before embedding):**
-- Take screenshots at **multiple timestamps** (midpoint and near-end) since content animates in
-- `ffmpeg -y -i video.mp4 -ss 00:00:05 -frames:v 1 -update 1 /tmp/check-mid.png` then Read image
+- Take screenshots at **multiple timestamps** (early, midpoint, near-end) since content animates in
+- `ffmpeg -y -i video.mp4 -ss 00:00:03 -frames:v 1 -update 1 /tmp/check-early.png` then Read image
+- `ffmpeg -y -i video.mp4 -ss 00:00:06 -frames:v 1 -update 1 /tmp/check-mid.png` then Read image
 - `ffmpeg -y -i video.mp4 -ss 00:00:09 -frames:v 1 -update 1 /tmp/check-end.png` then Read image
-- Confirm: all text visible (not clipped), labels legible, animations completed, final state correct
-- If anything is cut off or misaligned, fix and re-render before embedding
+- **Technical check**: all text visible (not clipped), labels legible, animations completed
+- **Content check** (critical): Look at each screenshot and ask "does this actually explain the concept visually, or does it just restate text in boxes?" If the video is just labeled boxes with no visual insight (no connections shown, no spatial relationships, no animation that reveals something text can't), redesign it before embedding. Videos should show structure, flow, or relationships — not just repeat labels.
+- If anything fails either check, fix and re-render before embedding
 
 **Embedding in the page** (use `autoplay muted loop playsinline`, NOT `controls`):
 ```html
@@ -221,7 +228,7 @@ Every page must work on 375px screens. The `@media (max-width: 900px)` block mus
 - [ ] Single HTML file with all CSS/JS inline
 - [ ] Flex body layout with sticky sidebar (not fixed sidebar)
 - [ ] "← All Papers" home link at top of sidebar
-- [ ] Sidebar TOC with active section tracking (no section numbers)
+- [ ] Sidebar TOC with active section tracking (no section numbers). The scroll handler must force the last section active when the user scrolls to the bottom of the page: `if ((window.innerHeight + window.scrollY) >= document.documentElement.scrollHeight - 50) current = sections[sections.length - 1].id;`
 - [ ] All AI terms have yellow-colored hover tooltips
 - [ ] Searchable glossary (accent blue button with 📖 emoji)
 - [ ] Real-world analogy for each major concept (solid dark bg, not rgba)
@@ -234,6 +241,7 @@ Every page must work on 375px screens. The `@media (max-width: 900px)` block mus
 - [ ] Demo videos (if available) with playback controls and audio
 - [ ] Interactive Turing test (if applicable) with separate answer buttons
 - [ ] Comprehension quizzes (no numbered questions)
+- [ ] "Why This Paper Matters" section with practical impact, research significance, and bigger picture
 - [ ] Meta line with paper authors, publish date
 - [ ] Research banner with gradient bg, icon, pill-style link buttons
 - [ ] Mobile responsive (sidebar drawer, no horizontal overflow on 375px)

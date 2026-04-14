@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mem0: Building Production-Ready AI Agents with Scalable Long-Term Memory &mdash; The Paper, Explained</title>
+<style>
+:root {
+  --bg: #0d1117; --surface: #161b22; --border: #30363d; --text: #e6edf3; --text-muted: #8b949e;
+  --accent: #58a6ff; --accent-subtle: #1f6feb22; --green: #3fb950; --yellow: #d29922; --red: #f85149; --purple: #bc8cff;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; background: var(--bg); color: var(--text); line-height: 1.7; max-width: 1200px; margin: 0 auto; padding: 2rem 1.5rem; display: flex; gap: 0; }
+.progress-bar { position: fixed; top: 0; left: 0; height: 3px; background: var(--accent); z-index: 1000; transition: width 0.1s; }
+.sidebar { position: sticky; top: 1rem; align-self: flex-start; width: 240px; flex-shrink: 0; max-height: calc(100vh - 2rem); overflow-y: auto; padding-right: 1.25rem; border-right: 1px solid var(--border); margin-right: 2rem; scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
+.sidebar::-webkit-scrollbar { width: 4px; } .sidebar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; } .sidebar::-webkit-scrollbar-track { background: transparent; }
+.sidebar .toc-title { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); margin-bottom: 0.75rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border); }
+.sidebar a { display: block; color: var(--text-muted); text-decoration: none; font-size: 0.8rem; padding: 0.2rem 0; line-height: 1.4; transition: color 0.15s, border-color 0.15s; border-left: 2px solid transparent; padding-left: 0.6rem; }
+.sidebar a:hover { color: var(--text); } .sidebar a.active { color: var(--accent); border-left-color: var(--accent); font-weight: 600; }
+.sidebar a.section-gap { margin-top: 0.4rem; }
+.sidebar-home { display: block; font-size: 0.8rem; color: var(--text-muted); text-decoration: none; padding: 0.3rem 0.6rem; margin-bottom: 0.75rem; border-left: none !important; transition: color 0.15s; }
+.sidebar-home:hover { color: var(--accent); }
+.main-content { flex: 1; min-width: 0; max-width: 860px; }
+@media (max-width: 900px) {
+  body { display: block; max-width: 860px; }
+  .sidebar { position: fixed; top: 0; left: -280px; width: 260px; height: 100vh; max-height: 100vh; background: var(--surface); border-right: 1px solid var(--border); padding: 1rem; margin-right: 0; z-index: 1001; transition: left 0.25s ease; }
+  .sidebar.mobile-open { left: 0; } .main-content { max-width: 100%; } .mobile-toc-btn { display: flex !important; }
+  .mobile-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; } .mobile-overlay.active { display: block; }
+  .compare-row { grid-template-columns: 1fr; } .glossary-panel { width: calc(100vw - 3rem); right: 1.5rem; }
+  .term .tooltip { width: calc(100vw - 4rem); max-width: 320px; left: 0; transform: none; }
+  .metrics-table { display: block; overflow-x: auto; }
+}
+.mobile-toc-btn { display: none; position: fixed; bottom: 1.5rem; left: 1.5rem; width: 44px; height: 44px; background: var(--accent); color: var(--bg); border: none; border-radius: 50%; font-size: 1.1rem; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.4); z-index: 999; align-items: center; justify-content: center; }
+h1 { font-size: 2rem; margin-bottom: 0.5rem; } .subtitle { color: var(--text-muted); margin-bottom: 2rem; font-size: 1.05rem; }
+.meta { color: var(--text-muted); font-size: 0.8rem; margin-top: -1rem; margin-bottom: 1.5rem; }
+h2 { font-size: 1.5rem; margin: 2.5rem 0 1rem; color: var(--accent); border-bottom: 1px solid var(--border); padding-bottom: 0.5rem; }
+h3 { font-size: 1.2rem; margin: 1.5rem 0 0.75rem; color: var(--purple); } p { margin-bottom: 1rem; } a { color: var(--accent); }
+ul, ol { margin-bottom: 1rem; padding-left: 1.5rem; } li { margin-bottom: 0.35rem; }
+.research-banner { background: linear-gradient(135deg, #011627 0%, #0d2137 50%, #1a1a3a 100%); border: 1px solid #2EC4B6; border-radius: 12px; padding: 1.25rem 1.5rem; margin-bottom: 2rem; display: flex; align-items: center; gap: 1.25rem; }
+.research-banner .banner-icon { font-size: 2.2rem; flex-shrink: 0; } .research-banner .banner-text { flex: 1; }
+.research-banner .banner-text p { margin: 0; font-size: 0.95rem; color: var(--text-muted); line-height: 1.5; }
+.research-banner .banner-text p:first-child { font-size: 1.05rem; font-weight: 600; color: var(--text); margin-bottom: 0.25rem; }
+.research-banner a { color: #2EC4B6; text-decoration: none; font-weight: 600; } .research-banner a:hover { text-decoration: underline; }
+.banner-links { display: flex; gap: 0.75rem; margin-top: 0.5rem; flex-wrap: wrap; }
+.banner-link { display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.85rem; padding: 0.35rem 0.75rem; border-radius: 6px; border: 1px solid; text-decoration: none !important; transition: background 0.2s; }
+.banner-link.primary { border-color: #2EC4B6; color: #2EC4B6; } .banner-link.primary:hover { background: rgba(46,196,182,0.1); }
+.banner-link.secondary { border-color: var(--border); color: var(--text-muted); } .banner-link.secondary:hover { background: var(--accent-subtle); }
+.term { color: var(--yellow); cursor: help; border-bottom: 1px dashed var(--yellow); position: relative; } .term:hover { color: #e3b341; }
+.term .tooltip { display: none; position: absolute; bottom: 130%; left: 50%; transform: translateX(-50%); background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 0.75rem 1rem; width: 320px; font-size: 0.85rem; color: var(--text); z-index: 100; box-shadow: 0 4px 20px rgba(0,0,0,0.5); line-height: 1.5; }
+.term:hover .tooltip { display: block; }
+.analogy { background: #1a2332; border-left: 4px solid var(--accent); padding: 1rem 1.25rem; border-radius: 0 8px 8px 0; margin: 1rem 0; }
+.analogy::before { content: "Real-world analogy: "; font-weight: 700; color: var(--accent); }
+.insight { background: #1a2a1a; border-left: 4px solid var(--green); padding: 1rem 1.25rem; border-radius: 0 8px 8px 0; margin: 1rem 0; }
+.insight::before { content: "Key Insight: "; font-weight: 700; color: var(--green); }
+details { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; margin: 1rem 0; padding: 0; overflow: visible; }
+details summary { padding: 0.75rem 1rem; cursor: pointer; font-weight: 600; user-select: none; list-style: none; display: flex; align-items: center; gap: 0.5rem; }
+details summary::before { content: '+ '; color: var(--accent); font-family: monospace; font-size: 1.2rem; }
+details[open] summary::before { content: '- '; } details summary:hover { background: var(--accent-subtle); }
+details .content { padding: 0 1rem 1rem; }
+.arch-flow { display: flex; flex-direction: column; align-items: center; gap: 0; margin: 1.5rem 0; }
+.arch-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 1rem 1.5rem; width: 100%; max-width: 500px; text-align: center; }
+.arch-card.highlight { border-color: #2EC4B6; background: linear-gradient(135deg, var(--surface) 0%, rgba(46,196,182,0.05) 100%); }
+.arch-card .name { font-weight: 700; font-size: 1em; } .arch-card .desc { color: var(--text-muted); font-size: 0.85em; margin-top: 0.25rem; }
+.arrow-down { width: 2px; height: 20px; background: var(--border); position: relative; }
+.arrow-down::after { content: ''; position: absolute; bottom: -4px; left: -4px; border: 5px solid transparent; border-top: 6px solid var(--border); }
+.tag-row { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-bottom: 8px; }
+.tag { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 0.8em; font-weight: 600; }
+.tag-teal { background: rgba(46,196,182,0.15); color: #2EC4B6; } .tag-orange { background: rgba(255,159,28,0.15); color: #FF9F1C; }
+.tag-purple { background: rgba(188,140,255,0.15); color: #bc8cff; } .tag-green { background: rgba(63,185,80,0.15); color: var(--green); }
+.compare-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 1rem 0; }
+.compare-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 1.25rem; }
+.compare-card h4 { margin-bottom: 0.5rem; } .compare-card.good { border-color: var(--green); } .compare-card.good h4 { color: var(--green); }
+.compare-card.bad { border-color: var(--red); } .compare-card.bad h4 { color: var(--red); }
+.metrics-table { width: 100%; border-collapse: collapse; margin: 1.25rem 0; font-size: 0.9rem; }
+.metrics-table th { text-transform: uppercase; font-size: 0.7rem; letter-spacing: 1px; color: var(--text-muted); padding: 0.6rem 0.75rem; text-align: left; border-bottom: 2px solid var(--border); }
+.metrics-table td { padding: 0.6rem 0.75rem; border-bottom: 1px solid var(--border); }
+.metrics-table tr:hover td { background: rgba(88,166,255,0.04); } .val-best { color: var(--green); font-weight: 700; }
+.quiz { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 1.25rem; margin: 1.5rem 0; }
+.quiz-q { font-weight: 600; margin-bottom: 0.75rem; color: var(--purple); }
+.quiz label { display: block; padding: 0.5rem 0.75rem; margin: 0.25rem 0; border-radius: 6px; cursor: pointer; transition: background 0.2s; }
+.quiz label:hover { background: var(--accent-subtle); } .quiz input[type="radio"] { margin-right: 0.5rem; }
+.quiz-btn { margin-top: 0.75rem; padding: 0.5rem 1.25rem; background: var(--accent); color: var(--bg); border: none; border-radius: 6px; font-weight: 600; cursor: pointer; }
+.quiz-btn:hover { opacity: 0.9; } .quiz-feedback { display: none; margin-top: 0.75rem; padding: 0.75rem; border-radius: 6px; }
+.quiz-correct { background: #1a2a1a; color: var(--green); } .quiz-wrong { background: #2a1a1a; color: var(--red); }
+.glossary-toggle { position: fixed; bottom: 1.5rem; right: 1.5rem; width: 50px; height: 50px; background: var(--accent); color: var(--bg); border: none; border-radius: 50%; font-size: 1.3rem; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.4); z-index: 999; display: flex; align-items: center; justify-content: center; }
+.glossary-panel { display: none; position: fixed; bottom: 5rem; right: 1.5rem; width: 380px; max-height: 70vh; overflow-y: auto; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 1.25rem; z-index: 998; box-shadow: 0 8px 30px rgba(0,0,0,0.5); }
+.glossary-panel.open { display: block; } .glossary-panel h3 { margin-top: 0; }
+.glossary-panel input { width: 100%; padding: 0.5rem 0.75rem; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; color: var(--text); margin-bottom: 0.75rem; font-size: 0.9rem; }
+.glossary-entry { padding: 0.5rem 0; border-bottom: 1px solid var(--border); } .glossary-entry:last-child { border-bottom: none; }
+.glossary-entry strong { color: var(--yellow); } .glossary-entry p { font-size: 0.85rem; color: var(--text-muted); margin: 0.25rem 0 0; }
+.video-embed { margin: 1.5rem 0; border-radius: 12px; overflow: hidden; border: 1px solid var(--border); background: #011627; }
+.video-embed video { display: block; width: 100%; height: auto; }
+.video-caption { padding: 0.5rem 0.75rem; font-size: 0.8rem; color: var(--text-muted); background: var(--surface); display: flex; align-items: center; gap: 0.5rem; }
+.video-caption .badge { display: inline-flex; flex-direction: column; align-items: center; padding: 0.2rem 0.6rem; border-radius: 4px; background: rgba(46,196,182,0.15); color: #2EC4B6; text-decoration: none; white-space: nowrap; line-height: 1.2; transition: background 0.15s; }
+.video-caption .badge .badge-label { font-size: 0.55rem; font-weight: 400; color: #778DA9; text-transform: uppercase; letter-spacing: 0.04em; }
+.video-caption .badge .badge-name { font-size: 0.75rem; font-weight: 700; } .video-caption .badge:hover { background: rgba(46,196,182,0.3); text-decoration: none; }
+ol.big { counter-reset: biglist; list-style: none; padding: 0; }
+ol.big li { counter-increment: biglist; padding: 8px 0 8px 48px; position: relative; margin-bottom: 8px; }
+ol.big li::before { content: counter(biglist); position: absolute; left: 0; top: 6px; width: 32px; height: 32px; border-radius: 50%; background: rgba(88,166,255,0.12); color: var(--accent); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.9em; }
+/* Stepper */
+.stepper { margin: 1.5rem 0; padding-left: 20px; }
+.step { position: relative; padding: 0 0 1.25rem 28px; border-left: 2px solid var(--accent); }
+.step:last-child { border-left: 2px solid transparent; }
+.step::before { content: ""; position: absolute; left: -7px; top: 4px; width: 12px; height: 12px; border-radius: 50%; background: var(--accent); }
+.step strong { display: block; margin-bottom: 4px; } .step .step-desc { color: var(--text-muted); font-size: 0.95em; }
+</style>
+</head>
+<body>
+
+<div class="progress-bar" id="progress-bar"></div>
+<button class="mobile-toc-btn" onclick="document.querySelector('.sidebar').classList.toggle('mobile-open'); document.querySelector('.mobile-overlay').classList.toggle('active');">&#9776;</button>
+<div class="mobile-overlay" onclick="document.querySelector('.sidebar').classList.remove('mobile-open'); this.classList.remove('active');"></div>
+
+<nav class="sidebar">
+  <a href="../" class="sidebar-home">&larr; All Papers</a>
+  <div class="toc-title">Contents</div>
+  <a href="#big-picture">The Big Picture</a>
+  <a href="#background" class="section-gap">Background Concepts</a>
+  <a href="#how-it-works" class="section-gap">How Mem0 Works</a>
+  <a href="#graph-memory" class="section-gap">Graph Memory</a>
+  <a href="#evaluation" class="section-gap">Evaluation Setup</a>
+  <a href="#results" class="section-gap">Results</a>
+  <a href="#latency" class="section-gap">Latency &amp; Efficiency</a>
+  <a href="#quiz" class="section-gap">Final Quiz</a>
+  <a href="#why-it-matters" class="section-gap">Why It Matters</a>
+</nav>
+
+<div class="main-content">
+
+<h1>Mem0: The Paper, Explained</h1>
+<p class="subtitle">A beginner-friendly guide to building AI agents with persistent long-term memory. Every AI term is defined. Every concept is grounded in analogy.</p>
+<p class="meta">Paper by Prateek Chhikara, Dev Khant, Saket Aryan, Taranjeet Singh, Deshraj Yadav (Mem0, 2025) &bull; Explainer published April 14, 2026 &bull; Terence Cho</p>
+
+<div class="research-banner">
+  <div class="banner-icon">&#x1F9E0;</div>
+  <div class="banner-text">
+    <p>This is a companion explainer for the Mem0 paper</p>
+    <p>Mem0 is a memory system for AI agents that lets them remember important information across conversations. It outperforms RAG and full-context approaches while using 90% fewer tokens and running 91% faster.</p>
+    <div class="banner-links">
+      <a href="https://arxiv.org/abs/2504.19413" target="_blank" class="banner-link primary">&#x1F4C4; Read the Paper (arXiv)</a>
+      <a href="https://mem0.ai/research" target="_blank" class="banner-link secondary">&#x1F4BB; Code &amp; Research</a>
+    </div>
+  </div>
+</div>
+
+<!-- ========== BIG PICTURE ========== -->
+<h2 id="big-picture">The Big Picture</h2>
+
+<p>AI assistants like ChatGPT and Claude have a memory problem: they forget everything between conversations. Tell your assistant you're vegetarian on Monday, and by Wednesday it might suggest a steak restaurant. This paper introduces <strong>Mem0</strong>, a system that gives AI agents persistent memory across sessions.</p>
+
+<div class="analogy">Think about your relationship with a doctor you've seen for years. They remember your medical history, allergies, and past treatments without you repeating them every visit. Now imagine a doctor who forgets everything about you each time you walk in. That's the difference between an AI with Mem0 and one without it.</div>
+
+<p>The paper solves three problems:</p>
+
+<ol class="big">
+  <li><strong>Context windows aren't enough</strong> &mdash; Even models with 128K or 200K token windows eventually overflow. More importantly, critical information (like dietary preferences) gets buried in thousands of tokens of unrelated conversation.</li>
+  <li><strong>Existing approaches are inefficient</strong> &mdash; You could dump the entire conversation history into the model (slow, expensive, degrades attention), or use RAG to retrieve relevant chunks (misses nuance, retrieves too much or too little).</li>
+  <li><strong>Memory needs structure</strong> &mdash; The paper introduces both a base system (natural language memories) and a graph-based variant that captures relationships between entities, enabling complex reasoning about who, what, when, and how things connect.</li>
+</ol>
+
+<div class="insight">Mem0 achieves 26% better accuracy than OpenAI's built-in memory while using 91% less latency and 90% fewer tokens than processing the full conversation. It does this by extracting only the <em>salient facts</em> from conversations and maintaining them as a compact, updatable knowledge base.</div>
+
+<!-- ========== BACKGROUND ========== -->
+<h2 id="background">Background Concepts</h2>
+
+<h3>Context Windows</h3>
+<p>Every language model has a <span class="term">context window<span class="tooltip">The maximum amount of text a model can process at once, measured in tokens (roughly word-parts). GPT-4 supports 128K tokens, Claude supports 200K, Gemini supports up to 10M. But bigger windows don't solve the memory problem — they just delay it.</span></span> &mdash; a fixed amount of text it can "see" at once. Once a conversation exceeds this window, older information is lost. Even within the window, the model's ability to use distant information <span class="term">degrades<span class="tooltip">Research shows that language models pay less attention to information in the middle of long contexts (the "lost in the middle" effect). Critical facts buried among thousands of tokens of unrelated discussion may be effectively ignored.</span></span> the farther away it is.</p>
+
+<div class="analogy">A context window is like a desk. You can only spread out so many papers before they start falling off the edge. Making the desk bigger helps, but eventually you need a filing cabinet (persistent memory) to store important documents you can pull out when needed.</div>
+
+<h3>Retrieval-Augmented Generation (RAG)</h3>
+<p><span class="term">RAG<span class="tooltip">A technique where the model retrieves relevant text chunks from a database before generating a response. The conversation history is split into chunks, each is converted to a numerical representation (embedding), and at query time, the most similar chunks are retrieved and fed to the model as context.</span></span> is a common approach: split the conversation into chunks, store them in a database, and retrieve the most relevant chunks when answering a question. But RAG has limitations for memory:</p>
+<ul>
+  <li>It retrieves <em>raw text chunks</em>, not distilled facts &mdash; lots of irrelevant context comes along</li>
+  <li>Chunk boundaries are arbitrary and can split important information</li>
+  <li>It can't update or consolidate information &mdash; if a user corrects something, both the old and new information persist</li>
+</ul>
+
+<h3>Vector Embeddings</h3>
+<p><span class="term">Embeddings<span class="tooltip">A way to represent text as a list of numbers (a vector) that captures its meaning. Texts with similar meanings produce similar vectors, allowing you to find related content by computing the mathematical distance between vectors. Used in both RAG and Mem0 for finding relevant memories.</span></span> are how Mem0 finds relevant memories. Each memory is converted to a list of numbers that captures its meaning. When a new question comes in, it's also converted to numbers, and the system finds memories with the most similar numerical representation.</p>
+
+<h3>Knowledge Graphs</h3>
+<p>A <span class="term">knowledge graph<span class="tooltip">A data structure where information is stored as entities (nodes) connected by labeled relationships (edges). For example: (Alice) --[lives_in]--> (San Francisco). This structure makes it easy to answer questions that require following chains of relationships.</span></span> stores information as a network of entities and relationships. Instead of storing "Alice lives in San Francisco" as a flat text string, it stores: <strong>(Alice)</strong> &mdash;[lives_in]&rarr; <strong>(San Francisco)</strong>. This structure enables reasoning across connected facts.</p>
+
+<!-- ========== HOW IT WORKS ========== -->
+<h2 id="how-it-works">How Mem0 Works</h2>
+
+<p>Mem0 processes conversations incrementally &mdash; one message pair at a time. Each time a user sends a message and gets a response, Mem0 runs a two-phase pipeline: <strong>extraction</strong> then <strong>update</strong>.</p>
+
+<div class="video-embed">
+  <video src="videos/mem0-pipeline.mp4" autoplay muted loop playsinline></video>
+  <div class="video-caption"><a href="https://github.com/heygen-com/hyperframes" target="_blank" class="badge" title="Made with HyperFrames — HeyGen's HTML-to-video composition framework"><span class="badge-label">made with</span><span class="badge-name">HyperFrames</span></a> The extraction phase pulls salient facts from message pairs. The update phase decides whether to ADD, UPDATE, DELETE, or ignore (NOOP) each fact.</div>
+</div>
+
+<h3>Phase 1: Extraction</h3>
+<p>When a new message pair arrives (user message + assistant response), the system builds a comprehensive prompt containing:</p>
+<ul>
+  <li>The new message pair</li>
+  <li>A <strong>conversation summary</strong> that captures the overall context (updated asynchronously in the background)</li>
+  <li>The <strong>last 10 messages</strong> for recent context</li>
+</ul>
+<p>This prompt is sent to an LLM, which extracts a set of <strong>salient memories</strong> &mdash; the important facts worth remembering from this exchange.</p>
+
+<div class="analogy">It's like a personal assistant who sits in on all your meetings. After each meeting, they don't transcribe every word &mdash; they note down just the key decisions, action items, and important facts: "Client prefers blue theme," "Deadline moved to March 15," "Budget approved for $50K."</div>
+
+<h3>Phase 2: Update</h3>
+<p>Each extracted memory is then compared against existing memories using <span class="term">semantic similarity<span class="tooltip">A measure of how close two pieces of text are in meaning (not just word overlap). Computed by comparing their vector embeddings. "I'm vegetarian" and "I don't eat meat" would have high semantic similarity even though they share few words.</span></span>. The system retrieves the 10 most similar existing memories and uses the LLM to decide one of four operations:</p>
+
+<div class="compare-row">
+  <div class="compare-card good">
+    <h4>ADD</h4>
+    <p>No matching memory exists. Create a new one.</p>
+  </div>
+  <div class="compare-card">
+    <h4>UPDATE</h4>
+    <p>An existing memory covers the same topic but the new info adds detail. Merge them.</p>
+  </div>
+</div>
+<div class="compare-row">
+  <div class="compare-card bad">
+    <h4>DELETE</h4>
+    <p>New information contradicts an existing memory. Remove the outdated one.</p>
+  </div>
+  <div class="compare-card">
+    <h4>NOOP</h4>
+    <p>The information already exists or isn't worth storing. Do nothing.</p>
+  </div>
+</div>
+
+<div class="insight">The LLM itself decides which operation to use via <span class="term">function calling<span class="tooltip">A capability where the LLM doesn't just generate text — it can call structured functions with specific parameters. Here, the LLM outputs a structured call like ADD(memory="User is vegetarian") or DELETE(memory_id=42). This lets the LLM act as both the reasoning engine and the memory manager.</span></span> (also called "tool use"). Rather than building a separate classifier, Mem0 leverages the LLM's reasoning to figure out the relationship between new and existing information.</div>
+
+<!-- ========== GRAPH MEMORY ========== -->
+<h2 id="graph-memory">Graph Memory (Mem0<sup>g</sup>)</h2>
+
+<p>The base Mem0 stores memories as natural language text. The graph variant adds a structured layer on top: a <span class="term">directed labeled graph<span class="tooltip">A graph where connections have both a direction (from A to B, not just "A and B are connected") and a label describing the relationship type. For example: (Alice) --[prefers]--> (vegetarian food) is directed (Alice does the preferring) and labeled ("prefers").</span></span> stored in <span class="term">Neo4j<span class="tooltip">A popular graph database that stores data as nodes and relationships rather than tables and rows. Optimized for traversing networks of connected data, making it ideal for following chains of relationships like "Alice lives in SF, SF is in California, California has warm weather."</span></span>.</p>
+
+<h3>How It Builds the Graph</h3>
+<div class="stepper">
+  <div class="step"><strong>Entity Extraction</strong><span class="step-desc">An LLM identifies entities (people, places, objects, events) and their types from the conversation.</span></div>
+  <div class="step"><strong>Relationship Generation</strong><span class="step-desc">A second LLM pass identifies meaningful connections between entities, producing triplets like (Alice, lives_in, San Francisco).</span></div>
+  <div class="step"><strong>Graph Integration</strong><span class="step-desc">New entities are matched against existing nodes using embedding similarity. If a match is found, the existing node is reused; otherwise, a new node is created.</span></div>
+  <div class="step"><strong>Conflict Resolution</strong><span class="step-desc">When new relationships conflict with existing ones (e.g., Alice moved from SF to NYC), an LLM-based resolver marks the old relationship as invalid rather than deleting it, preserving temporal history.</span></div>
+</div>
+
+<div class="video-embed">
+  <video src="videos/graph-retrieval.mp4" autoplay muted loop playsinline></video>
+  <div class="video-caption"><a href="https://github.com/heygen-com/hyperframes" target="_blank" class="badge" title="Made with HyperFrames — HeyGen's HTML-to-video composition framework"><span class="badge-label">made with</span><span class="badge-name">HyperFrames</span></a> Graph memory stores entities as nodes with labeled relationships. Dual retrieval finds answers by both traversing entity connections and matching query embeddings against all triplets.</div>
+</div>
+
+<h3>Dual Retrieval</h3>
+<p>When answering a question, Mem0<sup>g</sup> uses two complementary retrieval strategies:</p>
+<ul>
+  <li><strong>Entity-centric</strong>: Identify entities in the query, find their nodes in the graph, and explore all connected relationships to build a relevant subgraph</li>
+  <li><strong>Semantic triplet</strong>: Encode the entire query as an embedding and match it against all relationship triplets, returning the most similar ones</li>
+</ul>
+
+<div class="analogy">Entity-centric retrieval is like looking up a person in a contacts app and seeing all their info. Semantic retrieval is like typing a question into a search bar and getting the most relevant results. Mem0<sup>g</sup> does both and combines the results.</div>
+
+<!-- ========== EVALUATION ========== -->
+<h2 id="evaluation">Evaluation Setup</h2>
+
+<h3>The LOCOMO Benchmark</h3>
+<p>The paper evaluates on <span class="term">LOCOMO<span class="tooltip">A benchmark for testing long-term conversational memory. Contains 10 extended conversations (~600 messages and ~26,000 tokens each), with ~200 questions per conversation spanning four types: single-hop (one fact), multi-hop (combining facts), temporal (time-based), and open-domain (general knowledge).</span></span>, which contains realistic multi-session conversations between two people discussing daily life. The questions test four types of memory:</p>
+<ul>
+  <li><strong>Single-hop</strong> &mdash; Finding one specific fact ("What is Alice's favorite food?")</li>
+  <li><strong>Multi-hop</strong> &mdash; Combining facts across sessions ("Where did Alice go after visiting the restaurant she mentioned last week?")</li>
+  <li><strong>Temporal</strong> &mdash; Time-dependent reasoning ("What did Alice do before moving to New York?")</li>
+  <li><strong>Open-domain</strong> &mdash; General knowledge integration ("What kind of activities does Alice enjoy?")</li>
+</ul>
+
+<h3>Metrics</h3>
+<p>Beyond traditional text-overlap metrics (F1, BLEU), the paper uses <span class="term">LLM-as-a-Judge<span class="tooltip">Using a separate, capable LLM to evaluate the quality of generated answers by comparing them against ground truth. More reliable than word-overlap metrics because it can recognize that "I don't eat meat" correctly answers "Is Alice vegetarian?" even though the words are different. Run 10 times and averaged to account for randomness.</span></span> (called "J") as the primary quality metric &mdash; a separate LLM evaluates whether the answer is factually correct, not just whether it shares words with the reference answer.</p>
+
+<!-- ========== RESULTS ========== -->
+<h2 id="results">Results</h2>
+
+<table class="metrics-table">
+  <thead><tr><th>Method</th><th>Single-Hop (J)</th><th>Multi-Hop (J)</th><th>Open-Domain (J)</th><th>Temporal (J)</th></tr></thead>
+  <tbody>
+    <tr><td>MemGPT</td><td>&#8212;</td><td>&#8212;</td><td>&#8212;</td><td>&#8212;</td></tr>
+    <tr><td>A-Mem</td><td>39.8</td><td>18.9</td><td>54.1</td><td>49.9</td></tr>
+    <tr><td>LangMem</td><td>62.2</td><td>47.9</td><td>71.1</td><td>23.4</td></tr>
+    <tr><td>Zep</td><td>61.7</td><td>41.4</td><td class="val-best">76.6</td><td>49.3</td></tr>
+    <tr><td>OpenAI Memory</td><td>63.8</td><td>42.9</td><td>62.3</td><td>21.7</td></tr>
+    <tr><td>Best RAG</td><td>~61</td><td>~61</td><td>~61</td><td>~61</td></tr>
+    <tr><td>Full Context</td><td colspan="4" style="text-align:center;">Overall J = 72.9 (highest accuracy, but slowest)</td></tr>
+    <tr><td><strong>Mem0</strong></td><td class="val-best">67.1</td><td class="val-best">51.2</td><td>72.9</td><td>55.5</td></tr>
+    <tr><td><strong>Mem0<sup>g</sup></strong></td><td>65.7</td><td>47.2</td><td>75.7</td><td class="val-best">58.1</td></tr>
+  </tbody>
+</table>
+
+<p>Key takeaways:</p>
+<ul>
+  <li><strong>Mem0 wins on single-hop and multi-hop</strong> &mdash; Its natural language memories are ideal for direct fact retrieval and synthesizing across sessions</li>
+  <li><strong>Mem0<sup>g</sup> wins on temporal reasoning</strong> &mdash; The graph structure captures event sequences and chronological relationships that flat text misses</li>
+  <li><strong>Zep leads on open-domain</strong> by a narrow margin, but its memory graph consumes 600K+ tokens (vs Mem0's 7K) &mdash; 85x more storage</li>
+  <li><strong>OpenAI's memory struggles with time</strong> &mdash; It frequently omits timestamps from extracted memories, causing poor temporal reasoning (J = 21.7)</li>
+  <li><strong>Full context is most accurate overall</strong> (J = 72.9) but impractical &mdash; it processes all 26,000 tokens for every query</li>
+</ul>
+
+<!-- ========== LATENCY ========== -->
+<h2 id="latency">Latency &amp; Efficiency</h2>
+
+<p>This is where Mem0 really shines for production use:</p>
+
+<table class="metrics-table">
+  <thead><tr><th>Method</th><th>Avg Tokens</th><th>Search p95 (s)</th><th>Total p95 (s)</th><th>Overall J</th></tr></thead>
+  <tbody>
+    <tr><td>Full Context</td><td>26,031</td><td>&#8212;</td><td>17.1s</td><td>72.9</td></tr>
+    <tr><td>Zep</td><td>3,911</td><td>0.78s</td><td>2.93s</td><td>66.0</td></tr>
+    <tr><td>LangMem</td><td>127</td><td>59.8s</td><td>60.4s</td><td>58.1</td></tr>
+    <tr><td>Best RAG (k=2, 256)</td><td>512</td><td>0.70s</td><td>1.91s</td><td>61.0</td></tr>
+    <tr><td><strong>Mem0</strong></td><td class="val-best">1,764</td><td class="val-best">0.20s</td><td class="val-best">1.44s</td><td class="val-best">66.9</td></tr>
+    <tr><td><strong>Mem0<sup>g</sup></strong></td><td>3,616</td><td>0.66s</td><td>2.59s</td><td class="val-best">68.4</td></tr>
+  </tbody>
+</table>
+
+<p>Compared to full context processing, Mem0 delivers:</p>
+<ul>
+  <li><strong>91% lower p95 latency</strong> (1.44s vs 17.1s)</li>
+  <li><strong>93% fewer tokens</strong> (1,764 vs 26,031)</li>
+  <li><strong>Comparable accuracy</strong> (66.9 vs 72.9 overall J)</li>
+</ul>
+
+<div class="insight">LangMem, despite using only 127 tokens per query, has the <em>worst</em> latency (60 seconds) because its search process is extremely slow. Mem0 strikes the optimal balance: fast search (0.2s), moderate token usage, and high accuracy. For production AI agents that need to respond in real time, this tradeoff is critical.</div>
+
+<!-- ========== QUIZ ========== -->
+<h2 id="quiz">Final Quiz</h2>
+
+<div class="quiz" id="q1">
+  <div class="quiz-q">Why can't simply extending the context window solve the long-term memory problem?</div>
+  <label><input type="radio" name="q1" value="a"> Context windows are limited to 4K tokens</label>
+  <label><input type="radio" name="q1" value="b"> Conversations eventually exceed any window, and attention degrades over distant tokens even within the window</label>
+  <label><input type="radio" name="q1" value="c"> Language models can't process more than one session at a time</label>
+  <label><input type="radio" name="q1" value="d"> Longer contexts make the model less intelligent</label>
+  <button class="quiz-btn" onclick="checkQuiz('q1','b')">Check Answer</button>
+  <div class="quiz-feedback"></div>
+</div>
+
+<div class="quiz" id="q2">
+  <div class="quiz-q">What are the four operations Mem0 can perform during the update phase?</div>
+  <label><input type="radio" name="q2" value="a"> CREATE, READ, UPDATE, DELETE</label>
+  <label><input type="radio" name="q2" value="b"> ADD, UPDATE, DELETE, NOOP</label>
+  <label><input type="radio" name="q2" value="c"> INSERT, MERGE, REMOVE, SKIP</label>
+  <label><input type="radio" name="q2" value="d"> STORE, RETRIEVE, FORGET, IGNORE</label>
+  <button class="quiz-btn" onclick="checkQuiz('q2','b')">Check Answer</button>
+  <div class="quiz-feedback"></div>
+</div>
+
+<div class="quiz" id="q3">
+  <div class="quiz-q">Why does Mem0<sup>g</sup> outperform base Mem0 on temporal reasoning tasks?</div>
+  <label><input type="radio" name="q3" value="a"> It uses a faster LLM for inference</label>
+  <label><input type="radio" name="q3" value="b"> Its graph structure explicitly captures chronological relationships and event sequences</label>
+  <label><input type="radio" name="q3" value="c"> It processes more tokens per query</label>
+  <label><input type="radio" name="q3" value="d"> It stores the full conversation history</label>
+  <button class="quiz-btn" onclick="checkQuiz('q3','b')">Check Answer</button>
+  <div class="quiz-feedback"></div>
+</div>
+
+<div class="quiz" id="q4">
+  <div class="quiz-q">How does Mem0 achieve 91% lower latency than full-context processing?</div>
+  <label><input type="radio" name="q4" value="a"> It uses a smaller, faster language model</label>
+  <label><input type="radio" name="q4" value="b"> It retrieves only compact, relevant memories instead of processing all 26,000 tokens of conversation history</label>
+  <label><input type="radio" name="q4" value="c"> It caches all previous answers</label>
+  <label><input type="radio" name="q4" value="d"> It runs on specialized hardware</label>
+  <button class="quiz-btn" onclick="checkQuiz('q4','b')">Check Answer</button>
+  <div class="quiz-feedback"></div>
+</div>
+
+<div class="quiz" id="q5">
+  <div class="quiz-q">Why does Mem0 use the LLM itself to decide memory operations (ADD, UPDATE, DELETE, NOOP) rather than a separate classifier?</div>
+  <label><input type="radio" name="q5" value="a"> Classifiers are too slow for real-time use</label>
+  <label><input type="radio" name="q5" value="b"> The LLM's reasoning capabilities allow it to understand the semantic relationship between new and existing memories</label>
+  <label><input type="radio" name="q5" value="c"> There aren't enough training examples for a classifier</label>
+  <label><input type="radio" name="q5" value="d"> It's cheaper than training a classifier</label>
+  <button class="quiz-btn" onclick="checkQuiz('q5','b')">Check Answer</button>
+  <div class="quiz-feedback"></div>
+</div>
+
+<!-- ========== WHY IT MATTERS ========== -->
+<h2 id="why-it-matters">Why This Paper Matters</h2>
+
+<p>Memory is arguably the missing piece in making AI agents truly useful over time. Today's language models are stateless by default &mdash; every conversation starts from scratch. This paper matters because it provides a <strong>practical, production-ready solution</strong> to that problem, not just a research prototype.</p>
+
+<h3>For AI Agent Builders</h3>
+<p>Mem0 demonstrates that you don't need to choose between quality and cost. The naive approach (dump everything into the context window) works but becomes prohibitively expensive as conversations grow. RAG is cheaper but loses nuance. Mem0 shows that a thin memory layer &mdash; extracting just the salient facts and maintaining them with ADD/UPDATE/DELETE operations &mdash; achieves near-full-context quality at a fraction of the cost. This makes long-running AI agents economically viable for production use cases like healthcare, tutoring, and customer support.</p>
+
+<h3>For the Research Community</h3>
+<p>The paper provides one of the most comprehensive benchmarks of memory approaches to date, comparing against six different baseline categories on a standardized benchmark. Two findings stand out:</p>
+<ul>
+  <li><strong>Graph memory helps for temporal reasoning but not everywhere</strong> &mdash; Mem0<sup>g</sup> excels when questions require tracking event sequences, but base Mem0 with natural language memories is actually better for single-hop and multi-hop retrieval. This suggests that the optimal memory representation depends on the type of reasoning required.</li>
+  <li><strong>Existing solutions have surprising blind spots</strong> &mdash; OpenAI's memory struggles badly with temporal questions (J = 21.7) because it drops timestamps. Zep uses 85x more tokens than Mem0 for similar quality. These findings highlight how much room for improvement exists in production memory systems.</li>
+</ul>
+
+<h3>The Bigger Picture</h3>
+<p>As AI agents move from single-turn assistants to long-term collaborators &mdash; personal tutors that track learning progress over months, healthcare companions that remember medication changes, coding assistants that learn your codebase and preferences &mdash; persistent memory becomes a core infrastructure requirement, not a nice-to-have. This paper provides both the architecture and the evidence that it works.</p>
+
+</div>
+
+<!-- Glossary -->
+<button class="glossary-toggle" onclick="toggleGlossary()" title="Open Glossary">&#x1F4D6;</button>
+<div class="glossary-panel" id="glossary-panel">
+  <h3 style="color:var(--accent); margin-bottom:0.75rem;">Glossary</h3>
+  <input type="text" id="glossary-search" placeholder="Search terms..." oninput="filterGlossary()">
+  <div id="glossary-list"></div>
+</div>
+
+<script>
+var glossaryData = [
+  {term:"Context Window", def:"The maximum amount of text a language model can process at once. Once exceeded, older information is lost."},
+  {term:"Directed Labeled Graph", def:"A graph where edges have both a direction and a label. (Alice) --[lives_in]--> (SF) is directed and labeled."},
+  {term:"Embedding", def:"A numerical representation (vector) of text that captures its meaning. Similar texts produce similar vectors."},
+  {term:"Entity", def:"A distinct person, place, object, event, or concept identified in text. Stored as nodes in Mem0's knowledge graph."},
+  {term:"Function Calling / Tool Use", def:"A capability where the LLM outputs structured function calls (like ADD or DELETE) instead of free text, enabling it to take actions."},
+  {term:"Knowledge Graph", def:"A data structure storing information as entities (nodes) connected by labeled relationships (edges)."},
+  {term:"LLM (Large Language Model)", def:"An AI model trained on large amounts of text that can generate, summarize, and reason about language. Examples: GPT-4, Claude, Gemini."},
+  {term:"LLM-as-a-Judge", def:"Using a separate LLM to evaluate the quality of generated answers. More reliable than word-overlap metrics for factual accuracy."},
+  {term:"LOCOMO", def:"A benchmark for testing long-term conversational memory. Contains 10 extended conversations with ~200 questions each spanning 4 types."},
+  {term:"Mem0", def:"The memory system introduced in this paper. Extracts, consolidates, and retrieves salient facts from conversations to enable persistent AI memory."},
+  {term:"Mem0g (Graph Memory)", def:"An enhanced variant of Mem0 that stores memories as a knowledge graph with entity nodes and relationship edges, enabling complex relational reasoning."},
+  {term:"Multi-Hop Question", def:"A question requiring the combination of information from multiple separate conversation sessions or facts."},
+  {term:"Neo4j", def:"A graph database used by Mem0g to store its knowledge graph. Optimized for traversing networks of connected data."},
+  {term:"NOOP", def:"'No Operation' — when a new fact doesn't require any change to the memory store (already known or not worth storing)."},
+  {term:"Persistent Memory", def:"Information that survives across separate conversations/sessions, unlike a context window which resets."},
+  {term:"RAG (Retrieval-Augmented Generation)", def:"A technique that retrieves relevant text chunks from a database to provide context for the model's response. Splits text into chunks and uses embedding similarity for retrieval."},
+  {term:"Semantic Similarity", def:"A measure of how close two texts are in meaning (not just word overlap). Computed by comparing vector embeddings."},
+  {term:"Single-Hop Question", def:"A question answerable from one specific fact in one conversation turn."},
+  {term:"Temporal Question", def:"A question requiring reasoning about time — when events happened, their order, or their duration."},
+  {term:"Triplet", def:"A (subject, relationship, object) tuple in a knowledge graph. Example: (Alice, lives_in, San Francisco)."},
+  {term:"Vector Database", def:"A database optimized for storing and searching embedding vectors. Used to find memories similar to a query."},
+].sort(function(a,b) { return a.term.localeCompare(b.term); });
+
+function renderGlossary(filter) {
+  var list = document.getElementById('glossary-list');
+  var f = (filter || '').toLowerCase();
+  list.innerHTML = glossaryData
+    .filter(function(g) { return !f || g.term.toLowerCase().indexOf(f) >= 0 || g.def.toLowerCase().indexOf(f) >= 0; })
+    .map(function(g) { return '<div class="glossary-entry"><strong>' + g.term + '</strong><p>' + g.def + '</p></div>'; })
+    .join('');
+}
+renderGlossary();
+function toggleGlossary() { document.getElementById('glossary-panel').classList.toggle('open'); }
+function filterGlossary() { renderGlossary(document.getElementById('glossary-search').value); }
+
+window.addEventListener('scroll', function() {
+  var h = document.documentElement.scrollHeight - window.innerHeight;
+  document.getElementById('progress-bar').style.width = (window.scrollY / h * 100) + '%';
+});
+
+var sections = document.querySelectorAll('h2[id]');
+var links = document.querySelectorAll('.sidebar a');
+window.addEventListener('scroll', function() {
+  var current = '';
+  sections.forEach(function(s) { if (window.scrollY >= s.offsetTop - 120) current = s.id; });
+  // If scrolled to bottom, activate the last section
+  if ((window.innerHeight + window.scrollY) >= document.documentElement.scrollHeight - 50) {
+    current = sections[sections.length - 1].id;
+  }
+  links.forEach(function(a) { a.classList.toggle('active', a.getAttribute('href') === '#' + current); });
+});
+
+function checkQuiz(qid, correct) {
+  var sel = document.querySelector('#' + qid + ' input[name="' + qid + '"]:checked');
+  var fb = document.querySelector('#' + qid + ' .quiz-feedback');
+  if (!sel) { fb.style.display='block'; fb.className='quiz-feedback quiz-wrong'; fb.textContent='Please select an answer.'; return; }
+  fb.style.display = 'block';
+  if (sel.value === correct) { fb.className='quiz-feedback quiz-correct'; fb.textContent='Correct!'; }
+  else { fb.className='quiz-feedback quiz-wrong'; fb.textContent='Not quite. Try again!'; }
+}
+</script>
+
+<script data-goatcounter="https://tcho.goatcounter.com/count"
+        async src="//gc.zgo.at/count.js"></script>
+</body>
+</html>

@@ -782,6 +782,7 @@
   <a href="#infra" class="section-gap">Infrastructure</a>
   <a href="#results" class="section-gap">Evaluation</a>
   <a href="#final-quiz" class="section-gap">Final Quiz</a>
+  <a href="#why-it-matters" class="section-gap">Why It Matters</a>
 </nav>
 
 <!-- Main content -->
@@ -789,7 +790,7 @@
 
 <h1>Avatar V: The Paper, Explained</h1>
 <p class="subtitle">A beginner-friendly guide to HeyGen's Avatar V technical report.<br>Every AI term is defined. Every concept is grounded in analogy.</p>
-<p style="font-size:0.8rem; color:var(--text-muted); margin-top:-1rem; margin-bottom:1.5rem;">Paper by HeyGen Research &middot; Explainer published April 13, 2026 &middot; Terence Cho</p>
+<p style="font-size:0.8rem; color:var(--text-muted); margin-top:-1rem; margin-bottom:1.5rem;">Paper by HeyGen Research (2025) &middot; Explainer published April 13, 2026 &middot; Terence Cho</p>
 
 <div class="research-banner">
   <div class="banner-icon">&#x1F3AC;</div>
@@ -1412,6 +1413,23 @@
   <div class="feedback wrong" id="quiz6-wrong">The answer is B. Ray's GCS is a centralized coordination point where every state change must be broadcast to every node. At 2000+ nodes, it consumed 100GB+ RSS and crashed.</div>
 </div>
 
+<!-- ========== WHY IT MATTERS ========== -->
+<h2 id="why-it-matters">Why This Paper Matters</h2>
+
+<h3>For Video Production Teams</h3>
+<p>Avatar V represents a shift from "generic AI video" to "personalized AI video at scale." Previous systems could generate videos of a generic person talking, but couldn't faithfully reproduce a <em>specific</em> person's talking rhythm, micro-expressions, and gestural tendencies. For companies creating personalized video content &mdash; training videos, marketing, customer support, localization &mdash; this means AI-generated avatars that are actually recognizable as the real person, not just visually similar.</p>
+
+<h3>For the Research Community</h3>
+<p>The paper introduces several techniques with broad applicability beyond avatars:</p>
+<ul>
+  <li><strong>Sparse Reference Attention</strong> solves the quadratic scaling problem for conditioning on long reference contexts &mdash; relevant for any video generation system that conditions on reference material</li>
+  <li><strong>The motion representation stream</strong> demonstrates that identity and motion can be disentangled and transferred separately, opening the door to motion style transfer across different identities</li>
+  <li><strong>The five-stage progressive training pipeline</strong> provides a practical template for training complex generative systems &mdash; starting broad (text-to-video), then specializing (lip sync, identity, speed, quality) in stages rather than trying to learn everything at once</li>
+</ul>
+
+<h3>The Bigger Picture</h3>
+<p>Avatar V points toward a future where video communication is no longer bottlenecked by the physical availability of the speaker. A CEO could record a 30-second reference video and generate personalized messages to thousands of employees in their own talking style. Educational content could be delivered by an instructor's avatar speaking any of 50+ languages while preserving their teaching mannerisms. The technology raises important questions about consent, deepfakes, and authenticity &mdash; but the production-quality bar it sets (1080p, unlimited duration, state-of-the-art fidelity) means these conversations are no longer hypothetical.</p>
+
 <!-- Close main-content div -->
 </div>
 
@@ -1499,6 +1517,9 @@ function updateActiveSection() {
   var active = sections[0];
   for (var i = 0; i < sections.length; i++) {
     if (sections[i].el.offsetTop <= scrollY) active = sections[i];
+  }
+  if ((window.innerHeight + window.scrollY) >= document.documentElement.scrollHeight - 50) {
+    active = sections[sections.length - 1];
   }
   sidebarLinks.forEach(function(l) { l.classList.remove('active'); });
   if (active) active.link.classList.add('active');
