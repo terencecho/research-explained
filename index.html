@@ -183,7 +183,7 @@
 <input type="text" class="search-box" id="search" placeholder="Search papers..." oninput="filterPapers()">
 
 <div class="paper-list" id="paper-list">
-  <a href="memorization/" class="paper-card">
+  <a href="memorization/" class="paper-card" data-date="2025-06">
     <div class="paper-title">
       How Much Do Language Models Memorize?
       <span class="arrow">&rarr;</span>
@@ -196,7 +196,7 @@
       <span class="tag tag-paper">Meta FAIR + Google DeepMind + Cornell + NVIDIA</span>
     </div>
   </a>
-  <a href="lora/" class="paper-card">
+  <a href="lora/" class="paper-card" data-date="2021-06">
     <div class="paper-title">
       LoRA: Low-Rank Adaptation of Large Language Models
       <span class="arrow">&rarr;</span>
@@ -209,7 +209,7 @@
       <span class="tag tag-paper">Microsoft</span>
     </div>
   </a>
-  <a href="avatar-v/" class="paper-card">
+  <a href="avatar-v/" class="paper-card" data-date="2026-04">
     <div class="paper-title">
       Avatar V: Scaling Video-Reference Avatar Generation
       <span class="arrow">&rarr;</span>
@@ -222,7 +222,7 @@
       <span class="tag tag-paper">HeyGen Research</span>
     </div>
   </a>
-  <a href="kv-compaction/" class="paper-card">
+  <a href="kv-compaction/" class="paper-card" data-date="2026-02">
     <div class="paper-title">
       Fast KV Compaction via Attention Matching
       <span class="arrow">&rarr;</span>
@@ -235,7 +235,7 @@
       <span class="tag tag-paper">MIT + Ramp Labs</span>
     </div>
   </a>
-  <a href="mem0/" class="paper-card">
+  <a href="mem0/" class="paper-card" data-date="2025-04">
     <div class="paper-title">
       Mem0: Building Production-Ready AI Agents with Scalable Long-Term Memory
       <span class="arrow">&rarr;</span>
@@ -258,6 +258,16 @@
 </footer>
 
 <script>
+// Sort papers by data-date (newest first) on page load
+(function() {
+  var list = document.getElementById('paper-list');
+  var cards = Array.from(list.querySelectorAll('.paper-card'));
+  cards.sort(function(a, b) {
+    return (b.getAttribute('data-date') || '').localeCompare(a.getAttribute('data-date') || '');
+  });
+  cards.forEach(function(card) { list.appendChild(card); });
+})();
+
 function filterPapers() {
   var q = document.getElementById('search').value.toLowerCase();
   var cards = document.querySelectorAll('.paper-card');
