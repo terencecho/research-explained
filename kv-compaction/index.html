@@ -428,7 +428,7 @@ ol.big li::before {
   <li><strong>Gradient-based approaches are too slow</strong> &mdash; Prior work (Cartridges) could compress well but took GPU-hours per context. This paper achieves similar quality in <em>seconds</em>.</li>
 </ol>
 
-<div class="insight">Instead of training a compact cache end-to-end (expensive), the authors decompose the problem into simple subproblems &mdash; select the best keys, correct the attention weights, and reconstruct the values &mdash; each solvable in closed form without gradient descent.</div>
+<div class="insight">Instead of training a compact cache end-to-end (expensive), the authors decompose the problem into simple subproblems &mdash; select the best keys, correct the attention weights, and reconstruct the values &mdash; each solvable with direct mathematical formulas (no iterative optimization needed).</div>
 
 <!-- ========== SECTION 2: BACKGROUND ========== -->
 <h2 id="background">Background Concepts</h2>
@@ -458,7 +458,7 @@ ol.big li::before {
 
 <div class="analogy">Think of a student taking a test with access to their notes. Rather than re-reading the entire textbook for every question (full recomputation), they keep organized notes (the KV cache) that they can quickly reference. The problem: the longer the class, the thicker the notebook, and eventually it doesn't fit on the desk.</div>
 
-<p>For a model like Qwen3-4B with a 128K context window, the KV cache alone can reach <strong>many gigabytes</strong> per request. This is the bottleneck that compaction addresses.</p>
+<p>For a model like Qwen3-4B (a 4-billion-parameter language model) with a 128K-token context window (roughly 100,000 words), the KV cache alone can reach <strong>many gigabytes</strong> per request. This is the bottleneck that compaction addresses.</p>
 
 <h3>Token Eviction and Merging (Prior Approaches)</h3>
 <p>Before this paper, the main approaches to shrinking the KV cache were:</p>
@@ -466,7 +466,7 @@ ol.big li::before {
 <div class="compare-row">
   <div class="compare-card bad">
     <h4>Token Eviction</h4>
-    <p>Simply delete the KV entries for tokens deemed unimportant (e.g., H2O, SnapKV). Problem: at high compression ratios (20x+), performance drops sharply because you're permanently losing information.</p>
+    <p>Simply delete the KV entries for tokens deemed unimportant. Problem: at high compression ratios (20x+), performance drops sharply because you're permanently losing information.</p>
   </div>
   <div class="compare-card bad">
     <h4>Summarization</h4>
@@ -478,7 +478,7 @@ ol.big li::before {
 <p><span class="term">Cartridges<span class="tooltip">A prior method (Eyuboglu et al., 2025) that trains compact KV caches end-to-end using prefix-tuning on synthetic "self-study" data. Achieves high compression but requires GPU-hours per context.</span></span> showed that you <em>can</em> build very compact KV representations in <span class="term">latent space<span class="tooltip">The internal representation space of a neural network, as opposed to "token space" which is the raw text. Latent-space compaction manipulates the model's internal vectors directly rather than summarizing text.</span></span> (the model's internal representation, not the text itself). But it does this through end-to-end <span class="term">gradient-based optimization<span class="tooltip">An iterative method for minimizing a loss function by computing gradients (derivatives) and adjusting parameters in the direction that reduces the loss. Think of it as slowly walking downhill to find the lowest point in a valley.</span></span> &mdash; essentially training a small model for every context. This takes <strong>5+ GPU-hours per context</strong>, making it impractical for real-time use.</p>
 
 <h3>Grouped Query Attention (GQA)</h3>
-<p>Modern models use <span class="term">GQA<span class="tooltip">Grouped Query Attention: instead of having one set of Keys and Values per attention head, multiple Query heads share the same KV pair. This reduces KV cache size by the grouping factor while maintaining most of the model's expressiveness.</span></span> to reduce the KV cache size. Instead of each attention head having its own keys and values, multiple query heads share a single KV head. For example, Qwen3-4B has 36 layers with 32 query heads but only 8 KV heads per layer.</p>
+<p>Modern models use <span class="term">GQA<span class="tooltip">Grouped Query Attention: instead of having one set of Keys and Values per attention head, multiple Query heads share the same KV pair. This reduces KV cache size by the grouping factor while maintaining most of the model's expressiveness.</span></span> to reduce the KV cache size. Instead of each attention head having its own keys and values, multiple query heads share a single KV head. For example, Qwen3-4B has 36 processing layers, each with 32 query heads but only 8 KV heads &mdash; a 4x reduction in memory.</p>
 
 <h3>Rotary Position Embeddings (RoPE)</h3>
 <p><span class="term">RoPE<span class="tooltip">Rotary Position Embeddings: a method for encoding position information into attention by rotating key and query vectors. The angle of rotation depends on position, so the dot product between a query and key naturally encodes their relative distance.</span></span> is how modern models encode the <em>position</em> of tokens in a sequence. It works by rotating the key and query vectors by an angle that depends on their position, so that the dot product between a query at position <em>i</em> and a key at position <em>j</em> naturally encodes their relative distance |<em>i</em> - <em>j</em>|.</p>
@@ -516,13 +516,13 @@ ol.big li::before {
   <div class="arch-card">
     <div class="icon">1&#xFE0F;&#x20E3;</div>
     <div class="name">Select Compact Keys C<sub>k</sub></div>
-    <div class="desc">Pick the most important keys from the original set (via attention scores or Orthogonal Matching Pursuit)</div>
+    <div class="desc">Pick the most important keys from the original set (by attention score ranking or a greedy selection algorithm)</div>
   </div>
   <div class="arrow-down">&darr;</div>
   <div class="arch-card highlight">
     <div class="icon">2&#xFE0F;&#x20E3;</div>
     <div class="name">Fit Bias Corrections &beta;</div>
-    <div class="desc">Solve for scalar biases via NNLS so the compact keys match the original attention mass</div>
+    <div class="desc">Solve for scalar biases (via nonnegative least squares) so the compact keys match the original attention mass</div>
   </div>
   <div class="arrow-down">&darr;</div>
   <div class="arch-card">
@@ -542,7 +542,7 @@ ol.big li::before {
 <div class="compare-row">
   <div class="compare-card good">
     <h4>Highest Attention Keys (Fast)</h4>
-    <p>Compute attention scores for all reference queries, aggregate via RMS, keep the top-scoring keys. Simple and fast (~3 seconds for 60K tokens).</p>
+    <p>Compute attention scores for all reference queries, aggregate them (using root-mean-square averaging), and keep the top-scoring keys. Simple and fast (~3 seconds for 60K tokens).</p>
   </div>
   <div class="compare-card good">
     <h4>OMP Keys (Best Quality)</h4>
@@ -577,13 +577,13 @@ ol.big li::before {
 <ul>
   <li><strong>Repeat-prefill</strong>: Prompt the model with "Repeat the previous context" and extract the query vectors it generates &mdash; fast and effective</li>
   <li><strong>Self-study</strong>: Generate synthetic interactions (questions, summaries, fact extraction) about the context and collect query vectors &mdash; best quality but slower</li>
-  <li><strong>Context-prefill</strong>: Simply run a forward pass on the context and extract queries &mdash; cheapest but slightly less effective</li>
+  <li><strong>Context-prefill</strong>: Simply run the context through the model once and extract queries &mdash; cheapest but slightly less effective</li>
 </ul>
 
 <details>
   <summary>Deep dive: On-policy queries</summary>
   <div class="content">
-    <p>There's a subtle issue with compacting layers sequentially: compacting early layers changes the residual stream, so later layers see different inputs than they would in the original model. This means the queries they generate are "off-policy."</p>
+    <p>There's a subtle issue with compacting layers sequentially: compacting early layers changes the data flowing through the network, so later layers see different inputs than they would in the original model. This means the queries they generate don't match what the unmodified model would produce.</p>
     <p>The solution is <strong>on-policy query extraction</strong>: compact layers in order, and for each layer, extract reference queries by running the model <em>with all previously compacted layers already in place</em>. This gives slight but consistent improvements.</p>
   </div>
 </details>
@@ -622,7 +622,7 @@ ol.big li::before {
   <div class="video-caption"><a href="https://github.com/heygen-com/hyperframes" target="_blank" class="badge" title="Made with HyperFrames — HeyGen's HTML-to-video composition framework"><span class="badge-label">made with</span><span class="badge-name">HyperFrames</span></a> The orchestrator's reasoning trajectory is compacted using the specific task query as a relevance signal, giving the worker a focused view.</div>
 </div>
 
-<div class="insight">The shared global mask is the key to making compaction real-time. The original AM algorithm required 320 separate CUDA kernel launches (one per KV head across all 40 layers &times; 8 heads) because each head selected different tokens, making matrix shapes incompatible. With a shared mask, all 320 solves can be stacked into 2-3 batched tensor operations, reducing compaction from 30+ seconds to ~1.7 seconds.</div>
+<div class="insight">The shared global mask is the key to making compaction real-time. The original AM algorithm required 320 separate GPU operations (one per KV head across all 40 layers &times; 8 heads) because each head selected different tokens, making matrix shapes incompatible. With a shared mask, all 320 solves can be stacked into 2-3 batched tensor operations, reducing compaction from 30+ seconds to ~1.7 seconds.</div>
 
 <!-- ========== SECTION: TRAINING / CONSTRUCTING ========== -->
 <h2 id="training">Constructing the Compact Cache</h2>
@@ -648,15 +648,15 @@ ol.big li::before {
   <div class="pipeline-arrow">&rarr;</div>
   <div class="pipeline-stage">
     <div class="num num-4">4</div>
-    <div class="name">Fit C<sub>v</sub> via OLS</div>
+    <div class="name">Fit C<sub>v</sub> via least squares</div>
     <div class="desc">Reconstruct values to match attention outputs</div>
   </div>
 </div>
 
-<p>This entire process is done <strong>per KV-head, per layer</strong>. For a model like Qwen3-4B (36 layers &times; 8 KV heads = 288 solves), this is tractable because each solve involves small, well-conditioned linear algebra problems.</p>
+<p>This entire process is done <strong>per KV-head, per layer</strong>. For a model like Qwen3-4B (36 layers &times; 8 KV heads = 288 solves), this is fast because each solve is a small, straightforward math problem.</p>
 
 <h3>Wall-Clock Timing</h3>
-<p>On a 60K-token context with Gemma-3-12B on a single H200 GPU:</p>
+<p>On a 60K-token context with Gemma-3-12B (a 12-billion-parameter model) on a single high-end GPU:</p>
 
 <table class="metrics-table">
   <thead><tr><th>Stage</th><th>Method</th><th>Time</th></tr></thead>
@@ -677,7 +677,7 @@ ol.big li::before {
 <!-- ========== SECTION: INFERENCE ========== -->
 <h2 id="inference">Inference &amp; Chunked Compaction</h2>
 
-<p>At inference time, the compacted cache drops right into the model's normal attention mechanism. The only additions are the scalar biases &beta;, which are supported natively by efficient attention implementations like <span class="term">FlashAttention<span class="tooltip">An optimized attention implementation that reduces memory usage from O(n&sup2;) to O(n) by computing attention in tiles and never materializing the full attention matrix. The standard in modern LLM inference.</span></span> and FlexAttention.</p>
+<p>At inference time, the compacted cache drops right into the model's normal attention mechanism. The only additions are the scalar biases &beta;, which are supported natively by efficient attention implementations like <span class="term">FlashAttention<span class="tooltip">An optimized attention implementation that reduces memory usage from O(n&sup2;) to O(n) by computing attention in tiles and never materializing the full attention matrix. The standard in modern LLM inference.</span></span> and FlexAttention (optimized attention libraries).</p>
 
 <h3>Chunked Compaction for Long Contexts</h3>
 <p>For very long contexts (e.g., 60K+ tokens), the method applies compaction independently to <em>chunks</em> of the input, then concatenates the compacted caches:</p>
@@ -687,7 +687,7 @@ ol.big li::before {
 <p>Two variants exist:</p>
 <ul>
   <li><strong>KV-based chunking</strong> (preferred): Prefill the full context once, slice out each chunk's KV states, compact independently, and merge. Preserves cross-chunk interactions from the original prefill.</li>
-  <li><strong>Text-based chunking</strong>: Prefill each chunk in isolation, then align positions via a RoPE phase shift. An approximation because chunks don't see each other during prefill.</li>
+  <li><strong>Text-based chunking</strong>: Prefill each chunk in isolation, then adjust position encodings so each chunk's keys line up with their original positions in the full document. An approximation because chunks don't see each other during prefill.</li>
 </ul>
 
 <p>The cache retains a <strong>logical length</strong> of T (the original sequence length) even though its physical size is only t. New tokens appended after compaction receive the same position IDs they would under the full cache &mdash; the physical size is decoupled from the positional encoding.</p>
@@ -695,7 +695,7 @@ ol.big li::before {
 <!-- ========== SECTION: NONUNIFORM ========== -->
 <h2 id="nonuniform">Nonuniform Compaction</h2>
 
-<p>Not all attention heads are created equal. Some heads barely use their KV cache (they attend locally or to "attention sinks"), while others are critical for long-range retrieval. A uniform compaction ratio across all heads wastes budget on insensitive heads.</p>
+<p>Not all attention heads are created equal. Some heads barely use their KV cache (they only attend to nearby tokens or to special tokens that absorb excess attention), while others are critical for long-range retrieval. A uniform compaction ratio across all heads wastes budget on insensitive heads.</p>
 
 <div class="analogy">It's like allocating shelf space in a library. The reference section (critical heads) needs lots of space because people constantly look things up there. The magazine rack (insensitive heads) barely gets used &mdash; you can shrink it without anyone noticing.</div>
 
@@ -721,7 +721,7 @@ ol.big li::before {
 <h2 id="results">Results</h2>
 
 <h3>Accuracy vs. Compaction Ratio</h3>
-<p>Evaluated on QuALITY (long-document QA, 894 questions across 50 contexts) and LongHealth (clinical record QA, 60K tokens per context):</p>
+<p>Evaluated on QuALITY (long-document question answering, 894 questions across 50 contexts) and LongHealth (clinical record QA, 60K tokens per context):</p>
 
 <table class="metrics-table">
   <thead><tr><th>Method</th><th>Type</th><th>50x Compaction Quality</th><th>Speed</th></tr></thead>
@@ -738,14 +738,14 @@ ol.big li::before {
 
 <p>Key results across three models (Qwen3-4B, Llama3.1-8B, Gemma3-12B):</p>
 <ul>
-  <li>AM methods <strong>consistently form the Pareto frontier</strong> of compaction time vs. quality</li>
+  <li>AM methods <strong>consistently achieve the best tradeoff</strong> between compaction speed and quality of compaction time vs. quality</li>
   <li>At 50x compaction, AM matches or exceeds Cartridges while being <strong>100-1000x faster</strong></li>
   <li>Summarization fails catastrophically on information-dense tasks (LongHealth), performing no better than no context at all</li>
   <li>AM can be stacked <em>on top of</em> summarization for 200x total compaction with quality comparable to summarization alone</li>
 </ul>
 
-<h3>Ablation: What Matters Most?</h3>
-<p>Leave-one-out experiments show the importance of each component (ordered by impact):</p>
+<h3>Component Analysis: What Matters Most?</h3>
+<p>The authors tested removing each component one at a time to measure its importance (ordered by impact):</p>
 
 <div class="stepper">
   <div class="step"><strong>Nonuniform head budgets</strong><span class="step-desc">Removing this causes the largest quality drop. Most critical component.</span></div>
@@ -764,7 +764,7 @@ ol.big li::before {
 <table class="metrics-table">
   <thead><tr><th>Metric</th><th>Best Result</th><th>Condition</th></tr></thead>
   <tbody>
-    <tr><td>Accuracy vs. baseline</td><td class="val-best">+3 pp improvement</td><td>At optimal threshold per condition</td></tr>
+    <tr><td>Accuracy vs. baseline</td><td class="val-best">+3 percentage points improvement</td><td>At optimal threshold per condition</td></tr>
     <tr><td>Median token savings (total)</td><td class="val-best">21-31%</td><td>At optimal thresholds</td></tr>
     <tr><td>Worker token reduction</td><td class="val-best">42-57% (up to 65%)</td><td>Median across thresholds</td></tr>
     <tr><td>Compaction overhead</td><td class="val-best">~1.7s median</td><td>Scales linearly with input length</td></tr>
@@ -781,7 +781,7 @@ ol.big li::before {
   </div>
   <div class="compare-card good">
     <h4>Hard Questions: Aggressive Compaction</h4>
-    <p>Threshold t=2.0 (79% compaction) wins by +3pp over baseline. Hard questions cause the orchestrator to explore many speculative hypotheses. Aggressive compaction acts as a <strong>relevance filter</strong>, stripping noise.</p>
+    <p>Threshold t=2.0 (79% compaction) wins by +3 percentage points over baseline. Hard questions cause the orchestrator to explore many speculative hypotheses. Aggressive compaction acts as a <strong>relevance filter</strong>, stripping noise.</p>
   </div>
 </div>
 
