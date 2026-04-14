@@ -1,0 +1,958 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fast KV Compaction via Attention Matching: The Paper, Explained</title>
+<style>
+:root {
+  --bg: #0d1117;
+  --surface: #161b22;
+  --border: #30363d;
+  --text: #e6edf3;
+  --text-muted: #8b949e;
+  --accent: #58a6ff;
+  --accent-subtle: #1f6feb22;
+  --green: #3fb950;
+  --yellow: #d29922;
+  --red: #f85149;
+  --purple: #bc8cff;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.7;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+  display: flex;
+  gap: 0;
+}
+
+/* Progress bar */
+.progress-bar {
+  position: fixed; top: 0; left: 0; height: 3px;
+  background: var(--accent); z-index: 1000; transition: width 0.1s;
+}
+
+/* Sidebar TOC */
+.sidebar {
+  position: sticky;
+  top: 1rem;
+  align-self: flex-start;
+  width: 240px;
+  flex-shrink: 0;
+  max-height: calc(100vh - 2rem);
+  overflow-y: auto;
+  padding-right: 1.25rem;
+  border-right: 1px solid var(--border);
+  margin-right: 2rem;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+.sidebar::-webkit-scrollbar { width: 4px; }
+.sidebar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+.sidebar::-webkit-scrollbar-track { background: transparent; }
+.sidebar .toc-title {
+  font-size: 0.7rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.08em; color: var(--text-muted);
+  margin-bottom: 0.75rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border);
+}
+.sidebar a {
+  display: block; color: var(--text-muted); text-decoration: none;
+  font-size: 0.8rem; padding: 0.2rem 0 0.2rem 0; line-height: 1.4;
+  transition: color 0.15s, border-color 0.15s;
+  border-left: 2px solid transparent; padding-left: 0.6rem;
+}
+.sidebar a:hover { color: var(--text); }
+.sidebar a.active { color: var(--accent); border-left-color: var(--accent); font-weight: 600; }
+.sidebar-home {
+  display: block; font-size: 0.8rem; color: var(--text-muted); text-decoration: none;
+  padding: 0.3rem 0.6rem; margin-bottom: 0.75rem; border-left: none !important;
+  transition: color 0.15s;
+}
+.sidebar-home:hover { color: var(--accent); }
+
+.main-content { flex: 1; min-width: 0; max-width: 860px; }
+
+/* Mobile */
+@media (max-width: 900px) {
+  body { display: block; max-width: 860px; }
+  .sidebar {
+    position: fixed; top: 0; left: -280px; width: 260px; height: 100vh;
+    max-height: 100vh; background: var(--surface); border-right: 1px solid var(--border);
+    padding: 1rem; margin-right: 0; z-index: 1001; transition: left 0.25s ease;
+  }
+  .sidebar.mobile-open { left: 0; }
+  .main-content { max-width: 100%; }
+  .mobile-toc-btn { display: flex !important; }
+  .mobile-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; }
+  .mobile-overlay.active { display: block; }
+  .compare-row { grid-template-columns: 1fr; }
+  .pipeline { flex-direction: column; align-items: center; }
+  .pipeline-arrow { transform: rotate(90deg); }
+  .glossary-panel { width: calc(100vw - 3rem); right: 1.5rem; }
+  .term .tooltip { width: calc(100vw - 4rem); max-width: 320px; left: 0; transform: none; }
+  .metrics-table { display: block; overflow-x: auto; }
+}
+.mobile-toc-btn {
+  display: none; position: fixed; bottom: 1.5rem; left: 1.5rem;
+  width: 44px; height: 44px; background: var(--accent); color: var(--bg);
+  border: none; border-radius: 50%; font-size: 1.1rem; cursor: pointer;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.4); z-index: 999;
+  align-items: center; justify-content: center;
+}
+
+h1 { font-size: 2rem; margin-bottom: 0.5rem; }
+.subtitle { color: var(--text-muted); margin-bottom: 2rem; font-size: 1.05rem; }
+.meta { color: var(--text-muted); font-size: 0.8rem; margin-top: -1rem; margin-bottom: 1.5rem; }
+
+h2 { font-size: 1.5rem; margin: 2.5rem 0 1rem; color: var(--accent); border-bottom: 1px solid var(--border); padding-bottom: 0.5rem; }
+h3 { font-size: 1.2rem; margin: 1.5rem 0 0.75rem; color: var(--purple); }
+
+p { margin-bottom: 1rem; }
+a { color: var(--accent); }
+
+/* Research banner */
+.research-banner {
+  background: linear-gradient(135deg, #011627 0%, #0d2137 50%, #1a1a3a 100%);
+  border: 1px solid #2EC4B6;
+  border-radius: 12px;
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 2rem;
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+}
+.research-banner .banner-icon { font-size: 2.2rem; flex-shrink: 0; }
+.research-banner .banner-text { flex: 1; }
+.research-banner .banner-text p {
+  margin: 0; font-size: 0.95rem; color: var(--text-muted); line-height: 1.5;
+}
+.research-banner .banner-text p:first-child {
+  font-size: 1.05rem; font-weight: 600; color: var(--text); margin-bottom: 0.25rem;
+}
+.research-banner a { color: #2EC4B6; text-decoration: none; font-weight: 600; }
+.research-banner a:hover { text-decoration: underline; }
+.banner-links { display: flex; gap: 0.75rem; margin-top: 0.5rem; flex-wrap: wrap; }
+.banner-link {
+  display: inline-flex; align-items: center; gap: 0.35rem;
+  font-size: 0.85rem; padding: 0.35rem 0.75rem; border-radius: 6px;
+  border: 1px solid; text-decoration: none !important; transition: background 0.2s;
+}
+.banner-link.primary { border-color: #2EC4B6; color: #2EC4B6; }
+.banner-link.primary:hover { background: rgba(46,196,182,0.1); }
+.banner-link.secondary { border-color: var(--border); color: var(--text-muted); }
+.banner-link.secondary:hover { background: rgba(88,166,255,0.08); }
+
+/* Term highlighting */
+.term {
+  color: var(--yellow); cursor: help; border-bottom: 1px dashed var(--yellow); position: relative;
+}
+.term:hover { color: #e3b341; }
+.term .tooltip {
+  display: none; position: absolute; bottom: 130%; left: 50%; transform: translateX(-50%);
+  background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+  padding: 0.75rem 1rem; width: 320px; font-size: 0.85rem; color: var(--text);
+  z-index: 100; box-shadow: 0 4px 20px rgba(0,0,0,0.5); line-height: 1.5;
+}
+.term:hover .tooltip { display: block; }
+
+/* Analogy boxes */
+.analogy {
+  background: #1a2332; border-left: 4px solid var(--accent);
+  padding: 1rem 1.25rem; border-radius: 0 8px 8px 0; margin: 1rem 0;
+}
+.analogy::before { content: "Real-world analogy: "; font-weight: 700; color: var(--accent); }
+
+/* Key insight boxes */
+.insight {
+  background: #1a2a1a; border-left: 4px solid var(--green);
+  padding: 1rem 1.25rem; border-radius: 0 8px 8px 0; margin: 1rem 0;
+}
+.insight::before { content: "Key Insight: "; font-weight: 700; color: var(--green); }
+
+/* Collapsible sections */
+details {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 8px; margin: 1rem 0; padding: 0; overflow: hidden;
+}
+details summary {
+  padding: 0.75rem 1rem; cursor: pointer; font-weight: 600;
+  user-select: none; list-style: none; display: flex; align-items: center; gap: 0.5rem;
+}
+details summary::before { content: '+ '; color: var(--accent); font-family: monospace; font-size: 1.2rem; }
+details[open] summary::before { content: '- '; }
+details summary:hover { background: var(--accent-subtle); }
+details .content { padding: 0 1rem 1rem; }
+
+/* Architecture diagram */
+.arch-flow { display: flex; flex-direction: column; align-items: center; gap: 0; margin: 24px 0; }
+.arch-card {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+  padding: 16px 24px; width: 100%; max-width: 500px; text-align: center;
+}
+.arch-card.highlight { border-color: #2EC4B6; box-shadow: 0 0 20px rgba(46,196,182,0.15); }
+.arch-card .icon { font-size: 1.5em; margin-bottom: 4px; }
+.arch-card .name { font-weight: 700; font-size: 1.05em; }
+.arch-card .desc { color: var(--text-muted); font-size: 0.9em; margin-top: 4px; }
+.arrow-down { color: var(--text-muted); font-size: 1.8em; line-height: 1; padding: 4px 0; }
+.tag-row { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-bottom: 8px; }
+.tag { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 0.8em; font-weight: 600; }
+.tag-teal { background: rgba(46,196,182,0.15); color: #2EC4B6; }
+.tag-orange { background: rgba(255,159,28,0.15); color: #FF9F1C; }
+.tag-purple { background: rgba(188,140,255,0.15); color: #bc8cff; }
+.tag-green { background: rgba(63,185,80,0.15); color: var(--green); }
+
+/* Pipeline stages */
+.pipeline { display: flex; gap: 0; align-items: stretch; margin: 24px 0; overflow-x: auto; padding-bottom: 8px; }
+.pipeline-stage { flex: 1; min-width: 160px; text-align: center; padding: 16px 12px; position: relative; }
+.pipeline-stage .num {
+  width: 36px; height: 36px; border-radius: 50%; display: inline-flex;
+  align-items: center; justify-content: center; font-weight: 700; font-size: 1em;
+  margin-bottom: 8px;
+}
+.pipeline-stage .name { font-weight: 700; font-size: 0.95em; margin-bottom: 4px; }
+.pipeline-stage .desc { color: var(--text-muted); font-size: 0.82em; font-style: italic; }
+.pipeline-arrow { display: flex; align-items: center; color: var(--text-muted); font-size: 1.5em; padding: 0 4px; }
+.num-1 { background: rgba(46,196,182,0.2); color: #2EC4B6; }
+.num-2 { background: rgba(255,159,28,0.2); color: #FF9F1C; }
+.num-3 { background: rgba(188,140,255,0.2); color: #bc8cff; }
+.num-4 { background: rgba(63,185,80,0.2); color: var(--green); }
+
+/* Stepper */
+.stepper { margin: 24px 0; padding-left: 20px; }
+.step { position: relative; padding: 0 0 24px 28px; border-left: 2px solid var(--accent); }
+.step:last-child { border-left: 2px solid transparent; }
+.step::before {
+  content: ""; position: absolute; left: -7px; top: 4px;
+  width: 12px; height: 12px; border-radius: 50%; background: var(--accent);
+}
+.step strong { display: block; margin-bottom: 4px; }
+.step .step-desc { color: var(--text-muted); font-size: 0.95em; }
+
+/* Metrics table */
+.metrics-table { width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 0.95em; }
+.metrics-table th {
+  text-transform: uppercase; font-size: 0.75em; letter-spacing: 1px;
+  color: var(--text-muted); padding: 10px 12px; text-align: left;
+  border-bottom: 2px solid var(--border);
+}
+.metrics-table td { padding: 10px 12px; border-bottom: 1px solid var(--border); }
+.metrics-table tr:hover td { background: rgba(88,166,255,0.04); }
+.val-best { color: var(--green); font-weight: 700; }
+
+/* Quiz */
+.quiz {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 8px; padding: 1.25rem; margin: 1.5rem 0;
+}
+.quiz-q { font-weight: 600; margin-bottom: 0.75rem; color: var(--purple); }
+.quiz label {
+  display: block; padding: 0.5rem 0.75rem; margin: 0.25rem 0;
+  border-radius: 6px; cursor: pointer; transition: background 0.2s;
+}
+.quiz label:hover { background: var(--accent-subtle); }
+.quiz input[type="radio"] { margin-right: 0.5rem; }
+.quiz-btn {
+  margin-top: 0.75rem; padding: 0.5rem 1.25rem; background: var(--accent);
+  color: var(--bg); border: none; border-radius: 6px; font-weight: 600; cursor: pointer;
+}
+.quiz-btn:hover { opacity: 0.9; }
+.quiz-feedback { display: none; margin-top: 0.75rem; padding: 0.75rem; border-radius: 6px; }
+.quiz-correct { background: #1a2a1a; color: var(--green); }
+.quiz-wrong { background: #2a1a1a; color: var(--red); }
+
+/* Glossary panel */
+.glossary-toggle {
+  position: fixed; bottom: 1.5rem; right: 1.5rem; width: 50px; height: 50px;
+  background: var(--accent); color: var(--bg); border: none; border-radius: 50%;
+  font-size: 1.3rem; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+  z-index: 999; display: flex; align-items: center; justify-content: center;
+}
+.glossary-panel {
+  display: none; position: fixed; bottom: 5rem; right: 1.5rem; width: 380px;
+  max-height: 70vh; overflow-y: auto; background: var(--surface);
+  border: 1px solid var(--border); border-radius: 12px; padding: 1.25rem;
+  z-index: 998; box-shadow: 0 8px 30px rgba(0,0,0,0.5);
+}
+.glossary-panel.open { display: block; }
+.glossary-panel h3 { margin-top: 0; }
+.glossary-panel input {
+  width: 100%; padding: 0.5rem 0.75rem; background: var(--bg);
+  border: 1px solid var(--border); border-radius: 6px; color: var(--text);
+  margin-bottom: 0.75rem; font-size: 0.9rem;
+}
+.glossary-entry { padding: 0.5rem 0; border-bottom: 1px solid var(--border); }
+.glossary-entry:last-child { border-bottom: none; }
+.glossary-entry strong { color: var(--yellow); }
+.glossary-entry p { font-size: 0.85rem; color: var(--text-muted); margin: 0.25rem 0 0; }
+
+/* Video embed */
+.video-embed {
+  margin: 1.5rem 0;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  background: #011627;
+}
+.video-embed video {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.video-caption {
+  padding: 0.5rem 0.75rem;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  background: var(--surface);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.video-caption .badge {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.2rem 0.6rem;
+  border-radius: 4px;
+  background: rgba(46,196,182,0.15);
+  color: #2EC4B6;
+  text-decoration: none;
+  white-space: nowrap;
+  line-height: 1.2;
+  transition: background 0.15s;
+}
+.video-caption .badge .badge-label {
+  font-size: 0.55rem;
+  font-weight: 400;
+  color: #778DA9;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.video-caption .badge .badge-name {
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+.video-caption .badge:hover {
+  background: rgba(46,196,182,0.3);
+  text-decoration: none;
+}
+
+/* Numbered list */
+ol.big { counter-reset: biglist; list-style: none; padding: 0; }
+ol.big li { counter-increment: biglist; padding: 8px 0 8px 48px; position: relative; margin-bottom: 8px; }
+ol.big li::before {
+  content: counter(biglist); position: absolute; left: 0; top: 6px;
+  width: 32px; height: 32px; border-radius: 50%; background: rgba(88,166,255,0.12);
+  color: var(--accent); display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 0.9em;
+}
+
+/* Comparison card pair */
+.compare-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 20px 0; }
+.compare-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 20px; }
+.compare-card h4 { margin-bottom: 8px; }
+.compare-card.bad { border-color: var(--red); }
+.compare-card.bad h4 { color: var(--red); }
+.compare-card.good { border-color: var(--green); }
+.compare-card.good h4 { color: var(--green); }
+
+/* Equation block */
+.eq-block {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+  padding: 16px 20px; margin: 16px 0; font-family: "Cambria Math", "Times New Roman", serif;
+  font-size: 1.05em; overflow-x: auto; text-align: center;
+}
+
+</style>
+</head>
+<body>
+
+<div class="progress-bar" id="progress-bar"></div>
+
+<button class="mobile-toc-btn" onclick="document.querySelector('.sidebar').classList.toggle('mobile-open'); document.querySelector('.mobile-overlay').classList.toggle('active');">&#9776;</button>
+<div class="mobile-overlay" onclick="document.querySelector('.sidebar').classList.remove('mobile-open'); this.classList.remove('active');"></div>
+
+<nav class="sidebar">
+  <a href="../" class="sidebar-home">&larr; All Papers</a>
+  <div class="toc-title">Contents</div>
+  <a href="#big-picture">The Big Picture</a>
+  <a href="#background">Background Concepts</a>
+  <a href="#how-it-works">How It Works</a>
+  <a href="#latent-briefing">Latent Briefing (Application)</a>
+  <a href="#training">Constructing the Compact Cache</a>
+  <a href="#inference">Inference &amp; Chunking</a>
+  <a href="#nonuniform">Nonuniform Compaction</a>
+  <a href="#results">Results</a>
+  <a href="#latent-briefing-results">Latent Briefing Results</a>
+  <a href="#quiz">Final Quiz</a>
+</nav>
+
+<div class="main-content">
+
+<!-- Title -->
+<h1>Fast KV Compaction via Attention Matching: The Paper, Explained</h1>
+<p class="subtitle">A beginner-friendly guide to KV cache compaction and its application in multi-agent systems. Every AI term is defined. Every concept is grounded in analogy.</p>
+<p class="meta">Paper by Adam Zweiger, Xinghong Fu, Han Guo, Yoon Kim (MIT) &bull; Blog post by Ramp Labs &bull; Explainer published April 13, 2026 &bull; Terence Cho</p>
+
+<div class="research-banner">
+  <div class="banner-icon">&#x1F9E0;</div>
+  <div class="banner-text">
+    <p>This is a companion explainer for two related works</p>
+    <p>The <a href="https://arxiv.org/abs/2602.16284" target="_blank">Attention Matching paper</a> introduces fast KV cache compaction. The <a href="https://x.com/RampLabs/status/2042660310851449223" target="_blank">Latent Briefing blog post</a> by Ramp Labs applies it to multi-agent systems. This page helps you understand the <em>science behind both</em> &mdash; every AI term explained, every concept broken down at a college-freshman level.</p>
+    <div class="banner-links">
+      <a href="https://arxiv.org/abs/2602.16284" target="_blank" class="banner-link primary">&#x1F4C4; Read the Paper (arXiv)</a>
+      <a href="https://github.com/adamzweiger/compaction" target="_blank" class="banner-link secondary">&#x1F4BB; GitHub Repo</a>
+      <a href="https://x.com/RampLabs/status/2042660310851449223" target="_blank" class="banner-link secondary">&#x1F310; Ramp Labs Post</a>
+    </div>
+  </div>
+</div>
+
+<!-- ========== SECTION 1: BIG PICTURE ========== -->
+<h2 id="big-picture">The Big Picture</h2>
+
+<p>Modern AI language models like GPT, Claude, and Gemini have a memory problem. As conversations get longer, they need to remember more and more, and that memory isn't free &mdash; it takes up expensive GPU space. This paper introduces a clever way to <strong>shrink that memory by up to 50x</strong> while barely losing any quality.</p>
+
+<div class="analogy">Think of your phone's photo storage. You have thousands of high-resolution photos, but storage is limited. You could <em>delete</em> old photos (lossy!), write <em>text descriptions</em> of them (summarization &mdash; you lose detail), or you could <em>intelligently compress</em> them so they look nearly identical but take up far less space. This paper does the third option, but for AI memory.</div>
+
+<p>Here's what the paper solves:</p>
+
+<ol class="big">
+  <li><strong>The memory wall</strong> &mdash; Language models store a "key-value cache" that grows linearly with conversation length. Long conversations can eat many gigabytes of GPU memory per request.</li>
+  <li><strong>Existing solutions are bad</strong> &mdash; Current approaches either summarize context (lossy and slow) or drop tokens (quality degrades fast at high compression).</li>
+  <li><strong>Gradient-based approaches are too slow</strong> &mdash; Prior work (Cartridges) could compress well but took GPU-hours per context. This paper achieves similar quality in <em>seconds</em>.</li>
+</ol>
+
+<div class="insight">Instead of training a compact cache end-to-end (expensive), the authors decompose the problem into simple subproblems &mdash; select the best keys, correct the attention weights, and reconstruct the values &mdash; each solvable in closed form without gradient descent.</div>
+
+<!-- ========== SECTION 2: BACKGROUND ========== -->
+<h2 id="background">Background Concepts</h2>
+
+<h3>Transformers and Attention</h3>
+<p>The <span class="term">Transformer<span class="tooltip">The dominant neural network architecture behind modern LLMs. It processes text by letting every word "attend to" every other word, learning which words are relevant to each other.</span></span> is the architecture behind essentially every modern language model. Its core mechanism is <span class="term">attention<span class="tooltip">A mechanism where the model computes relevance scores between all pairs of positions in a sequence, allowing each position to "look at" and gather information from the most relevant other positions.</span></span>: a way for the model to figure out which parts of the input are relevant to each other.</p>
+
+<div class="analogy">Imagine you're at a crowded party trying to follow a conversation. Your brain automatically "attends" to the person speaking to you while filtering out background noise. Attention in a Transformer works similarly &mdash; for every word being generated, the model assigns relevance scores to every prior word, then takes a weighted average of their information.</div>
+
+<details>
+  <summary>Deep dive: How attention works mathematically</summary>
+  <div class="content">
+    <p>Attention uses three sets of vectors for each token:</p>
+    <ul>
+      <li><strong>Query (Q)</strong> &mdash; "What am I looking for?"</li>
+      <li><strong>Key (K)</strong> &mdash; "What do I contain?"</li>
+      <li><strong>Value (V)</strong> &mdash; "What information do I carry?"</li>
+    </ul>
+    <p>The model computes scores by comparing each Query against all Keys (via dot product), normalizes them with <span class="term">softmax<span class="tooltip">A function that converts a list of numbers into probabilities that sum to 1. It exponentiates each number and divides by the total, making larger values much more prominent.</span></span>, and uses those scores to take a weighted average of the Values.</p>
+    <div class="eq-block">Attention(Q, K, V) = softmax(Q &middot; K<sup>T</sup> / &radic;d) &middot; V</div>
+    <p>The &radic;d scaling prevents the dot products from getting too large, which would push softmax into regions where its gradients are tiny.</p>
+  </div>
+</details>
+
+<h3>The KV Cache</h3>
+<p>When a language model generates text one token at a time, it would be wasteful to recompute attention over the <em>entire</em> context for every new token. Instead, models store the Key and Value vectors from all previous tokens in a <span class="term">KV cache<span class="tooltip">A memory store that holds the Key and Value vectors from all previously processed tokens. This avoids redundant computation during text generation, but grows linearly with sequence length.</span></span>.</p>
+
+<div class="analogy">Think of a student taking a test with access to their notes. Rather than re-reading the entire textbook for every question (full recomputation), they keep organized notes (the KV cache) that they can quickly reference. The problem: the longer the class, the thicker the notebook, and eventually it doesn't fit on the desk.</div>
+
+<p>For a model like Qwen3-4B with a 128K context window, the KV cache alone can reach <strong>many gigabytes</strong> per request. This is the bottleneck that compaction addresses.</p>
+
+<h3>Token Eviction and Merging (Prior Approaches)</h3>
+<p>Before this paper, the main approaches to shrinking the KV cache were:</p>
+
+<div class="compare-row">
+  <div class="compare-card bad">
+    <h4>Token Eviction</h4>
+    <p>Simply delete the KV entries for tokens deemed unimportant (e.g., H2O, SnapKV). Problem: at high compression ratios (20x+), performance drops sharply because you're permanently losing information.</p>
+  </div>
+  <div class="compare-card bad">
+    <h4>Summarization</h4>
+    <p>Replace the original text with a shorter summary. Problem: it's slow (requires a full LLM call), lossy, and the summary might not capture what's actually needed for downstream tasks.</p>
+  </div>
+</div>
+
+<h3>Cartridges (Prior Work)</h3>
+<p><span class="term">Cartridges<span class="tooltip">A prior method (Eyuboglu et al., 2025) that trains compact KV caches end-to-end using prefix-tuning on synthetic "self-study" data. Achieves high compression but requires GPU-hours per context.</span></span> showed that you <em>can</em> build very compact KV representations in <span class="term">latent space<span class="tooltip">The internal representation space of a neural network, as opposed to "token space" which is the raw text. Latent-space compaction manipulates the model's internal vectors directly rather than summarizing text.</span></span> (the model's internal representation, not the text itself). But it does this through end-to-end <span class="term">gradient-based optimization<span class="tooltip">An iterative method for minimizing a loss function by computing gradients (derivatives) and adjusting parameters in the direction that reduces the loss. Think of it as slowly walking downhill to find the lowest point in a valley.</span></span> &mdash; essentially training a small model for every context. This takes <strong>5+ GPU-hours per context</strong>, making it impractical for real-time use.</p>
+
+<h3>Grouped Query Attention (GQA)</h3>
+<p>Modern models use <span class="term">GQA<span class="tooltip">Grouped Query Attention: instead of having one set of Keys and Values per attention head, multiple Query heads share the same KV pair. This reduces KV cache size by the grouping factor while maintaining most of the model's expressiveness.</span></span> to reduce the KV cache size. Instead of each attention head having its own keys and values, multiple query heads share a single KV head. For example, Qwen3-4B has 36 layers with 32 query heads but only 8 KV heads per layer.</p>
+
+<h3>Rotary Position Embeddings (RoPE)</h3>
+<p><span class="term">RoPE<span class="tooltip">Rotary Position Embeddings: a method for encoding position information into attention by rotating key and query vectors. The angle of rotation depends on position, so the dot product between a query and key naturally encodes their relative distance.</span></span> is how modern models encode the <em>position</em> of tokens in a sequence. It works by rotating the key and query vectors by an angle that depends on their position, so that the dot product between a query at position <em>i</em> and a key at position <em>j</em> naturally encodes their relative distance |<em>i</em> - <em>j</em>|.</p>
+
+<div class="analogy">It's like a clock where each token gets placed at a different time. When the model compares two tokens, the "angle between them on the clock" tells it how far apart they are in the text.</div>
+
+<p>This matters for compaction because even though we reduce the <em>physical</em> number of KV entries, we keep the original position IDs so that future tokens still get the correct positional relationships.</p>
+
+<!-- ========== SECTION 3: HOW IT WORKS ========== -->
+<h2 id="how-it-works">How It Works: Attention Matching</h2>
+
+<p>The core idea is elegant: instead of trying to optimize a compact cache end-to-end, <strong>just make the compact cache produce the same attention behavior as the original</strong>. If the attention outputs match, the model can't tell the difference.</p>
+
+<div class="insight">Attention over concatenated blocks decomposes into a mixture of each block's local attention output, weighted by that block's "attention mass." So matching both the local attention output AND the attention mass guarantees correctness even when the compacted cache is combined with new tokens later.</div>
+
+<p>Formally, the method finds compacted keys C<sub>k</sub>, scalar biases &beta;, and compacted values C<sub>v</sub> such that for all relevant queries <em>q</em>:</p>
+
+<div class="eq-block">
+  softmax(q &middot; C<sub>k</sub><sup>T</sup> + &beta;) &middot; C<sub>v</sub> &approx; softmax(q &middot; K<sup>T</sup>) &middot; V<br><br>
+  &sum; exp(q &middot; C<sub>k,j</sub><sup>T</sup> + &beta;<sub>j</sub>) &approx; &sum; exp(q &middot; K<sub>j</sub><sup>T</sup>)
+</div>
+
+<p>The first equation matches the <strong>attention output</strong> (what information gets passed forward). The second matches the <strong>attention mass</strong> (how much total "weight" this block contributes when combined with other blocks).</p>
+
+<!-- Architecture Diagram -->
+<h3>The Three-Step Pipeline</h3>
+
+<div class="arch-flow">
+  <div class="tag-row">
+    <span class="tag tag-teal">Original Keys K</span>
+    <span class="tag tag-orange">Original Values V</span>
+    <span class="tag tag-purple">Reference Queries Q<sub>ref</sub></span>
+  </div>
+  <div class="arrow-down">&darr;</div>
+  <div class="arch-card">
+    <div class="icon">1&#xFE0F;&#x20E3;</div>
+    <div class="name">Select Compact Keys C<sub>k</sub></div>
+    <div class="desc">Pick the most important keys from the original set (via attention scores or Orthogonal Matching Pursuit)</div>
+  </div>
+  <div class="arrow-down">&darr;</div>
+  <div class="arch-card highlight">
+    <div class="icon">2&#xFE0F;&#x20E3;</div>
+    <div class="name">Fit Bias Corrections &beta;</div>
+    <div class="desc">Solve for scalar biases via NNLS so the compact keys match the original attention mass</div>
+  </div>
+  <div class="arrow-down">&darr;</div>
+  <div class="arch-card">
+    <div class="icon">3&#xFE0F;&#x20E3;</div>
+    <div class="name">Fit Compact Values C<sub>v</sub></div>
+    <div class="desc">Solve for new values via least squares so attention outputs match the original</div>
+  </div>
+  <div class="arrow-down">&darr;</div>
+  <div class="tag-row">
+    <span class="tag tag-green">Compacted Cache (C<sub>k</sub>, &beta;, C<sub>v</sub>)</span>
+  </div>
+</div>
+
+<h3>Step 1: Selecting Keys</h3>
+<p>The method restricts compact keys to be a <em>subset</em> of the original keys (rather than optimizing new key vectors freely). This avoids the need for gradient descent. Two selection strategies are offered:</p>
+
+<div class="compare-row">
+  <div class="compare-card good">
+    <h4>Highest Attention Keys (Fast)</h4>
+    <p>Compute attention scores for all reference queries, aggregate via RMS, keep the top-scoring keys. Simple and fast (~3 seconds for 60K tokens).</p>
+  </div>
+  <div class="compare-card good">
+    <h4>OMP Keys (Best Quality)</h4>
+    <p><span class="term">Orthogonal Matching Pursuit<span class="tooltip">A greedy algorithm from signal processing. It iteratively picks the key whose column best reduces the residual error in matching attention mass, then refits all weights. Think of it as building a team one person at a time, always picking the person who fills the biggest gap.</span></span> greedily selects keys that directly minimize the mass-matching error. Better quality but slower (~100s with speedups).</p>
+  </div>
+</div>
+
+<div class="analogy">Imagine you're making a highlight reel of a 3-hour movie. "Highest Attention" is like picking the most-watched scenes &mdash; fast to decide, usually good. OMP is like a film editor carefully selecting each clip to maximize how well the highlight reel covers all plot points &mdash; better result, takes more time.</div>
+
+<h3>Step 2: Fitting the Bias &beta;</h3>
+<p>Here's a subtle but critical piece. When you keep only <em>t</em> out of <em>T</em> keys, the total attention mass (the sum of exponential scores) is necessarily smaller. This means the compacted block would get <em>underweighted</em> when concatenated with other blocks (like new user messages).</p>
+
+<p>The solution: add a scalar bias &beta;<sub>j</sub> to each kept key, which is equivalent to multiplying its contribution by exp(&beta;<sub>j</sub>). This lets each kept key "represent the mass of many removed keys." The biases are found by solving a <span class="term">nonnegative least squares<span class="tooltip">An optimization problem: find non-negative weights w that minimize ||Aw - b||&sup2;. The non-negativity constraint ensures the weights (which represent exp(&beta;)) are physically meaningful &mdash; you can't have negative attention mass.</span></span> (NNLS) problem.</p>
+
+<div class="analogy">If you're making a team of 5 representatives for a class of 50 students, each representative needs to speak not just for themselves but for the ~10 students they represent. The bias is like giving each representative a "voting weight" proportional to how many people they speak for.</div>
+
+<div class="video-embed">
+  <video src="videos/attention-mass.mp4" autoplay muted loop playsinline></video>
+  <div class="video-caption"><a href="https://github.com/heygen-com/hyperframes" target="_blank" class="badge" title="Made with HyperFrames — HeyGen's HTML-to-video composition framework"><span class="badge-label">made with</span><span class="badge-name">HyperFrames</span></a> Without bias corrections, the compacted block's attention mass drops and gets underweighted. Biases restore the correct mass.</div>
+</div>
+
+<h3>Step 3: Fitting Values</h3>
+<p>With keys and biases fixed, finding the best values is a straightforward <span class="term">least squares<span class="tooltip">A standard method for finding the best-fit solution to an overdetermined system of equations. It minimizes the sum of squared differences between predicted and actual values. Has a closed-form solution: C = (X^T X)^-1 X^T Y.</span></span> problem. We want values C<sub>v</sub> such that the attention-weighted output matches the original:</p>
+
+<div class="eq-block">C<sub>v</sub> = (X<sup>T</sup>X)<sup>-1</sup> X<sup>T</sup> Y</div>
+
+<p>where X is the matrix of compacted attention weights and Y is the matrix of original attention outputs. This has a direct closed-form solution &mdash; no iteration needed.</p>
+
+<h3>Reference Queries</h3>
+<p>All three steps depend on "reference queries" Q<sub>ref</sub> &mdash; example queries that represent the kinds of attention patterns the model will produce. The paper explores several strategies:</p>
+
+<ul>
+  <li><strong>Repeat-prefill</strong>: Prompt the model with "Repeat the previous context" and extract the query vectors it generates &mdash; fast and effective</li>
+  <li><strong>Self-study</strong>: Generate synthetic interactions (questions, summaries, fact extraction) about the context and collect query vectors &mdash; best quality but slower</li>
+  <li><strong>Context-prefill</strong>: Simply run a forward pass on the context and extract queries &mdash; cheapest but slightly less effective</li>
+</ul>
+
+<details>
+  <summary>Deep dive: On-policy queries</summary>
+  <div class="content">
+    <p>There's a subtle issue with compacting layers sequentially: compacting early layers changes the residual stream, so later layers see different inputs than they would in the original model. This means the queries they generate are "off-policy."</p>
+    <p>The solution is <strong>on-policy query extraction</strong>: compact layers in order, and for each layer, extract reference queries by running the model <em>with all previously compacted layers already in place</em>. This gives slight but consistent improvements.</p>
+  </div>
+</details>
+
+<!-- ========== SECTION: LATENT BRIEFING ========== -->
+<h2 id="latent-briefing">Latent Briefing: Applying Compaction to Multi-Agent Systems</h2>
+
+<p>The Ramp Labs blog post takes the Attention Matching framework and applies it to a practical problem: <strong>efficiently sharing context between AI agents</strong>. In multi-agent systems where an orchestrator delegates tasks to worker models, there's a "token explosion" problem.</p>
+
+<div class="analogy">Imagine a CEO (orchestrator) managing a team of analysts (workers). The CEO has been in every meeting, read every report, and has a rich mental model of the project. When they ask an analyst to investigate something specific, they could either (a) forward every email they've ever received (expensive), (b) write a summary (slow, might miss what the analyst needs), or (c) share a compressed version of their memory that prioritizes what's relevant to this specific task. Latent Briefing does option (c).</div>
+
+<h3>The Token Explosion Problem</h3>
+<p>In the <span class="term">Recursive Language Model (RLM)<span class="tooltip">A multi-agent framework where a strong orchestrator model decomposes tasks and makes repeated calls to a worker model through a REPL environment. The orchestrator builds up reasoning over many calls.</span></span> framework, an orchestrator (like Claude Sonnet 4) makes repeated calls to a worker model (like Qwen3-14B). Each call, the orchestrator passes the raw document plus a targeted query. But the orchestrator has been building up a rich reasoning trajectory &mdash; hypotheses tested, passages identified, dead ends eliminated &mdash; that the worker never sees.</p>
+
+<h3>Three Key Modifications</h3>
+
+<div class="arch-flow">
+  <div class="arch-card highlight">
+    <div class="name">1. Task-Guided Query Vectors</div>
+    <div class="desc">Instead of sampling reference queries from the context itself, use queries derived from the orchestrator's specific task prompt. This compresses the cache to prioritize information most relevant to the current sub-task.</div>
+  </div>
+  <div class="arrow-down">&darr;</div>
+  <div class="arch-card">
+    <div class="name">2. Shared Token Selection (Global Scoring)</div>
+    <div class="desc">Instead of each of the 320 attention heads independently picking which tokens to keep, aggregate scores across all heads into a single consensus vote. This enables batched GPU execution.</div>
+  </div>
+  <div class="arrow-down">&darr;</div>
+  <div class="arch-card">
+    <div class="name">3. MAD Thresholding</div>
+    <div class="desc">Instead of keeping a fixed number of tokens (top-k), keep every token scoring above a statistically derived threshold using <span class="term">Median Absolute Deviation<span class="tooltip">A robust measure of statistical dispersion. Unlike standard deviation, it's not sensitive to extreme outliers. MAD = median(|x_i - median(x)|). Used here to set a principled threshold for which tokens to keep.</span></span>.</div>
+  </div>
+</div>
+
+<div class="video-embed">
+  <video src="videos/agent-loop.mp4" autoplay muted loop playsinline></video>
+  <div class="video-caption"><a href="https://github.com/heygen-com/hyperframes" target="_blank" class="badge" title="Made with HyperFrames — HeyGen's HTML-to-video composition framework"><span class="badge-label">made with</span><span class="badge-name">HyperFrames</span></a> The orchestrator's reasoning trajectory is compacted using the specific task query as a relevance signal, giving the worker a focused view.</div>
+</div>
+
+<div class="insight">The shared global mask is the key to making compaction real-time. The original AM algorithm required 320 separate CUDA kernel launches (one per KV head across all 40 layers &times; 8 heads) because each head selected different tokens, making matrix shapes incompatible. With a shared mask, all 320 solves can be stacked into 2-3 batched tensor operations, reducing compaction from 30+ seconds to ~1.7 seconds.</div>
+
+<!-- ========== SECTION: TRAINING / CONSTRUCTING ========== -->
+<h2 id="training">Constructing the Compact Cache</h2>
+
+<div class="pipeline">
+  <div class="pipeline-stage">
+    <div class="num num-1">1</div>
+    <div class="name">Generate Queries</div>
+    <div class="desc">Run repeat-prefill and/or self-study to extract reference query vectors Q<sub>ref</sub></div>
+  </div>
+  <div class="pipeline-arrow">&rarr;</div>
+  <div class="pipeline-stage">
+    <div class="num num-2">2</div>
+    <div class="name">Select Keys</div>
+    <div class="desc">Choose which keys to keep via highest-attention or OMP</div>
+  </div>
+  <div class="pipeline-arrow">&rarr;</div>
+  <div class="pipeline-stage">
+    <div class="num num-3">3</div>
+    <div class="name">Fit &beta; via NNLS</div>
+    <div class="desc">Compute bias corrections to match attention mass</div>
+  </div>
+  <div class="pipeline-arrow">&rarr;</div>
+  <div class="pipeline-stage">
+    <div class="num num-4">4</div>
+    <div class="name">Fit C<sub>v</sub> via OLS</div>
+    <div class="desc">Reconstruct values to match attention outputs</div>
+  </div>
+</div>
+
+<p>This entire process is done <strong>per KV-head, per layer</strong>. For a model like Qwen3-4B (36 layers &times; 8 KV heads = 288 solves), this is tractable because each solve involves small, well-conditioned linear algebra problems.</p>
+
+<h3>Wall-Clock Timing</h3>
+<p>On a 60K-token context with Gemma-3-12B on a single H200 GPU:</p>
+
+<table class="metrics-table">
+  <thead><tr><th>Stage</th><th>Method</th><th>Time</th></tr></thead>
+  <tbody>
+    <tr><td>Query Generation</td><td>Context-prefill</td><td>7s</td></tr>
+    <tr><td>Query Generation</td><td>Repeat-prefill</td><td>8s</td></tr>
+    <tr><td>Query Generation</td><td>Self-study</td><td>139s</td></tr>
+    <tr><td>Key Selection</td><td>Highest attention</td><td class="val-best">3s</td></tr>
+    <tr><td>Key Selection</td><td>OMP-fast</td><td>104s</td></tr>
+    <tr><td>Key Selection</td><td>OMP (full)</td><td>565s</td></tr>
+    <tr><td>&beta; fitting</td><td>NNLS</td><td class="val-best">2.2s</td></tr>
+    <tr><td>Value fitting</td><td>Least squares</td><td class="val-best">1.8s</td></tr>
+  </tbody>
+</table>
+
+<p>The fastest variant (AM-HighestAttnKeys-fast using only repeat-prefill) takes roughly <strong>15 seconds total</strong> &mdash; orders of magnitude faster than Cartridges' 5+ GPU-hours.</p>
+
+<!-- ========== SECTION: INFERENCE ========== -->
+<h2 id="inference">Inference &amp; Chunked Compaction</h2>
+
+<p>At inference time, the compacted cache drops right into the model's normal attention mechanism. The only additions are the scalar biases &beta;, which are supported natively by efficient attention implementations like <span class="term">FlashAttention<span class="tooltip">An optimized attention implementation that reduces memory usage from O(n&sup2;) to O(n) by computing attention in tiles and never materializing the full attention matrix. The standard in modern LLM inference.</span></span> and FlexAttention.</p>
+
+<h3>Chunked Compaction for Long Contexts</h3>
+<p>For very long contexts (e.g., 60K+ tokens), the method applies compaction independently to <em>chunks</em> of the input, then concatenates the compacted caches:</p>
+
+<div class="eq-block">[prefix] + [compacted chunk<sub>1</sub>] + &hellip; + [compacted chunk<sub>N</sub>] + [suffix]</div>
+
+<p>Two variants exist:</p>
+<ul>
+  <li><strong>KV-based chunking</strong> (preferred): Prefill the full context once, slice out each chunk's KV states, compact independently, and merge. Preserves cross-chunk interactions from the original prefill.</li>
+  <li><strong>Text-based chunking</strong>: Prefill each chunk in isolation, then align positions via a RoPE phase shift. An approximation because chunks don't see each other during prefill.</li>
+</ul>
+
+<p>The cache retains a <strong>logical length</strong> of T (the original sequence length) even though its physical size is only t. New tokens appended after compaction receive the same position IDs they would under the full cache &mdash; the physical size is decoupled from the positional encoding.</p>
+
+<!-- ========== SECTION: NONUNIFORM ========== -->
+<h2 id="nonuniform">Nonuniform Compaction</h2>
+
+<p>Not all attention heads are created equal. Some heads barely use their KV cache (they attend locally or to "attention sinks"), while others are critical for long-range retrieval. A uniform compaction ratio across all heads wastes budget on insensitive heads.</p>
+
+<div class="analogy">It's like allocating shelf space in a library. The reference section (critical heads) needs lots of space because people constantly look things up there. The magazine rack (insensitive heads) barely gets used &mdash; you can shrink it without anyone noticing.</div>
+
+<div class="video-embed">
+  <video src="videos/head-budgets.mp4" autoplay muted loop playsinline></video>
+  <div class="video-caption"><a href="https://github.com/heygen-com/hyperframes" target="_blank" class="badge" title="Made with HyperFrames — HeyGen's HTML-to-video composition framework"><span class="badge-label">made with</span><span class="badge-name">HyperFrames</span></a> Uniform allocation wastes budget on insensitive local heads. Optimized allocation reallocates to sensitive retrieval heads that need it most.</div>
+</div>
+
+<p>The paper's key finding: <strong>head sensitivity rankings are stable across different inputs.</strong> This means you can measure which heads need more KV budget once per model, then reuse that allocation forever.</p>
+
+<details>
+  <summary>Deep dive: How head budgets are computed</summary>
+  <div class="content">
+    <p>For each KV head, hold all other heads at a baseline compaction ratio and vary this head's ratio. Plot the resulting change in model loss. The slope of this "sensitivity curve" tells you how much each head benefits from additional capacity.</p>
+    <p>Then, solve a resource allocation problem: starting from a uniform budget, iteratively swap units of KV budget from insensitive heads to sensitive heads until no swap improves the total loss. This produces a model-specific allocation that's reused across all contexts.</p>
+    <p>The ablation study shows that nonuniform head budgets are the <strong>single most important component</strong> of the full method &mdash; more important than learned biases, learned values, or self-study queries.</p>
+  </div>
+</details>
+
+<p>This finding also explains why hybrid architectures with <span class="term">sliding-window attention<span class="tooltip">An attention variant where each layer only attends to a fixed-size window of recent tokens, rather than the full context. Models like Gemma use a mix of sliding-window and full-attention layers.</span></span> (like Gemma-3) work so well: even in full-attention models, most heads naturally specialize in local context, while only a few capture long-range dependencies.</p>
+
+<!-- ========== SECTION: RESULTS ========== -->
+<h2 id="results">Results</h2>
+
+<h3>Accuracy vs. Compaction Ratio</h3>
+<p>Evaluated on QuALITY (long-document QA, 894 questions across 50 contexts) and LongHealth (clinical record QA, 60K tokens per context):</p>
+
+<table class="metrics-table">
+  <thead><tr><th>Method</th><th>Type</th><th>50x Compaction Quality</th><th>Speed</th></tr></thead>
+  <tbody>
+    <tr><td>AM-OMP</td><td>Attention Matching</td><td class="val-best">Best (Pareto frontier)</td><td>~10 min</td></tr>
+    <tr><td>AM-OMP-fast</td><td>Attention Matching</td><td class="val-best">Near-best</td><td>~2 min</td></tr>
+    <tr><td>AM-HighestAttnKeys</td><td>Attention Matching</td><td>Strong</td><td class="val-best">~15s</td></tr>
+    <tr><td>Cartridges</td><td>End-to-end optimization</td><td>Strong (better at 100x on some benchmarks)</td><td>~5 GPU-hrs</td></tr>
+    <tr><td>KVzip</td><td>Token selection</td><td>Moderate</td><td>Fast</td></tr>
+    <tr><td>H2O+ / SnapKV</td><td>Token eviction</td><td>Poor at 50x</td><td>Very fast</td></tr>
+    <tr><td>Summarization</td><td>Token space</td><td>Poor (esp. LongHealth)</td><td>Slow</td></tr>
+  </tbody>
+</table>
+
+<p>Key results across three models (Qwen3-4B, Llama3.1-8B, Gemma3-12B):</p>
+<ul>
+  <li>AM methods <strong>consistently form the Pareto frontier</strong> of compaction time vs. quality</li>
+  <li>At 50x compaction, AM matches or exceeds Cartridges while being <strong>100-1000x faster</strong></li>
+  <li>Summarization fails catastrophically on information-dense tasks (LongHealth), performing no better than no context at all</li>
+  <li>AM can be stacked <em>on top of</em> summarization for 200x total compaction with quality comparable to summarization alone</li>
+</ul>
+
+<h3>Ablation: What Matters Most?</h3>
+<p>Leave-one-out experiments show the importance of each component (ordered by impact):</p>
+
+<div class="stepper">
+  <div class="step"><strong>Nonuniform head budgets</strong><span class="step-desc">Removing this causes the largest quality drop. Most critical component.</span></div>
+  <div class="step"><strong>Learned values &amp; biases</strong><span class="step-desc">Using original values (no fitting) degrades quality noticeably.</span></div>
+  <div class="step"><strong>Learned values only</strong><span class="step-desc">Fitting C<sub>v</sub> via least squares helps, even without bias corrections.</span></div>
+  <div class="step"><strong>Bias corrections</strong><span class="step-desc">Removing &beta; hurts, especially at high compaction ratios where mass correction matters most.</span></div>
+  <div class="step"><strong>Self-study queries</strong><span class="step-desc">Adds a small improvement over repeat-prefill alone.</span></div>
+  <div class="step"><strong>On-policy queries</strong><span class="step-desc">Slight but consistent benefit from sequential compaction with on-policy extraction.</span></div>
+</div>
+
+<!-- ========== SECTION: LATENT BRIEFING RESULTS ========== -->
+<h2 id="latent-briefing-results">Latent Briefing Results</h2>
+
+<p>Ramp Labs tested Latent Briefing on LongBench v2 (126 questions, documents from 0-100K tokens), using Claude Sonnet 4 as the orchestrator and Qwen3-14B as the worker:</p>
+
+<table class="metrics-table">
+  <thead><tr><th>Metric</th><th>Best Result</th><th>Condition</th></tr></thead>
+  <tbody>
+    <tr><td>Accuracy vs. baseline</td><td class="val-best">+3 pp improvement</td><td>At optimal threshold per condition</td></tr>
+    <tr><td>Median token savings (total)</td><td class="val-best">21-31%</td><td>At optimal thresholds</td></tr>
+    <tr><td>Worker token reduction</td><td class="val-best">42-57% (up to 65%)</td><td>Median across thresholds</td></tr>
+    <tr><td>Compaction overhead</td><td class="val-best">~1.7s median</td><td>Scales linearly with input length</td></tr>
+  </tbody>
+</table>
+
+<h3>The Threshold Puzzle</h3>
+<p>An interesting finding: the optimal compaction threshold varies systematically:</p>
+
+<div class="compare-row">
+  <div class="compare-card good">
+    <h4>Long Documents (32K-100K): Light Compaction</h4>
+    <p>Threshold t=-1.0 (18% compaction) wins. Long documents have dispersed information &mdash; you need broad coverage. Still achieves 57% worker token savings.</p>
+  </div>
+  <div class="compare-card good">
+    <h4>Hard Questions: Aggressive Compaction</h4>
+    <p>Threshold t=2.0 (79% compaction) wins by +3pp over baseline. Hard questions cause the orchestrator to explore many speculative hypotheses. Aggressive compaction acts as a <strong>relevance filter</strong>, stripping noise.</p>
+  </div>
+</div>
+
+<div class="analogy">It's like taking notes. When studying a broad topic, you want detailed notes because the details matter. But when brainstorming a hard problem, most of what you write down is exploration that won't lead anywhere &mdash; a concise summary of the best ideas is more useful than the full stream of consciousness.</div>
+
+<!-- ========== SECTION: QUIZ ========== -->
+<h2 id="quiz">Final Quiz</h2>
+
+<div class="quiz" id="q1">
+  <div class="quiz-q">1. Why does the paper use scalar biases (&beta;) in the compacted cache?</div>
+  <label><input type="radio" name="q1" value="a"> To encode position information (like RoPE)</label>
+  <label><input type="radio" name="q1" value="b"> To correct for the lost attention mass when tokens are removed</label>
+  <label><input type="radio" name="q1" value="c"> To make the model run faster during inference</label>
+  <label><input type="radio" name="q1" value="d"> To prevent gradient explosion during training</label>
+  <button class="quiz-btn" onclick="checkQuiz('q1','b')">Check Answer</button>
+  <div class="quiz-feedback"></div>
+</div>
+
+<div class="quiz" id="q2">
+  <div class="quiz-q">2. What is the most important component of the Attention Matching method according to ablation studies?</div>
+  <label><input type="radio" name="q2" value="a"> Self-study queries</label>
+  <label><input type="radio" name="q2" value="b"> On-policy query extraction</label>
+  <label><input type="radio" name="q2" value="c"> Nonuniform head budgets</label>
+  <label><input type="radio" name="q2" value="d"> Learned bias corrections</label>
+  <button class="quiz-btn" onclick="checkQuiz('q2','c')">Check Answer</button>
+  <div class="quiz-feedback"></div>
+</div>
+
+<div class="quiz" id="q3">
+  <div class="quiz-q">3. Why does Latent Briefing use "task-guided" queries instead of sampling queries from the context itself?</div>
+  <label><input type="radio" name="q3" value="a"> They're faster to compute</label>
+  <label><input type="radio" name="q3" value="b"> They compress the cache to prioritize information relevant to the specific worker task</label>
+  <label><input type="radio" name="q3" value="c"> The original AM paper requires it</label>
+  <label><input type="radio" name="q3" value="d"> To avoid copyright issues with the original context</label>
+  <button class="quiz-btn" onclick="checkQuiz('q3','b')">Check Answer</button>
+  <div class="quiz-feedback"></div>
+</div>
+
+<div class="quiz" id="q4">
+  <div class="quiz-q">4. How does a compacted cache maintain correct positional relationships with new tokens?</div>
+  <label><input type="radio" name="q4" value="a"> It recomputes positions from scratch</label>
+  <label><input type="radio" name="q4" value="b"> It keeps the original logical length T and position IDs, even though physical size is smaller</label>
+  <label><input type="radio" name="q4" value="c"> It doesn't &mdash; positional information is lost during compaction</label>
+  <label><input type="radio" name="q4" value="d"> New tokens are always appended at position 0</label>
+  <button class="quiz-btn" onclick="checkQuiz('q4','b')">Check Answer</button>
+  <div class="quiz-feedback"></div>
+</div>
+
+<div class="quiz" id="q5">
+  <div class="quiz-q">5. Why does aggressive compaction help with hard questions in the Latent Briefing experiments?</div>
+  <label><input type="radio" name="q5" value="a"> Hard questions require less context</label>
+  <label><input type="radio" name="q5" value="b"> The orchestrator generates speculative reasoning that dilutes the signal, so compaction acts as a relevance filter</label>
+  <label><input type="radio" name="q5" value="c"> The GPU runs faster with smaller caches</label>
+  <label><input type="radio" name="q5" value="d"> Hard questions have shorter correct answers</label>
+  <button class="quiz-btn" onclick="checkQuiz('q5','b')">Check Answer</button>
+  <div class="quiz-feedback"></div>
+</div>
+
+<div class="quiz" id="q6">
+  <div class="quiz-q">6. What makes the shared global mask critical for real-time compaction in Latent Briefing?</div>
+  <label><input type="radio" name="q6" value="a"> It reduces the number of attention heads in the model</label>
+  <label><input type="radio" name="q6" value="b"> It enables batched GPU operations instead of 320 sequential CUDA kernel launches</label>
+  <label><input type="radio" name="q6" value="c"> It eliminates the need for bias corrections</label>
+  <label><input type="radio" name="q6" value="d"> It compresses the text before passing it to the model</label>
+  <button class="quiz-btn" onclick="checkQuiz('q6','b')">Check Answer</button>
+  <div class="quiz-feedback"></div>
+</div>
+
+</div>
+
+<!-- Glossary -->
+<button class="glossary-toggle" onclick="toggleGlossary()" title="Glossary">Aa</button>
+<div class="glossary-panel" id="glossary-panel">
+  <h3 style="color:var(--accent); margin-bottom:0.75rem;">Glossary</h3>
+  <input type="text" id="glossary-search" placeholder="Search terms..." oninput="filterGlossary()">
+  <div id="glossary-list"></div>
+</div>
+
+<script>
+// Glossary data
+const glossaryData = [
+  {term:"Attention", def:"A mechanism where the model computes relevance scores between all pairs of positions, allowing each position to gather information from the most relevant others."},
+  {term:"Attention Mass", def:"The total unnormalized attention weight a block of keys receives: sum of exp(q * K_j). Determines how much influence the block has when concatenated with other blocks."},
+  {term:"Attention Matching", def:"The core objective of this paper: construct compact keys and values that reproduce the original attention outputs and attention mass for every KV-head."},
+  {term:"Attention Sinks", def:"Special tokens (often the first token or system tokens) that receive disproportionately high attention regardless of content. They must be preserved during compaction."},
+  {term:"BF16 (Brain Float 16)", def:"A 16-bit floating point format used for storing neural network weights. Has the same range as FP32 but less precision, offering a good speed/accuracy tradeoff."},
+  {term:"Cartridges", def:"Prior work (Eyuboglu et al., 2025) that trains compact KV caches via end-to-end gradient optimization on synthetic data. High quality but very slow (GPU-hours per context)."},
+  {term:"Chunked Compaction", def:"Applying compaction independently to contiguous segments of the input, then concatenating the compacted segments. Enables handling of very long contexts."},
+  {term:"Closed-Form Solution", def:"A solution that can be computed directly from a formula, without iterative optimization. Much faster than gradient descent."},
+  {term:"Context Window", def:"The maximum number of tokens a language model can process at once. Modern models support 128K-1M tokens, but memory usage grows linearly."},
+  {term:"FlashAttention", def:"An optimized attention implementation that reduces memory from O(n²) to O(n) by computing attention in tiles. The standard for efficient LLM inference."},
+  {term:"Gradient-Based Optimization", def:"An iterative method for minimizing a loss function by computing derivatives and adjusting parameters in the direction that reduces the loss."},
+  {term:"GQA (Grouped Query Attention)", def:"An efficiency technique where multiple query heads share the same key-value pair, reducing KV cache size by the grouping factor."},
+  {term:"KV Cache", def:"Memory storing Key and Value vectors from all previously processed tokens. Avoids redundant computation during generation but grows linearly with sequence length."},
+  {term:"KV Compaction", def:"Reducing the physical size of a KV cache while preserving the model's downstream behavior. Distinguished from 'compression' by analogy to log compaction in systems."},
+  {term:"Latent Briefing", def:"Ramp Labs' application of Attention Matching to share context between AI agents by compacting the orchestrator's KV cache before passing it to worker models."},
+  {term:"Latent Space", def:"The internal representation space of a neural network, as opposed to 'token space' (raw text). Latent-space compaction manipulates vectors directly rather than summarizing text."},
+  {term:"Least Squares", def:"A standard optimization method that minimizes the sum of squared errors. Has a closed-form solution: (X^T X)^{-1} X^T Y."},
+  {term:"MAD (Median Absolute Deviation)", def:"A robust measure of statistical spread: MAD = median(|x_i - median(x)|). Used in Latent Briefing as a principled threshold for token selection."},
+  {term:"NNLS (Nonnegative Least Squares)", def:"An optimization problem: find non-negative weights w minimizing ||Aw - b||². The non-negativity ensures weights (representing exp(β)) are physically meaningful."},
+  {term:"Nonuniform Compaction", def:"Assigning different compaction ratios to different attention heads based on their sensitivity. The most impactful component according to ablations."},
+  {term:"OMP (Orthogonal Matching Pursuit)", def:"A greedy algorithm that iteratively selects the key whose inclusion best reduces the mass-matching residual, then refits all weights."},
+  {term:"On-Policy Queries", def:"Reference queries extracted by running the model with previously compacted layers in place, reducing distribution shift from sequential layer compaction."},
+  {term:"Orchestrator", def:"In multi-agent systems, the primary model that decomposes tasks, maintains reasoning context, and delegates sub-tasks to worker models."},
+  {term:"Pareto Frontier", def:"The set of solutions where no solution is better than another in ALL dimensions. Here: the best achievable quality for each compaction time."},
+  {term:"Prefix Caching", def:"Reusing cached KV representations for tokens that haven't changed between calls. In Latent Briefing, 90%+ of tokens are reused across successive worker calls."},
+  {term:"Reference Queries (Q_ref)", def:"A set of query vectors used as a proxy for the queries the model will produce when attending to the context. Used to guide key selection and fitting."},
+  {term:"RLM (Recursive Language Model)", def:"A multi-agent framework where a strong orchestrator decomposes tasks and makes repeated calls to a worker model through a REPL environment."},
+  {term:"RoPE (Rotary Position Embeddings)", def:"A position encoding method that rotates key and query vectors by position-dependent angles. The dot product naturally encodes relative distance."},
+  {term:"Self-Study", def:"Generating synthetic interactions about a context (questions, summaries) to produce diverse reference query vectors for compaction."},
+  {term:"Sliding-Window Attention", def:"An attention variant where each layer only attends to a fixed-size window of recent tokens. Some models (Gemma) use a mix of sliding-window and full-attention layers."},
+  {term:"Softmax", def:"A function converting a vector of numbers into probabilities summing to 1: softmax(x_i) = exp(x_i) / Σ exp(x_j). Makes larger values exponentially more prominent."},
+  {term:"Token Eviction", def:"Dropping KV entries for tokens deemed unimportant. Simple and fast but degrades rapidly at high compression ratios."},
+  {term:"Transformer", def:"The dominant neural network architecture behind modern LLMs. Processes text by letting every position attend to every other position via the attention mechanism."},
+].sort((a,b) => a.term.localeCompare(b.term));
+
+// Render glossary
+function renderGlossary(filter='') {
+  const list = document.getElementById('glossary-list');
+  const f = filter.toLowerCase();
+  list.innerHTML = glossaryData
+    .filter(g => !f || g.term.toLowerCase().includes(f) || g.def.toLowerCase().includes(f))
+    .map(g => `<div class="glossary-entry"><strong>${g.term}</strong><p>${g.def}</p></div>`)
+    .join('');
+}
+renderGlossary();
+
+function toggleGlossary() {
+  document.getElementById('glossary-panel').classList.toggle('open');
+}
+function filterGlossary() {
+  renderGlossary(document.getElementById('glossary-search').value);
+}
+
+// Progress bar
+window.addEventListener('scroll', () => {
+  const h = document.documentElement.scrollHeight - window.innerHeight;
+  const p = (window.scrollY / h) * 100;
+  document.getElementById('progress-bar').style.width = p + '%';
+});
+
+// Active section tracking
+const sections = document.querySelectorAll('h2[id]');
+const links = document.querySelectorAll('.sidebar a');
+window.addEventListener('scroll', () => {
+  let current = '';
+  sections.forEach(s => {
+    if (window.scrollY >= s.offsetTop - 120) current = s.id;
+  });
+  links.forEach(a => {
+    a.classList.toggle('active', a.getAttribute('href') === '#' + current);
+  });
+});
+
+// Quiz checker
+function checkQuiz(qid, correct) {
+  const selected = document.querySelector(`#${qid} input[name="${qid}"]:checked`);
+  const fb = document.querySelector(`#${qid} .quiz-feedback`);
+  if (!selected) { fb.style.display='block'; fb.className='quiz-feedback quiz-wrong'; fb.textContent='Please select an answer.'; return; }
+  fb.style.display = 'block';
+  if (selected.value === correct) {
+    fb.className = 'quiz-feedback quiz-correct';
+    fb.textContent = 'Correct!';
+  } else {
+    fb.className = 'quiz-feedback quiz-wrong';
+    fb.textContent = 'Not quite. Try again!';
+  }
+}
+</script>
+
+<script data-goatcounter="https://tcho.goatcounter.com/count"
+        async src="//gc.zgo.at/count.js"></script>
+</body>
+</html>

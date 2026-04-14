@@ -79,6 +79,12 @@
   }
   .sidebar a.indent { padding-left: 1.4rem; font-size: 0.75rem; }
   .sidebar a.section-gap { margin-top: 0.4rem; }
+  .sidebar-home {
+    display: block; font-size: 0.8rem; color: var(--text-muted); text-decoration: none;
+    padding: 0.3rem 0.6rem; margin-bottom: 0.75rem; border-left: none !important;
+    transition: color 0.15s;
+  }
+  .sidebar-home:hover { color: var(--accent); }
 
   .main-content {
     flex: 1;
@@ -116,6 +122,12 @@
       z-index: 1000;
     }
     .mobile-overlay.active { display: block; }
+    .glossary-panel { width: calc(100vw - 3rem); right: 1.5rem; }
+    .term .tooltip { width: calc(100vw - 4rem); max-width: 320px; left: 0; transform: none; }
+    .demo-pair { grid-template-columns: 1fr; }
+    .turing-pair { grid-template-columns: 1fr; }
+    .arch-component { max-width: 100%; }
+    .pipeline-stages { flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; }
   }
 
   .mobile-toc-btn {
@@ -749,6 +761,7 @@
 
 <!-- Sidebar TOC -->
 <nav class="sidebar" id="sidebar">
+  <a href="../" class="sidebar-home">&larr; All Papers</a>
   <div class="toc-title">On This Page</div>
   <a href="#big-picture">1. The Big Picture</a>
   <a href="#see-it" class="section-gap">See It In Action</a>
@@ -776,7 +789,7 @@
 
 <h1>Avatar V: The Paper, Explained</h1>
 <p class="subtitle">A beginner-friendly guide to HeyGen's Avatar V technical report.<br>Every AI term is defined. Every concept is grounded in analogy.</p>
-<p style="font-size:0.8rem; color:var(--text-muted); margin-top:-1rem; margin-bottom:1.5rem;">Published April 13, 2026 &middot; Terence Cho</p>
+<p style="font-size:0.8rem; color:var(--text-muted); margin-top:-1rem; margin-bottom:1.5rem;">Paper by HeyGen Research &middot; Explainer published April 13, 2026 &middot; Terence Cho</p>
 
 <div class="research-banner">
   <div class="banner-icon">&#x1F3AC;</div>
@@ -819,7 +832,7 @@
 <h3>Reference Video vs Generated Output</h3>
 <p>Given a short reference video of someone (left), Avatar V generates a new video of that person in a different scene, preserving their identity and talking style (right).</p>
 
-<div class="audio-hint">&#x1F50A; <strong>Turn on sound</strong> to hear the voice cloning &mdash; Avatar V reproduces the speaker's vocal timbre, prosody, and accent from just ~10 seconds of audio (Section 2.3)</div>
+<div class="audio-hint">&#x1F50A; <strong>Turn on sound</strong> to hear the voice cloning &mdash; Avatar V reproduces the speaker's vocal timbre, prosody, and accent from just ~10 seconds of audio (<a href="#voice" style="color:inherit;">Voice Cloning section</a>)</div>
 
 <div class="demo-pair">
   <div>
@@ -1246,7 +1259,7 @@
 <p>Avatar V was trained on a massive dataset: <strong>100M+ clips</strong> curated from <strong>50M raw videos</strong>.</p>
 
 <h3>The Data Pipeline</h3>
-<p>Raw videos go through a 10-stage filtering cascade:</p>
+<p>Raw videos go through a multi-stage filtering cascade:</p>
 <div class="stepper">
   <div class="step"><div class="step-dot"></div><div class="step-content"><strong>Normalize</strong> resolution (640px) and frame rate (25fps)</div></div>
   <div class="step"><div class="step-dot"></div><div class="step-content"><strong>Reject</strong> static/choppy content via frame-difference analysis</div></div>
