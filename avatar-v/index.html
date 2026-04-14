@@ -188,7 +188,7 @@
     border-radius: 8px;
     margin: 1rem 0;
     padding: 0;
-    overflow: hidden;
+    overflow: visible;
   }
   summary {
     padding: 0.75rem 1rem;
@@ -763,25 +763,25 @@
 <nav class="sidebar" id="sidebar">
   <a href="../" class="sidebar-home">&larr; All Papers</a>
   <div class="toc-title">On This Page</div>
-  <a href="#big-picture">1. The Big Picture</a>
+  <a href="#big-picture">The Big Picture</a>
   <a href="#see-it" class="section-gap">See It In Action</a>
-  <a href="#prereqs" class="section-gap">2. Background Concepts</a>
+  <a href="#prereqs" class="section-gap">Background Concepts</a>
   <a href="#diffusion" class="indent">Diffusion Models</a>
   <a href="#transformers" class="indent">Transformers &amp; Attention</a>
   <a href="#vae" class="indent">VAE</a>
   <a href="#flow-matching" class="indent">Flow Matching</a>
   <a href="#embeddings" class="indent">Embeddings</a>
-  <a href="#architecture" class="section-gap">3. How Avatar V Works</a>
+  <a href="#architecture" class="section-gap">How Avatar V Works</a>
   <a href="#sparse-attn" class="indent">Sparse Reference Attention</a>
   <a href="#motion" class="indent">Motion Representation</a>
   <a href="#super-res" class="indent">Super-Resolution</a>
   <a href="#voice" class="indent">Voice Cloning</a>
-  <a href="#training" class="section-gap">4. Training Pipeline</a>
-  <a href="#inference" class="section-gap">5. Inference</a>
-  <a href="#data" class="section-gap">6. Data Curation</a>
-  <a href="#infra" class="section-gap">7. Infrastructure</a>
-  <a href="#results" class="section-gap">8. Evaluation</a>
-  <a href="#final-quiz" class="section-gap">9. Final Quiz</a>
+  <a href="#training" class="section-gap">Training Pipeline</a>
+  <a href="#inference" class="section-gap">Inference</a>
+  <a href="#data" class="section-gap">Data Curation</a>
+  <a href="#infra" class="section-gap">Infrastructure</a>
+  <a href="#results" class="section-gap">Evaluation</a>
+  <a href="#final-quiz" class="section-gap">Final Quiz</a>
 </nav>
 
 <!-- Main content -->
@@ -907,7 +907,7 @@
 <p>The paper assumes you know these AI concepts. Let's build them up from scratch.</p>
 
 <!-- DIFFUSION -->
-<h3 id="diffusion">2a. Diffusion Models</h3>
+<h3 id="diffusion">Diffusion Models</h3>
 
 <div class="video-embed">
   <video src="avatar-v-videos/diffusion-explainer.mp4" autoplay muted loop playsinline></video>
@@ -935,7 +935,7 @@
 </details>
 
 <!-- TRANSFORMERS -->
-<h3 id="transformers">2b. Transformers & Attention</h3>
+<h3 id="transformers">Transformers &amp; Attention</h3>
 
 <p>A <span class="term">Transformer<span class="tooltip">The dominant AI architecture since 2017. Used in ChatGPT, image generators, and now video generators. Its key innovation: the "attention" mechanism that lets every piece of input look at every other piece to understand context.</span></span> is the architecture (blueprint) that powers ChatGPT, DALL-E, and now Avatar V. Its superpower is the <span class="term">attention mechanism<span class="tooltip">A way for the model to decide "which parts of my input are relevant to the part I'm currently processing?" Each element computes a relevance score with every other element, then focuses on the most relevant ones.</span></span>.</p>
 
@@ -972,7 +972,7 @@
 </details>
 
 <!-- VAE -->
-<h3 id="vae">2c. VAE (Variational Autoencoder)</h3>
+<h3 id="vae">VAE (Variational Autoencoder)</h3>
 
 <p>A <span class="term">VAE<span class="tooltip">Variational Autoencoder. Compresses high-resolution images/video into a smaller "latent" representation and can decompress back. Like JPEG compression but learned by AI, and much more powerful.</span></span> compresses data into a smaller representation and decompresses it back.</p>
 
@@ -981,7 +981,7 @@
 <p><strong>Why this matters:</strong> Working with full 1080p video frames directly would be absurdly expensive computationally. Instead, the VAE compresses each frame into a tiny "latent" version, the diffusion model works in this compact space, and then the VAE decompresses the result back to full-size video.</p>
 
 <!-- FLOW MATCHING -->
-<h3 id="flow-matching">2d. Flow Matching</h3>
+<h3 id="flow-matching">Flow Matching</h3>
 
 <p><span class="term">Flow matching<span class="tooltip">A training method for diffusion models where instead of learning to predict noise, the model learns to predict a "velocity" - the direction and speed to move from noise toward clean data along a straight line. More stable and efficient than older methods.</span></span> is a modern alternative to the original diffusion training method (<span class="term">DDPM<span class="tooltip">Denoising Diffusion Probabilistic Models. The original (2020) method for training diffusion models. Uses a specific noise schedule and learns to predict the noise added at each step. Flow matching is a newer, often more efficient alternative.</span></span>).</p>
 
@@ -990,7 +990,7 @@
 <p>The model learns a <span class="term">velocity field<span class="tooltip">In flow matching, instead of predicting noise, the model predicts the "velocity" (direction + magnitude) needed to move from the current noisy state toward the clean data. Think of it as predicting which way to go at each point.</span></span> - at each point along the noise-to-data journey, it predicts which direction to go and how fast. Avatar V uses "rectified flow matching," which specifically encourages straight-line paths.</p>
 
 <!-- EMBEDDINGS -->
-<h3 id="embeddings">2e. Embeddings</h3>
+<h3 id="embeddings">Embeddings</h3>
 
 <p>An <span class="term">embedding<span class="tooltip">A list of numbers (vector) that represents something complex (a face, a voice, a word) in a way that captures its meaning. Similar things have similar number patterns. Used to measure similarity and as input to AI models.</span></span> is a list of numbers that represents something complex in a compact, meaningful way.</p>
 
@@ -1052,7 +1052,7 @@
   <div class="arch-output">Your Avatar Video</div>
 </div>
 
-<h3 id="sparse-attn">3a. Sparse Reference Attention</h3>
+<h3 id="sparse-attn">Sparse Reference Attention</h3>
 
 <div class="video-embed">
   <video src="avatar-v-videos/sparse-attention.mp4" autoplay muted loop playsinline></video>
@@ -1091,7 +1091,7 @@
   </div>
 </details>
 
-<h3 id="motion">3b. Motion Representation Stream</h3>
+<h3 id="motion">Motion Representation Stream</h3>
 
 <div class="video-embed">
   <video src="avatar-v-videos/motion-loop.mp4" autoplay muted loop playsinline></video>
@@ -1110,7 +1110,7 @@
 
 <p>By doing both, the model develops a unified understanding of each person's motion style.</p>
 
-<h3 id="super-res">3c. Super-Resolution Refiner</h3>
+<h3 id="super-res">Super-Resolution Refiner</h3>
 
 <p>The core model generates video at low resolution (for speed). The <span class="term">super-resolution<span class="tooltip">The process of taking a low-resolution image/video and generating a higher-resolution version with added detail. Like "enhance" in movies, except it actually works because the AI has learned what realistic detail looks like.</span></span> refiner upscales it to 1080p.</p>
 
@@ -1118,7 +1118,7 @@
 
 <p>It also uses <span class="term">sparse temporal attention<span class="tooltip">Instead of each frame looking at ALL other frames during upscaling (expensive), each frame only looks at nearby frames. Since the base model already established smooth motion, the refiner only needs to add local detail, not global consistency.</span></span> - since the low-resolution video already has smooth, consistent motion, the refiner only needs to look at nearby frames to add detail, not the entire video.</p>
 
-<h3 id="voice">3d. Voice Cloning Engine</h3>
+<h3 id="voice">Voice Cloning Engine</h3>
 
 <p>From just ~10 seconds of audio, the voice cloning engine can reproduce someone's voice. It's built on an <span class="term">LLM<span class="tooltip">Large Language Model. A very large neural network trained on text (and sometimes audio) that can generate human-like text, translate, summarize, and more. ChatGPT is an LLM. Here, an LLM-like architecture is used for audio generation.</span></span> backbone and treats speech generation as predicting a sequence of <span class="term">audio tokens<span class="tooltip">Discrete codes representing small chunks of audio. Just like text can be broken into word-tokens, audio can be broken into audio-tokens using a codec. The LLM predicts these tokens one by one to generate speech.</span></span> - similar to how ChatGPT predicts the next word, but for sound.</p>
 
@@ -1358,7 +1358,7 @@
 <h2 id="final-quiz"><span class="section-number">9</span> Final Comprehension Quiz</h2>
 
 <div class="quiz" id="quiz2">
-  <div class="quiz-question">1. What does "Sparse Reference Attention" solve?</div>
+  <div class="quiz-question">What does "Sparse Reference Attention" solve?</div>
   <label><input type="radio" name="q2" value="a"> The model is too small to generate video</label>
   <label><input type="radio" name="q2" value="b"> The quadratic cost of attending to all reference tokens by making attention asymmetric (generation tokens look at reference, but not vice versa)</label>
   <label><input type="radio" name="q2" value="c"> Audio-visual synchronization</label>
@@ -1369,7 +1369,7 @@
 </div>
 
 <div class="quiz" id="quiz3">
-  <div class="quiz-question">2. Why does the training pipeline have 5 stages instead of training everything at once?</div>
+  <div class="quiz-question">Why does the training pipeline have 5 stages instead of training everything at once?</div>
   <label><input type="radio" name="q3" value="a"> They didn't have enough GPUs to do it all at once</label>
   <label><input type="radio" name="q3" value="b"> Each stage builds on the previous one - the model needs general video understanding before it can learn lip sync, identity preservation, speed optimization, and human preference alignment</label>
   <label><input type="radio" name="q3" value="c"> Each stage uses a different programming language</label>
@@ -1380,7 +1380,7 @@
 </div>
 
 <div class="quiz" id="quiz4">
-  <div class="quiz-question">3. What is "distillation" in the context of this paper?</div>
+  <div class="quiz-question">What is "distillation" in the context of this paper?</div>
   <label><input type="radio" name="q4" value="a"> Removing impurities from the training data</label>
   <label><input type="radio" name="q4" value="b"> Compressing a slow, high-quality model into a fast one that produces similar-quality output in fewer steps</label>
   <label><input type="radio" name="q4" value="c"> Converting video to audio</label>
@@ -1391,7 +1391,7 @@
 </div>
 
 <div class="quiz" id="quiz5">
-  <div class="quiz-question">4. What does RLHF do for Avatar V?</div>
+  <div class="quiz-question">What does RLHF do for Avatar V?</div>
   <label><input type="radio" name="q5" value="a"> Makes the model generate videos faster</label>
   <label><input type="radio" name="q5" value="b"> Reduces the model's size</label>
   <label><input type="radio" name="q5" value="c"> Aligns the model's outputs with human perceptual preferences for identity, motion naturalness, and visual quality</label>
@@ -1402,7 +1402,7 @@
 </div>
 
 <div class="quiz" id="quiz6">
-  <div class="quiz-question">5. Why did HeyGen replace Ray with a custom data processing engine?</div>
+  <div class="quiz-question">Why did HeyGen replace Ray with a custom data processing engine?</div>
   <label><input type="radio" name="q6" value="a"> Ray was too expensive</label>
   <label><input type="radio" name="q6" value="b"> Ray's centralized coordination (GCS) couldn't scale past 2000+ nodes - it consumed 100GB+ RAM and crashed under load</label>
   <label><input type="radio" name="q6" value="c"> Ray doesn't support Python</label>
