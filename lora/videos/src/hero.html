@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap');
+* { margin: 0; padding: 0; box-sizing: border-box; }
+</style>
+</head>
+<body>
+<div data-composition-id="lora-hero" data-width="1920" data-height="540" data-start="0" data-duration="10">
+  <div class="scene">
+    <div class="title">Fine-Tuning vs <span style="color:#2EC4B6;">LoRA</span></div>
+    <div class="content">
+      <div class="col">
+        <div class="col-label" style="color:#E71D36;">Full Fine-Tuning</div>
+        <div class="stat-row">
+          <div class="stat"><div class="stat-val" style="color:#E71D36;">175B</div><div class="stat-label">parameters trained</div></div>
+          <div class="stat"><div class="stat-val" style="color:#E71D36;">1.2 TB</div><div class="stat-label">GPU memory</div></div>
+          <div class="stat"><div class="stat-val" style="color:#E71D36;">350 GB</div><div class="stat-label">per checkpoint</div></div>
+        </div>
+        <div class="verdict bad">100 models = 35 TB storage</div>
+      </div>
+      <div class="vs">vs</div>
+      <div class="col">
+        <div class="col-label" style="color:#2EC4B6;">LoRA (r=4)</div>
+        <div class="stat-row">
+          <div class="stat"><div class="stat-val" style="color:#2EC4B6;">4.7M</div><div class="stat-label">parameters trained</div></div>
+          <div class="stat"><div class="stat-val" style="color:#2EC4B6;">350 GB</div><div class="stat-label">GPU memory</div></div>
+          <div class="stat"><div class="stat-val" style="color:#2EC4B6;">35 MB</div><div class="stat-label">per checkpoint</div></div>
+        </div>
+        <div class="verdict good">100 models = 354 GB storage</div>
+      </div>
+    </div>
+  </div>
+
+  <style>
+    [data-composition-id="lora-hero"] {
+      position: relative; overflow: hidden; background: #011627;
+      width: 1920px; height: 540px; font-family: 'Space Mono', monospace; color: #FDFFFC;
+    }
+    .scene { width: 1920px; height: 540px; display: flex; flex-direction: column; align-items: center; }
+    .title { font-size: 48px; font-weight: 700; margin-top: 30px; white-space: nowrap; }
+    .content { flex: 1; display: flex; align-items: center; justify-content: center; gap: 60px; padding: 0 80px; }
+    .col { display: flex; flex-direction: column; align-items: center; gap: 20px; }
+    .col-label { font-size: 36px; font-weight: 700; }
+    .stat-row { display: flex; gap: 40px; }
+    .stat { text-align: center; }
+    .stat-val { font-size: 48px; font-weight: 700; }
+    .stat-label { font-size: 20px; color: #778DA9; margin-top: 4px; }
+    .vs { font-size: 40px; color: #415A77; font-weight: 700; }
+    .verdict { font-size: 26px; font-weight: 700; padding: 10px 28px; border-radius: 10px; }
+    .bad { background: rgba(231,29,54,0.12); border: 2px solid #E71D36; color: #E71D36; }
+    .good { background: rgba(46,196,182,0.12); border: 2px solid #2EC4B6; color: #2EC4B6; }
+  </style>
+
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+  <script>
+    window.__timelines = window.__timelines || {};
+    var root = document.currentScript.parentElement;
+    var tl = gsap.timeline({ paused: true });
+    var cols = root.querySelectorAll('.col');
+    tl.from(root.querySelector('.title'), { y: -20, opacity: 0, duration: 0.6, ease: 'power2.out' }, 0);
+    tl.from(cols[0].querySelector('.col-label'), { opacity: 0, duration: 0.5 }, 0.4);
+    cols[0].querySelectorAll('.stat').forEach(function(el, i) {
+      tl.from(el, { opacity: 0, y: 15, duration: 0.5, ease: 'power2.out' }, 0.8 + i * 0.3);
+    });
+    tl.from(cols[0].querySelector('.verdict'), { opacity: 0, scale: 0.9, duration: 0.5 }, 2.0);
+    tl.from(root.querySelector('.vs'), { opacity: 0, duration: 0.4 }, 2.8);
+    tl.from(cols[1].querySelector('.col-label'), { opacity: 0, duration: 0.5 }, 3.2);
+    cols[1].querySelectorAll('.stat').forEach(function(el, i) {
+      tl.from(el, { opacity: 0, y: 15, duration: 0.5, ease: 'power2.out' }, 3.6 + i * 0.3);
+    });
+    tl.from(cols[1].querySelector('.verdict'), { opacity: 0, scale: 0.9, duration: 0.5 }, 4.8);
+    tl.to({}, { duration: 3 });
+    window.__timelines["lora-hero"] = tl;
+  </script>
+</div>
+</body>
+</html>

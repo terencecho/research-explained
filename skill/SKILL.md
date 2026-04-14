@@ -75,7 +75,7 @@ Create a single `index.html` file with all CSS and JS inline. Follow this struct
 - **Term tooltips**: `<span class="term">term<span class="tooltip">definition</span></span>` — `color: var(--yellow)` on the term text itself, `1px dashed` underline. Tooltip uses `background: var(--surface)` with `border: 1px solid var(--border)` (NOT yellow border).
 - **Analogy boxes**: `background: #1a2332` (solid dark blue-gray, not rgba), blue left-border, "Real-world analogy:" prefix
 - **Insight boxes**: `background: #1a2a1a` (solid dark green-gray, not rgba), green left-border, "Key Insight:" prefix
-- **Collapsible deep-dives**: `<details>` with `background: var(--surface)`, border, rounded corners, `overflow: visible` (NOT `overflow: hidden` — that clips tooltips inside). Summary uses `+ / -` monospace prefix (not triangle ▶). Hover uses `var(--accent-subtle)`.
+- **Collapsible deep-dives**: `<details>` with `background: var(--surface)`, border, rounded corners, `overflow: visible` (NOT `overflow: hidden` — that clips tooltips inside). Summary uses `+ / -` monospace prefix (not triangle ▶). Hover uses `var(--accent-subtle)`. Use `padding: 0.75rem 1.5rem` on summary and `padding: 0 1.5rem 1.25rem` on `.content` (NOT `1rem` — too tight). Lists inside `.content` need `padding-left: 2.5rem` so bullet markers (which render outside the list's padding box) don't sit flush against the container border.
 - **Quizzes**: radio buttons + check button + feedback. Correct = `background: #1a2a1a`, wrong = `background: #2a1a1a`.
 - **Searchable glossary**: fixed panel, entries use `<strong>` for term + `<p>` for definition, separated by `border-bottom`
 - **Turing test** (if applicable): side-by-side videos with separate "This one is real" buttons below each video (NOT on the video itself — clicking video should only play it)
@@ -121,6 +121,7 @@ For each HyperFrames video:
 - Dark background: #011627
 - Keep text LARGE — minimum 28px for labels, 48px for titles. Common mistake: using 12-16px text that's unreadable when the video is embedded. When in doubt, go bigger.
 - Watch for bottom clipping — the 540px canvas height is tight. Leave 30px+ margin at the bottom for text below bar charts or diagrams.
+- **Use flexbox for layout, not absolute positioning with hardcoded pixels.** Absolute positioning leads to uneven spacing and dead whitespace. Use `display: flex; align-items: center; justify-content: center;` on the scene container and flex layouts for columns/rows. The only element that should be `position: absolute` is the title (centered at top). Everything else should flow with flex.
 - No description paragraphs in the video — labels and tags only
 - The page text provides the detail; the video provides the visual
 
@@ -135,7 +136,7 @@ For each HyperFrames video:
 - `ffmpeg -y -i video.mp4 -ss 00:00:03 -frames:v 1 -update 1 /tmp/check-early.png` then Read image
 - `ffmpeg -y -i video.mp4 -ss 00:00:06 -frames:v 1 -update 1 /tmp/check-mid.png` then Read image
 - `ffmpeg -y -i video.mp4 -ss 00:00:09 -frames:v 1 -update 1 /tmp/check-end.png` then Read image
-- **Technical check**: all text visible (not clipped), labels legible, animations completed
+- **Technical check**: all text visible (not clipped), labels legible, animations completed. **Check spacing**: no large dead whitespace areas, content should be evenly distributed across the 1920x540 canvas. If elements are bunched in the center with empty top/bottom, fix the layout.
 - **Content check** (critical): Look at each screenshot and ask "does this actually explain the concept visually, or does it just restate text in boxes?" If the video is just labeled boxes with no visual insight (no connections shown, no spatial relationships, no animation that reveals something text can't), redesign it before embedding. Videos should show structure, flow, or relationships — not just repeat labels.
 - If anything fails either check, fix and re-render before embedding
 
@@ -148,7 +149,20 @@ For each HyperFrames video:
 ```
 Badge is a stacked teal pill (small "made with" on top, bold "HyperFrames" below), always first child in `.video-caption`.
 
-### 6. Deploy to GitHub Pages
+### 6. Self-Review Before Presenting to User
+
+Before showing the page to the user or saying it's done, run this review checklist:
+
+1. **Jargon audit**: Search the page for acronyms and technical terms that appear in body text without a `class="term"` tooltip OR an inline explanation. Common offenders: VRAM, MLP, GLUE, FLOPs, NLU/NLG, NNLS, OMP, GQA, SFT, RLHF. Replace bare acronyms with plain language or add tooltips.
+2. **CSS consistency**: Verify the page has all accumulated CSS fixes: `overflow-x: hidden` on mobile body, `overflow: visible` on details, `padding-left: 2rem` on lists inside `.content`, scroll-to-bottom TOC fix in JS.
+3. **Spacing check on videos**: Review every HyperFrames video screenshot for dead whitespace. If elements are bunched in a narrow band with empty top/bottom, fix the layout.
+4. **Content check on videos**: Does each video explain a concept visually that text can't, or does it just restate labels in boxes?
+5. **Mobile check**: Are there any fixed-width elements without mobile overrides (tooltips, glossary, tables, grids)?
+6. **Cross-reference**: Do all sidebar TOC links match actual h2 IDs? Are there any dead internal links?
+
+Fix issues found before presenting. Do not ask the user to review issues you can catch yourself.
+
+### 7. Deploy to GitHub Pages
 
 If the user wants to deploy:
 - Create or use existing repo (suggest `research-explained` for multiple papers)

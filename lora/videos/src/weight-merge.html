@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap');
+* { margin: 0; padding: 0; box-sizing: border-box; }
+</style>
+</head>
+<body>
+<div data-composition-id="weight-merge" data-width="1920" data-height="540" data-start="0" data-duration="12">
+  <div class="scene">
+    <div class="title">Zero Inference Latency</div>
+    <div class="subtitle">LoRA weights merge back into the model at deployment</div>
+    <div class="content">
+      <!-- Training -->
+      <div class="phase">
+        <div class="phase-label" style="color:#FF9F1C;">During Training</div>
+        <div class="diagram">
+          <div class="input-tag">input x</div>
+          <div class="branch">
+            <div class="w-box frozen">W (frozen)</div>
+            <div class="plus-sign">+</div>
+            <div class="w-box trainable">BA (trainable)</div>
+          </div>
+          <div class="output-tag">h = Wx + BAx</div>
+        </div>
+      </div>
+
+      <!-- Arrow -->
+      <div class="merge-zone">
+        <div class="merge-arrow">&#8594;</div>
+        <div class="merge-text">merge</div>
+      </div>
+
+      <!-- Deployment -->
+      <div class="phase">
+        <div class="phase-label" style="color:#2EC4B6;">At Deployment</div>
+        <div class="diagram">
+          <div class="input-tag">input x</div>
+          <div class="w-box merged">W' = W + BA</div>
+          <div class="output-tag">h = W'x</div>
+          <div class="no-latency">No extra computation!</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <style>
+    [data-composition-id="weight-merge"] {
+      position: relative; overflow: hidden; background: #011627;
+      width: 1920px; height: 540px; font-family: 'Space Mono', monospace; color: #FDFFFC;
+    }
+    .scene { width: 1920px; height: 540px; display: flex; flex-direction: column; align-items: center; }
+    .title { font-size: 48px; font-weight: 700; margin-top: 20px; }
+    .subtitle { font-size: 24px; color: #778DA9; margin-top: 6px; }
+    .content { flex: 1; display: flex; align-items: center; justify-content: center; gap: 40px; padding: 0 60px; }
+
+    .phase { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+    .phase-label { font-size: 30px; font-weight: 700; }
+    .diagram { display: flex; flex-direction: column; align-items: center; gap: 16px; }
+
+    .input-tag { padding: 10px 28px; border-radius: 20px; font-size: 26px; font-weight: 700; background: rgba(65,90,119,0.3); color: #778DA9; }
+    .output-tag { padding: 10px 28px; border-radius: 20px; font-size: 24px; font-weight: 700; background: rgba(63,185,80,0.12); border: 2px solid #3fb950; color: #3fb950; }
+
+    .branch { display: flex; align-items: center; gap: 20px; }
+    .plus-sign { font-size: 40px; color: #415A77; font-weight: 700; }
+
+    .w-box { padding: 18px 36px; border-radius: 10px; font-size: 28px; font-weight: 700; text-align: center; }
+    .frozen { background: rgba(65,90,119,0.2); border: 3px solid #415A77; color: #778DA9; }
+    .trainable { background: rgba(255,159,28,0.12); border: 3px solid #FF9F1C; color: #FF9F1C; }
+    .merged { background: rgba(46,196,182,0.12); border: 3px solid #2EC4B6; color: #2EC4B6; font-size: 32px; padding: 24px 48px; }
+
+    .merge-zone { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+    .merge-arrow { font-size: 56px; color: #415A77; }
+    .merge-text { font-size: 24px; color: #778DA9; font-weight: 700; }
+
+    .no-latency { font-size: 28px; font-weight: 700; color: #3fb950; }
+  </style>
+
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+  <script>
+    window.__timelines = window.__timelines || {};
+    var root = document.currentScript.parentElement;
+    var tl = gsap.timeline({ paused: true });
+    tl.from(root.querySelector('.title'), { y: -20, opacity: 0, duration: 0.5 }, 0);
+    tl.from(root.querySelector('.subtitle'), { opacity: 0, duration: 0.4 }, 0.3);
+    var phases = root.querySelectorAll('.phase');
+    tl.from(phases[0].querySelector('.phase-label'), { opacity: 0, duration: 0.4 }, 0.6);
+    tl.from(phases[0].querySelector('.input-tag'), { opacity: 0, y: -10, duration: 0.4 }, 0.9);
+    tl.from(root.querySelector('.frozen'), { opacity: 0, x: -20, duration: 0.5, ease: 'power2.out' }, 1.3);
+    tl.from(root.querySelector('.plus-sign'), { opacity: 0, duration: 0.3 }, 1.6);
+    tl.from(root.querySelector('.trainable'), { opacity: 0, x: 20, duration: 0.5, ease: 'power2.out' }, 1.8);
+    tl.from(phases[0].querySelector('.output-tag'), { opacity: 0, y: 10, duration: 0.4 }, 2.4);
+    tl.from(root.querySelector('.merge-arrow'), { opacity: 0, x: -15, duration: 0.4 }, 3.5);
+    tl.from(root.querySelector('.merge-text'), { opacity: 0, duration: 0.3 }, 3.8);
+    tl.from(phases[1].querySelector('.phase-label'), { opacity: 0, duration: 0.4 }, 4.2);
+    tl.from(phases[1].querySelector('.input-tag'), { opacity: 0, y: -10, duration: 0.4 }, 4.5);
+    tl.from(root.querySelector('.merged'), { opacity: 0, scale: 0.9, duration: 0.6, ease: 'power2.out' }, 4.8);
+    tl.from(phases[1].querySelector('.output-tag'), { opacity: 0, y: 10, duration: 0.4 }, 5.5);
+    tl.from(root.querySelector('.no-latency'), { opacity: 0, y: 10, duration: 0.5 }, 6.0);
+    tl.to({}, { duration: 3 });
+    window.__timelines["weight-merge"] = tl;
+  </script>
+</div>
+</body>
+</html>
