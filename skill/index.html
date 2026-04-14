@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Research Explainer — Claude Code Skill</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --border: #30363d;
+    --text: #e6edf3;
+    --text-muted: #8b949e;
+    --accent: #58a6ff;
+    --green: #3fb950;
+    --yellow: #d29922;
+    --teal: #2EC4B6;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.7;
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 3rem 1.5rem;
+  }
+
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  .back { font-size: 0.85rem; color: var(--text-muted); display: inline-block; margin-bottom: 2rem; }
+  .back:hover { color: var(--accent); }
+
+  h1 { font-size: 2rem; margin-bottom: 0.5rem; }
+  .tagline { color: var(--text-muted); font-size: 1.05rem; margin-bottom: 2rem; }
+
+  h2 { font-size: 1.3rem; color: var(--accent); margin: 2rem 0 0.75rem; }
+
+  p { margin-bottom: 1rem; }
+
+  .install-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1.25rem 1.5rem;
+    margin: 1.5rem 0;
+    position: relative;
+  }
+  .install-box .label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+    margin-bottom: 0.5rem;
+  }
+  .install-box code {
+    display: block;
+    font-size: 0.95rem;
+    color: var(--green);
+    font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+    word-break: break-all;
+  }
+  .install-box .copy-btn {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: var(--border);
+    border: none;
+    border-radius: 4px;
+    color: var(--text-muted);
+    padding: 0.3rem 0.6rem;
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .install-box .copy-btn:hover { background: var(--accent); color: var(--bg); }
+
+  .feature-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin: 1.5rem 0;
+  }
+  @media (max-width: 600px) {
+    .feature-grid { grid-template-columns: 1fr; }
+  }
+  .feature {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1rem 1.25rem;
+  }
+  .feature .icon { font-size: 1.5rem; margin-bottom: 0.35rem; }
+  .feature .name { font-weight: 700; font-size: 0.95rem; margin-bottom: 0.25rem; }
+  .feature .desc { font-size: 0.85rem; color: var(--text-muted); line-height: 1.4; }
+
+  .example-block {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1rem 1.25rem;
+    margin: 1rem 0;
+    font-family: 'SFMono-Regular', Consolas, monospace;
+    font-size: 0.9rem;
+    color: var(--text-muted);
+  }
+  .example-block .prompt { color: var(--green); }
+  .example-block .comment { color: var(--text-muted); font-style: italic; }
+
+  .cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.6rem 1.25rem;
+    background: var(--accent);
+    color: var(--bg);
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    text-decoration: none !important;
+    transition: opacity 0.2s;
+    margin-top: 0.5rem;
+  }
+  .cta:hover { opacity: 0.9; }
+
+  .examples-list {
+    margin: 1rem 0;
+  }
+  .examples-list a {
+    display: block;
+    padding: 0.75rem 1rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    margin-bottom: 0.5rem;
+    text-decoration: none;
+    transition: border-color 0.2s;
+  }
+  .examples-list a:hover { border-color: var(--accent); }
+  .examples-list .title { font-weight: 700; color: var(--text); font-size: 0.95rem; }
+  .examples-list .meta { font-size: 0.8rem; color: var(--text-muted); margin-top: 0.15rem; }
+
+  footer {
+    margin-top: 3rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border);
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    display: flex;
+    gap: 1.5rem;
+  }
+  footer a { color: var(--text-muted); }
+  footer a:hover { color: var(--text); }
+</style>
+</head>
+<body>
+
+<a href="../" class="back">&larr; Back to Research Explained</a>
+
+<h1>Research Explainer</h1>
+<p class="tagline">A <a href="https://claude.ai/code" target="_blank">Claude Code</a> skill that turns AI research papers into interactive, beginner-friendly explainer pages.</p>
+
+<p>Give it a paper URL, and it generates a self-contained HTML page with hover-defined terms, real-world analogies, architecture diagrams, <a href="https://github.com/heygen-com/hyperframes" target="_blank">HyperFrames</a> motion graphics, and comprehension quizzes &mdash; all deployable to GitHub Pages.</p>
+
+<h2>Install</h2>
+
+<div class="install-box">
+  <div class="label">Run in your terminal</div>
+  <code>npx skills add https://github.com/terencecho/research-explained --skill skill</code>
+  <button class="copy-btn" onclick="navigator.clipboard.writeText('npx skills add https://github.com/terencecho/research-explained --skill skill'); this.textContent='Copied!'; setTimeout(()=>this.textContent='Copy',1500)">Copy</button>
+</div>
+
+<h2>Use</h2>
+
+<p>Once installed, use it in Claude Code by providing a paper URL:</p>
+
+<div class="example-block">
+  <span class="prompt">/research-explainer</span> https://arxiv.org/pdf/some-paper.pdf<br><br>
+  <span class="comment"># or just say it naturally:</span><br>
+  <span class="prompt">explain this paper:</span> https://arxiv.org/pdf/some-paper.pdf
+</div>
+
+<h2>What It Produces</h2>
+
+<div class="feature-grid">
+  <div class="feature">
+    <div class="icon">Aa</div>
+    <div class="name">Every Term Defined</div>
+    <div class="desc">Hover tooltips on all AI/ML jargon, plus a searchable glossary panel.</div>
+  </div>
+  <div class="feature">
+    <div class="icon">&#x1F4A1;</div>
+    <div class="name">Real-World Analogies</div>
+    <div class="desc">Each concept grounded in an analogy a non-expert can relate to.</div>
+  </div>
+  <div class="feature">
+    <div class="icon">&#x1F3AC;</div>
+    <div class="name">Motion Graphics</div>
+    <div class="desc">HyperFrames videos for concepts that are hard to picture from text alone.</div>
+  </div>
+  <div class="feature">
+    <div class="icon">&#x1F9E9;</div>
+    <div class="name">Architecture Diagrams</div>
+    <div class="desc">Styled HTML card flows and pipeline visualizations &mdash; no ASCII art.</div>
+  </div>
+  <div class="feature">
+    <div class="icon">&#x1F9EA;</div>
+    <div class="name">Comprehension Quizzes</div>
+    <div class="desc">Multiple-choice questions that test understanding of key concepts.</div>
+  </div>
+  <div class="feature">
+    <div class="icon">&#x1F4F1;</div>
+    <div class="name">Mobile Responsive</div>
+    <div class="desc">Works on phones and tablets. Sidebar becomes a slide-out drawer.</div>
+  </div>
+</div>
+
+<h2>Examples</h2>
+
+<p>Pages built with this skill:</p>
+
+<div class="examples-list">
+  <a href="../kv-compaction/">
+    <div class="title">Fast KV Compaction via Attention Matching</div>
+    <div class="meta">MIT &bull; KV cache compaction + multi-agent memory sharing</div>
+  </a>
+  <a href="../avatar-v/">
+    <div class="title">Avatar V: Scaling Video-Reference Avatar Generation</div>
+    <div class="meta">HeyGen Research &bull; Video-conditioned avatar generation</div>
+  </a>
+</div>
+
+<h2>Requirements</h2>
+
+<ul style="margin: 1rem 0; padding-left: 1.5rem; color: var(--text-muted);">
+  <li><a href="https://claude.ai/code" target="_blank">Claude Code</a> (CLI, desktop, or web)</li>
+  <li><code style="color:var(--yellow);">poppler</code> for PDF text extraction (<code style="color:var(--text-muted);">brew install poppler</code>)</li>
+  <li><a href="https://github.com/heygen-com/hyperframes" target="_blank">HyperFrames</a> for video rendering (optional, auto-installed via npx)</li>
+</ul>
+
+<a href="https://github.com/terencecho/research-explained" target="_blank" class="cta">View on GitHub &rarr;</a>
+
+<footer>
+  <a href="https://github.com/terencecho/research-explained" target="_blank">GitHub</a>
+  <a href="https://claude.ai/code" target="_blank">Claude Code</a>
+  <span>By Terence Cho</span>
+</footer>
+
+<script data-goatcounter="https://tcho.goatcounter.com/count"
+        async src="//gc.zgo.at/count.js"></script>
+</body>
+</html>

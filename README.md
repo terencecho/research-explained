@@ -6,6 +6,7 @@ Interactive explainer pages for AI research papers. Every technical term defined
 
 | Paper | Link | Published |
 |-------|------|-----------|
+| [Fast KV Compaction via Attention Matching](https://arxiv.org/abs/2602.16284) | [Read the explainer](https://terencecho.github.io/research-explained/kv-compaction/) | April 13, 2026 |
 | [Avatar V](https://dynamic.heygen.ai/www/Paper%20Links/avatarv_tech_report.pdf) | [Read the explainer](https://terencecho.github.io/research-explained/avatar-v/) | April 13, 2026 |
 
 ## Claude Code Skill
