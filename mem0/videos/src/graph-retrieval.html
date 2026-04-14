@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap');
+* { margin: 0; padding: 0; box-sizing: border-box; }
+</style>
+</head>
+<body>
+<div
+  data-composition-id="graph-retrieval"
+  data-width="1920"
+  data-height="540"
+  data-start="0"
+  data-duration="12"
+>
+  <div class="scene">
+    <div class="title">Graph Memory: Dual Retrieval</div>
+
+    <!-- SVG for connection lines -->
+    <svg class="lines" viewBox="0 0 1920 540">
+      <!-- Alice -> SF -->
+      <line id="line-alice-sf" x1="420" y1="170" x2="620" y2="250" stroke="#415A77" stroke-width="3" stroke-dasharray="8 4"/>
+      <!-- Alice -> Veg -->
+      <line id="line-alice-veg" x1="280" y1="190" x2="180" y2="270" stroke="#415A77" stroke-width="3" stroke-dasharray="8 4"/>
+      <!-- Alice -> Yoga -->
+      <line id="line-alice-yoga" x1="340" y1="200" x2="340" y2="350" stroke="#415A77" stroke-width="3" stroke-dasharray="8 4"/>
+      <!-- Alice -> Bob -->
+      <line id="line-alice-bob" x1="420" y1="190" x2="560" y2="370" stroke="#415A77" stroke-width="3" stroke-dasharray="8 4"/>
+    </svg>
+
+    <!-- Nodes -->
+    <div class="node n-alice" id="n-alice">Alice</div>
+    <div class="node n-sf" id="n-sf">San Francisco</div>
+    <div class="node n-veg" id="n-veg">Vegetarian</div>
+    <div class="node n-yoga" id="n-yoga">Yoga</div>
+    <div class="node n-bob" id="n-bob">Bob</div>
+
+    <!-- Edge labels on lines -->
+    <div class="edge-label" id="el1" style="left:480px; top:195px;">lives_in</div>
+    <div class="edge-label" id="el2" style="left:160px; top:215px;">prefers</div>
+    <div class="edge-label" id="el3" style="left:355px; top:268px;">practices</div>
+    <div class="edge-label" id="el4" style="left:470px; top:275px;">knows</div>
+
+    <!-- Query -->
+    <div class="query-box" id="query-box">
+      <div class="ql">QUERY</div>
+      <div class="qt">"Where does Alice live?"</div>
+    </div>
+
+    <!-- Result -->
+    <div class="result-box" id="result-box">
+      <div class="rl">ANSWER</div>
+      <div class="rt">San Francisco</div>
+    </div>
+
+    <!-- Method labels -->
+    <div class="method-tag" id="m-entity" style="right:100px; top:260px; border-color:#2EC4B6; color:#2EC4B6;">Entity-Centric: follow Alice's edges</div>
+    <div class="method-tag" id="m-semantic" style="right:100px; top:320px; border-color:#FF9F1C; color:#FF9F1C;">Semantic: match "where live" to triplets</div>
+  </div>
+
+  <style>
+    [data-composition-id="graph-retrieval"] {
+      position: relative; overflow: hidden; background: #011627;
+      width: 1920px; height: 540px; font-family: 'Space Mono', monospace; color: #FDFFFC;
+    }
+    .scene { position: relative; width: 1920px; height: 540px; }
+    .title { position: absolute; top: 16px; left: 50%; transform: translateX(-50%); font-size: 48px; font-weight: 700; white-space: nowrap; }
+
+    .lines { position: absolute; top: 0; left: 0; width: 1920px; height: 540px; pointer-events: none; }
+
+    .node {
+      position: absolute; padding: 10px 28px; border-radius: 28px; font-size: 26px; font-weight: 700;
+      border: 3px solid; text-align: center;
+    }
+    .n-alice { left: 260px; top: 140px; border-color: #2EC4B6; color: #2EC4B6; background: rgba(46,196,182,0.12); }
+    .n-sf { left: 560px; top: 220px; border-color: #FF9F1C; color: #FF9F1C; background: rgba(255,159,28,0.12); }
+    .n-veg { left: 60px; top: 250px; border-color: #3fb950; color: #3fb950; background: rgba(63,185,80,0.12); }
+    .n-yoga { left: 260px; top: 360px; border-color: #bc8cff; color: #bc8cff; background: rgba(188,140,255,0.12); }
+    .n-bob { left: 520px; top: 360px; border-color: #415A77; color: #778DA9; background: rgba(65,90,119,0.2); }
+
+    .edge-label { position: absolute; font-size: 20px; color: #556B8A; font-style: italic; }
+
+    .query-box { position: absolute; right: 100px; top: 100px; text-align: center; }
+    .ql { font-size: 22px; color: #778DA9; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 6px; }
+    .qt { font-size: 30px; font-weight: 700; color: #FDFFFC; }
+
+    .result-box { position: absolute; right: 100px; top: 400px; text-align: center; }
+    .rl { font-size: 22px; color: #778DA9; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 6px; }
+    .rt { font-size: 36px; font-weight: 700; color: #3fb950; }
+
+    .method-tag {
+      position: absolute; padding: 8px 20px; border-radius: 8px; font-size: 22px; font-weight: 700;
+      border: 2px solid; background: rgba(22,27,34,0.8);
+    }
+  </style>
+
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+  <script>
+    window.__timelines = window.__timelines || {};
+    var root = document.currentScript.parentElement;
+    var tl = gsap.timeline({ paused: true });
+
+    // Title
+    tl.from(root.querySelector('.title'), { y: -20, opacity: 0, duration: 0.6, ease: 'power2.out' }, 0);
+
+    // Nodes appear
+    var nodes = root.querySelectorAll('.node');
+    nodes.forEach(function(el, i) {
+      tl.from(el, { opacity: 0, scale: 0.7, duration: 0.5, ease: 'power2.out' }, 0.4 + i * 0.2);
+    });
+
+    // Lines appear
+    var lines = root.querySelectorAll('line');
+    lines.forEach(function(el, i) {
+      tl.from(el, { opacity: 0, duration: 0.4 }, 1.2 + i * 0.15);
+    });
+
+    // Edge labels
+    root.querySelectorAll('.edge-label').forEach(function(el, i) {
+      tl.from(el, { opacity: 0, duration: 0.3 }, 1.5 + i * 0.15);
+    });
+
+    // Query appears
+    tl.from(root.querySelector('.query-box'), { opacity: 0, x: 20, duration: 0.5 }, 3.0);
+
+    // Highlight Alice node (pulse)
+    tl.to(root.querySelector('.n-alice'), { boxShadow: '0 0 30px rgba(46,196,182,0.8)', borderWidth: '4px', duration: 0.4 }, 4.0);
+
+    // Highlight the Alice->SF line
+    tl.to(root.querySelector('#line-alice-sf'), { stroke: '#2EC4B6', strokeWidth: 5, strokeDasharray: 'none', duration: 0.5 }, 4.5);
+
+    // Highlight SF node
+    tl.to(root.querySelector('.n-sf'), { boxShadow: '0 0 30px rgba(255,159,28,0.8)', borderWidth: '4px', duration: 0.4 }, 5.0);
+
+    // Dim other lines and nodes
+    var dimLines = ['#line-alice-veg', '#line-alice-yoga', '#line-alice-bob'];
+    dimLines.forEach(function(sel) {
+      tl.to(root.querySelector(sel), { opacity: 0.2, duration: 0.4 }, 5.0);
+    });
+    ['#n-veg', '#n-yoga', '#n-bob'].forEach(function(sel) {
+      tl.to(root.querySelector(sel), { opacity: 0.3, duration: 0.4 }, 5.0);
+    });
+    ['#el2', '#el3', '#el4'].forEach(function(sel) {
+      tl.to(root.querySelector(sel), { opacity: 0.15, duration: 0.4 }, 5.0);
+    });
+
+    // Method tags
+    tl.from(root.querySelector('#m-entity'), { opacity: 0, x: 20, duration: 0.5 }, 5.5);
+    tl.from(root.querySelector('#m-semantic'), { opacity: 0, x: 20, duration: 0.5 }, 6.0);
+
+    // Result
+    tl.from(root.querySelector('.result-box'), { opacity: 0, y: 15, duration: 0.5 }, 6.8);
+
+    // Hold
+    tl.to({}, { duration: 3 });
+
+    window.__timelines["graph-retrieval"] = tl;
+  </script>
+</div>
+</body>
+</html>

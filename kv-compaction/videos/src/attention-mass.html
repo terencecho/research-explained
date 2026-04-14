@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap');
+* { margin: 0; padding: 0; box-sizing: border-box; }
+</style>
+</head>
+<body>
+<div
+  data-composition-id="attention-mass"
+  data-width="1920"
+  data-height="540"
+  data-start="0"
+  data-duration="10"
+>
+  <div class="scene">
+    <!-- Title -->
+    <div class="title">Why Attention Biases Matter</div>
+
+    <!-- Panel 1: Original -->
+    <div class="panel panel-orig">
+      <div class="panel-label" style="color:#2EC4B6;">ORIGINAL (8 keys)</div>
+      <div class="bars" id="orig-bars">
+        <div class="bar-col"><div class="bar" id="ob0" style="height:64px; background:#2EC4B6;"></div><div class="blbl">K1</div></div>
+        <div class="bar-col"><div class="bar" id="ob1" style="height:50px; background:#2EC4B6;"></div><div class="blbl">K2</div></div>
+        <div class="bar-col"><div class="bar" id="ob2" style="height:22px; background:#2EC4B6;"></div><div class="blbl">K3</div></div>
+        <div class="bar-col"><div class="bar" id="ob3" style="height:78px; background:#2EC4B6;"></div><div class="blbl">K4</div></div>
+        <div class="bar-col"><div class="bar" id="ob4" style="height:14px; background:#2EC4B6;"></div><div class="blbl">K5</div></div>
+        <div class="bar-col"><div class="bar" id="ob5" style="height:43px; background:#2EC4B6;"></div><div class="blbl">K6</div></div>
+        <div class="bar-col"><div class="bar" id="ob6" style="height:57px; background:#2EC4B6;"></div><div class="blbl">K7</div></div>
+        <div class="bar-col"><div class="bar" id="ob7" style="height:29px; background:#2EC4B6;"></div><div class="blbl">K8</div></div>
+      </div>
+      <div class="mass-val" style="color:#2EC4B6;">Mass = 100</div>
+    </div>
+
+    <!-- Panel 2: No Bias -->
+    <div class="panel panel-nobias">
+      <div class="panel-label" style="color:#E71D36;">KEPT 3 KEYS (no bias)</div>
+      <div class="bars" id="nb-bars">
+        <div class="bar-col"><div class="bar" style="height:64px; background:#E71D36;"></div><div class="blbl">K1</div></div>
+        <div class="bar-col"><div class="bar" style="height:78px; background:#E71D36;"></div><div class="blbl">K4</div></div>
+        <div class="bar-col"><div class="bar" style="height:57px; background:#E71D36;"></div><div class="blbl">K7</div></div>
+      </div>
+      <div class="mass-val" style="color:#E71D36;">Mass = 56 <span class="x-mark">&#x2717; underweighted!</span></div>
+    </div>
+
+    <!-- Panel 3: With Bias -->
+    <div class="panel panel-bias">
+      <div class="panel-label" style="color:#FF9F1C;">KEPT 3 KEYS + bias beta</div>
+      <div class="bars" id="bi-bars">
+        <div class="bar-col">
+          <div class="bias-tag">+B</div>
+          <div class="bar" style="height:107px; background:#FF9F1C;"></div>
+          <div class="blbl">K1</div>
+        </div>
+        <div class="bar-col">
+          <div class="bias-tag">+B</div>
+          <div class="bar" style="height:121px; background:#FF9F1C;"></div>
+          <div class="blbl">K4</div>
+        </div>
+        <div class="bar-col">
+          <div class="bias-tag">+B</div>
+          <div class="bar" style="height:93px; background:#FF9F1C;"></div>
+          <div class="blbl">K7</div>
+        </div>
+      </div>
+      <div class="mass-val" style="color:#FF9F1C;">Mass = 100 <span class="check-mark">&#x2713; matched!</span></div>
+    </div>
+
+    <!-- Arrow annotations -->
+    <div class="arrow-1">&#8594;</div>
+    <div class="arrow-2">&#8594;</div>
+  </div>
+
+  <style>
+    [data-composition-id="attention-mass"] {
+      position: relative;
+      overflow: hidden;
+      background: #011627;
+      width: 1920px;
+      height: 540px;
+      font-family: 'Space Mono', monospace;
+      color: #FDFFFC;
+    }
+    .scene { position: relative; width: 1920px; height: 540px; }
+    .title {
+      position: absolute; top: 16px; left: 50%; transform: translateX(-50%);
+      font-size: 48px; font-weight: 700; color: #FDFFFC; white-space: nowrap;
+    }
+    .panel { position: absolute; top: 80px; display: flex; flex-direction: column; align-items: center; }
+    .panel-orig { left: 40px; width: 560px; }
+    .panel-nobias { left: 700px; width: 320px; }
+    .panel-bias { left: 1160px; width: 320px; }
+    .panel-label { font-size: 28px; font-weight: 700; margin-bottom: 12px; }
+    .bars { display: flex; align-items: flex-end; gap: 12px; height: 200px; }
+    .bar-col { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+    .bar { width: 52px; border-radius: 4px 4px 0 0; }
+    .blbl { font-size: 22px; color: #415A77; }
+    .mass-val { margin-top: 12px; font-size: 30px; font-weight: 700; }
+    .x-mark { color: #E71D36; font-size: 26px; }
+    .check-mark { color: #3fb950; font-size: 26px; }
+    .bias-tag { font-size: 24px; color: #FF9F1C; font-weight: 700; margin-bottom: 2px; }
+    .arrow-1 { position: absolute; top: 210px; left: 620px; font-size: 52px; color: #415A77; }
+    .arrow-2 { position: absolute; top: 210px; left: 1080px; font-size: 52px; color: #415A77; }
+  </style>
+
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+  <script>
+    window.__timelines = window.__timelines || {};
+    const root = document.currentScript.parentElement;
+    const tl = gsap.timeline({ paused: true });
+
+    // Title fade in
+    tl.from(root.querySelector('.title'), { y: -20, opacity: 0, duration: 0.6, ease: 'power2.out' }, 0);
+
+    // Original panel
+    tl.from(root.querySelector('.panel-orig'), { opacity: 0, x: -40, duration: 0.8, ease: 'power2.out' }, 0.2);
+    root.querySelectorAll('#orig-bars .bar').forEach(function(bar, i) {
+      tl.from(bar, { height: 0, duration: 0.5, ease: 'power2.out' }, 0.4 + i * 0.06);
+    });
+    tl.from(root.querySelector('.panel-orig .mass-val'), { opacity: 0, duration: 0.5 }, 1.2);
+
+    // Arrow 1
+    tl.from(root.querySelector('.arrow-1'), { opacity: 0, x: -20, duration: 0.4 }, 2.0);
+
+    // No-bias panel
+    tl.from(root.querySelector('.panel-nobias'), { opacity: 0, x: -40, duration: 0.8, ease: 'power2.out' }, 2.5);
+    root.querySelectorAll('#nb-bars .bar').forEach(function(bar, i) {
+      tl.from(bar, { height: 0, duration: 0.5, ease: 'power2.out' }, 2.7 + i * 0.1);
+    });
+    tl.from(root.querySelector('.panel-nobias .mass-val'), { opacity: 0, duration: 0.5 }, 3.5);
+
+    // Fade original dropped bars
+    var fadeIdxs = [1,2,4,5,7];
+    fadeIdxs.forEach(function(idx, i) {
+      tl.to(root.querySelector('#ob' + idx), { opacity: 0.15, duration: 0.4 }, 2.5 + i * 0.05);
+    });
+
+    // Arrow 2
+    tl.from(root.querySelector('.arrow-2'), { opacity: 0, x: -20, duration: 0.4 }, 4.5);
+
+    // Bias panel
+    tl.from(root.querySelector('.panel-bias'), { opacity: 0, x: -40, duration: 0.8, ease: 'power2.out' }, 5.0);
+    root.querySelectorAll('.bias-tag').forEach(function(tag, i) {
+      tl.from(tag, { opacity: 0, y: -10, duration: 0.4 }, 5.4 + i * 0.15);
+    });
+    root.querySelectorAll('#bi-bars .bar').forEach(function(bar, i) {
+      tl.from(bar, { height: 0, duration: 0.6, ease: 'power2.out' }, 5.2 + i * 0.1);
+    });
+    tl.from(root.querySelector('.panel-bias .mass-val'), { opacity: 0, duration: 0.5 }, 6.2);
+
+    // Hold for viewing
+    tl.to({}, { duration: 3 });
+
+    window.__timelines["attention-mass"] = tl;
+  </script>
+</div>
+</body>
+</html>

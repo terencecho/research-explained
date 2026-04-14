@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap');
+* { margin: 0; padding: 0; box-sizing: border-box; }
+</style>
+</head>
+<body>
+<div
+  data-composition-id="mem0-pipeline"
+  data-width="1920"
+  data-height="540"
+  data-start="0"
+  data-duration="12"
+>
+  <div class="scene">
+    <div class="title">Mem0 Memory Pipeline</div>
+
+    <!-- Left: Extraction -->
+    <div class="phase phase-extract">
+      <div class="phase-label" style="color:#2EC4B6;">EXTRACTION</div>
+      <div class="msg-pair">
+        <div class="msg msg-user">I'm vegetarian and I avoid dairy</div>
+      </div>
+      <div class="extract-arrow">&#8595;</div>
+      <div class="llm-box">LLM extracts facts</div>
+      <div class="extract-arrow">&#8595;</div>
+      <div class="memory-out">Vegetarian, avoids dairy</div>
+    </div>
+
+    <!-- Arrow between phases -->
+    <div class="phase-arrow">&#8594;</div>
+
+    <!-- Right: Update -->
+    <div class="phase phase-update">
+      <div class="phase-label" style="color:#FF9F1C;">UPDATE</div>
+      <div class="compare-zone">
+        <div class="new-fact">New: "Vegetarian, avoids dairy"</div>
+        <div class="vs-label">vs existing memories</div>
+      </div>
+      <div class="ops-row">
+        <div class="op op-add">ADD</div>
+        <div class="op op-update">UPDATE</div>
+        <div class="op op-delete">DELETE</div>
+        <div class="op op-noop">NOOP</div>
+      </div>
+      <div class="ops-desc">LLM decides the right operation</div>
+    </div>
+  </div>
+
+  <style>
+    [data-composition-id="mem0-pipeline"] {
+      position: relative; overflow: hidden; background: #011627;
+      width: 1920px; height: 540px; font-family: 'Space Mono', monospace; color: #FDFFFC;
+    }
+    .scene { position: relative; width: 1920px; height: 540px; }
+    .title { position: absolute; top: 16px; left: 50%; transform: translateX(-50%); font-size: 48px; font-weight: 700; white-space: nowrap; }
+
+    .phase { position: absolute; top: 80px; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+    .phase-extract { left: 80px; width: 720px; }
+    .phase-update { left: 1020px; width: 800px; }
+    .phase-label { font-size: 30px; font-weight: 700; letter-spacing: 2px; }
+
+    .msg-pair { display: flex; flex-direction: column; gap: 8px; width: 100%; }
+    .msg { padding: 10px 18px; border-radius: 10px; font-size: 22px; max-width: 500px; }
+    .msg-user { background: rgba(46,196,182,0.15); border: 2px solid #2EC4B6; color: #2EC4B6; align-self: flex-start; }
+    .msg-asst { background: rgba(188,140,255,0.15); border: 2px solid #bc8cff; color: #bc8cff; align-self: flex-end; }
+
+    .extract-arrow { font-size: 28px; color: #415A77; }
+    .llm-box { padding: 10px 28px; border-radius: 8px; font-size: 22px; font-weight: 700; background: rgba(255,159,28,0.15); border: 2px solid #FF9F1C; color: #FF9F1C; }
+    .memory-out { padding: 10px 24px; border-radius: 8px; font-size: 24px; font-weight: 700; background: rgba(63,185,80,0.15); border: 2px solid #3fb950; color: #3fb950; }
+
+    .phase-arrow { position: absolute; top: 260px; left: 830px; font-size: 56px; color: #415A77; }
+
+    .compare-zone { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+    .new-fact { padding: 12px 24px; border-radius: 8px; font-size: 22px; font-weight: 700; background: rgba(63,185,80,0.15); border: 2px solid #3fb950; color: #3fb950; }
+    .vs-label { font-size: 22px; color: #778DA9; }
+
+    .ops-row { display: flex; gap: 16px; margin-top: 8px; }
+    .op { padding: 14px 28px; border-radius: 8px; font-size: 24px; font-weight: 700; }
+    .op-add { background: rgba(63,185,80,0.15); border: 2px solid #3fb950; color: #3fb950; }
+    .op-update { background: rgba(88,166,255,0.15); border: 2px solid #58a6ff; color: #58a6ff; }
+    .op-delete { background: rgba(231,29,54,0.15); border: 2px solid #E71D36; color: #E71D36; }
+    .op-noop { background: rgba(65,90,119,0.3); border: 2px solid #415A77; color: #778DA9; }
+
+    .ops-desc { font-size: 22px; color: #778DA9; margin-top: 8px; }
+  </style>
+
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+  <script>
+    window.__timelines = window.__timelines || {};
+    var root = document.currentScript.parentElement;
+    var tl = gsap.timeline({ paused: true });
+
+    // Title
+    tl.from(root.querySelector('.title'), { y: -20, opacity: 0, duration: 0.6, ease: 'power2.out' }, 0);
+
+    // Extraction phase
+    tl.from(root.querySelector('.phase-extract'), { opacity: 0, x: -30, duration: 0.7 }, 0.3);
+    tl.from(root.querySelector('.phase-extract .phase-label'), { opacity: 0, duration: 0.4 }, 0.5);
+
+    // Message
+    tl.from(root.querySelector('.msg-user'), { opacity: 0, x: -20, duration: 0.5, ease: 'power2.out' }, 0.8);
+
+    // Extraction flow
+    root.querySelectorAll('.extract-arrow').forEach(function(el, i) {
+      tl.from(el, { opacity: 0, duration: 0.3 }, 1.8 + i * 0.6);
+    });
+    tl.from(root.querySelector('.llm-box'), { opacity: 0, scale: 0.9, duration: 0.5, ease: 'power2.out' }, 2.1);
+    tl.from(root.querySelector('.memory-out'), { opacity: 0, scale: 0.9, duration: 0.5, ease: 'power2.out' }, 3.0);
+
+    // Phase arrow
+    tl.from(root.querySelector('.phase-arrow'), { opacity: 0, x: -20, duration: 0.4 }, 3.8);
+
+    // Update phase
+    tl.from(root.querySelector('.phase-update'), { opacity: 0, x: 30, duration: 0.7 }, 4.2);
+    tl.from(root.querySelector('.phase-update .phase-label'), { opacity: 0, duration: 0.4 }, 4.4);
+    tl.from(root.querySelector('.new-fact'), { opacity: 0, y: -10, duration: 0.4 }, 4.8);
+    tl.from(root.querySelector('.vs-label'), { opacity: 0, duration: 0.3 }, 5.2);
+
+    // Operation boxes
+    root.querySelectorAll('.op').forEach(function(el, i) {
+      tl.from(el, { opacity: 0, y: 15, duration: 0.4, ease: 'power2.out' }, 5.6 + i * 0.25);
+    });
+    tl.from(root.querySelector('.ops-desc'), { opacity: 0, duration: 0.3 }, 6.8);
+
+    // Hold
+    tl.to({}, { duration: 3 });
+
+    window.__timelines["mem0-pipeline"] = tl;
+  </script>
+</div>
+</body>
+</html>

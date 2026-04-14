@@ -127,7 +127,8 @@ For each HyperFrames video:
 **Build process:**
 - Create the HTML in a directory (e.g., `/tmp/my-vid/index.html`)
 - Lint with `npx hyperframes lint .` from that directory
-- Render with `npx hyperframes render --output <path>.mp4 --fps 30`
+- Render with `npx hyperframes render --output <path>.mp4 --fps 60`
+- **Save the source**: Copy the source HTML to `<paper-slug>/videos/src/<video-name>.html` so it can be re-rendered or tweaked later
 
 **Verification (required before embedding):**
 - Take screenshots at **multiple timestamps** (early, midpoint, near-end) since content animates in

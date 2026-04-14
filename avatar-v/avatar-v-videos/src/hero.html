@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap');
+* { margin: 0; padding: 0; box-sizing: border-box; }
+</style>
+</head>
+<body>
+<div
+  data-composition-id="avatar-hero"
+  data-width="1920"
+  data-height="540"
+  data-start="0"
+  data-duration="10"
+>
+  <div class="scene">
+    <!-- Left: Reference video representation -->
+    <div class="ref-panel">
+      <div class="panel-label">Reference Video</div>
+      <div class="ref-frame">
+        <div class="person-icon">&#x1F464;</div>
+        <div class="trait-tags">
+          <div class="trait">face geometry</div>
+          <div class="trait">talking rhythm</div>
+          <div class="trait">micro-expressions</div>
+          <div class="trait">voice tone</div>
+        </div>
+      </div>
+      <div class="ref-note">10 seconds of video</div>
+    </div>
+
+    <!-- Center: Avatar V processing -->
+    <div class="process-zone">
+      <div class="proc-arrow">&#8594;</div>
+      <div class="proc-box">
+        <div class="proc-name">Avatar V</div>
+        <div class="proc-parts">
+          <div class="proc-part p1">Identity</div>
+          <div class="proc-part p2">Motion</div>
+          <div class="proc-part p3">Voice</div>
+        </div>
+      </div>
+      <div class="proc-arrow">&#8594;</div>
+    </div>
+
+    <!-- Right: Multiple outputs -->
+    <div class="output-panel">
+      <div class="panel-label" style="color:#2EC4B6;">Generated Videos</div>
+      <div class="output-grid">
+        <div class="output-card">
+          <div class="out-icon">&#x1F3AC;</div>
+          <div class="out-text">New script</div>
+          <div class="out-sub">Same person</div>
+        </div>
+        <div class="output-card">
+          <div class="out-icon">&#x1F30D;</div>
+          <div class="out-text">50+ languages</div>
+          <div class="out-sub">Same voice</div>
+        </div>
+        <div class="output-card">
+          <div class="out-icon">&#x267E;&#xFE0F;</div>
+          <div class="out-text">Unlimited length</div>
+          <div class="out-sub">Same style</div>
+        </div>
+      </div>
+      <div class="output-quality">1080p &bull; state-of-the-art fidelity</div>
+    </div>
+  </div>
+
+  <style>
+    [data-composition-id="avatar-hero"] {
+      position: relative; overflow: hidden; background: #011627;
+      width: 1920px; height: 540px; font-family: 'Space Mono', monospace; color: #FDFFFC;
+    }
+    .scene { position: relative; width: 1920px; height: 540px; }
+
+    .ref-panel { position: absolute; left: 80px; top: 60px; width: 440px; }
+    .panel-label { font-size: 28px; font-weight: 700; color: #FF9F1C; margin-bottom: 12px; }
+    .ref-frame {
+      display: flex; align-items: center; gap: 20px; padding: 18px 24px;
+      border: 3px solid #FF9F1C; border-radius: 16px; background: rgba(255,159,28,0.06);
+    }
+    .person-icon { font-size: 72px; }
+    .trait-tags { display: flex; flex-wrap: wrap; gap: 8px; }
+    .trait {
+      padding: 5px 14px; border-radius: 20px; font-size: 19px; font-weight: 700;
+      background: rgba(255,159,28,0.12); border: 1px solid #FF9F1C; color: #FF9F1C;
+    }
+    .ref-note { font-size: 20px; color: #778DA9; margin-top: 10px; text-align: center; }
+
+    .process-zone {
+      position: absolute; left: 700px; top: 60px; width: 500px; height: 420px;
+      display: flex; align-items: center; justify-content: center; gap: 16px;
+    }
+    .proc-arrow { font-size: 48px; color: #415A77; }
+    .proc-box {
+      padding: 20px 36px; border-radius: 12px; text-align: center;
+      border: 3px solid #bc8cff; background: rgba(188,140,255,0.06);
+    }
+    .proc-name { font-size: 40px; font-weight: 700; color: #bc8cff; margin-bottom: 10px; }
+    .proc-parts { display: flex; gap: 10px; justify-content: center; }
+    .proc-part {
+      padding: 6px 16px; border-radius: 8px; font-size: 20px; font-weight: 700;
+      background: rgba(188,140,255,0.15); color: #bc8cff;
+    }
+
+    .output-panel { position: absolute; right: 80px; top: 60px; width: 460px; }
+    .output-grid { display: flex; flex-direction: column; gap: 10px; }
+    .output-card {
+      display: flex; align-items: center; gap: 14px; padding: 12px 20px;
+      border-radius: 12px; border: 2px solid #2EC4B6; background: rgba(46,196,182,0.06);
+    }
+    .out-icon { font-size: 32px; }
+    .out-text { font-size: 22px; font-weight: 700; color: #2EC4B6; }
+    .out-sub { font-size: 18px; color: #778DA9; margin-left: auto; }
+    .output-quality {
+      font-size: 22px; color: #3fb950; font-weight: 700; text-align: center; margin-top: 14px;
+    }
+  </style>
+
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+  <script>
+    window.__timelines = window.__timelines || {};
+    var root = document.currentScript.parentElement;
+    var tl = gsap.timeline({ paused: true });
+
+    // Reference panel
+    tl.from(root.querySelector('.ref-panel .panel-label'), { opacity: 0, duration: 0.4 }, 0);
+    tl.from(root.querySelector('.ref-frame'), { opacity: 0, x: -20, duration: 0.6, ease: 'power2.out' }, 0.3);
+    // Traits appear one by one
+    root.querySelectorAll('.trait').forEach(function(el, i) {
+      tl.from(el, { opacity: 0, x: -10, duration: 0.3, ease: 'power2.out' }, 0.6 + i * 0.2);
+    });
+    tl.from(root.querySelector('.ref-note'), { opacity: 0, duration: 0.3 }, 1.5);
+
+    // Process zone
+    root.querySelectorAll('.proc-arrow').forEach(function(el, i) {
+      tl.from(el, { opacity: 0, x: i === 0 ? -15 : 15, duration: 0.4 }, 2.0 + i * 0.5);
+    });
+    tl.from(root.querySelector('.proc-box'), { opacity: 0, scale: 0.9, duration: 0.5, ease: 'power2.out' }, 2.3);
+    root.querySelectorAll('.proc-part').forEach(function(el, i) {
+      tl.from(el, { opacity: 0, y: 8, duration: 0.3 }, 2.6 + i * 0.15);
+    });
+
+    // Output panel
+    tl.from(root.querySelector('.output-panel .panel-label'), { opacity: 0, duration: 0.4 }, 3.5);
+    root.querySelectorAll('.output-card').forEach(function(el, i) {
+      tl.from(el, { opacity: 0, x: 20, duration: 0.5, ease: 'power2.out' }, 3.8 + i * 0.3);
+    });
+    tl.from(root.querySelector('.output-quality'), { opacity: 0, y: 10, duration: 0.4 }, 5.0);
+
+    // Hold
+    tl.to({}, { duration: 3 });
+
+    window.__timelines["avatar-hero"] = tl;
+  </script>
+</div>
+</body>
+</html>

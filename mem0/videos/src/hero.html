@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap');
+* { margin: 0; padding: 0; box-sizing: border-box; }
+</style>
+</head>
+<body>
+<div
+  data-composition-id="mem0-hero"
+  data-width="1920"
+  data-height="540"
+  data-start="0"
+  data-duration="10"
+>
+  <div class="scene">
+    <!-- Session 1 messages scrolling up left side -->
+    <div class="session s1">
+      <div class="session-label">Session 1</div>
+      <div class="msg m1">I'm vegetarian and avoid dairy</div>
+      <div class="msg m2">Working on a Python project</div>
+      <div class="msg m3">My deadline is March 15</div>
+      <div class="msg m4">I prefer dark mode in all apps</div>
+    </div>
+
+    <!-- Center: Memory extraction -->
+    <div class="center">
+      <div class="mem-label">Mem0</div>
+      <div class="mem-store">
+        <div class="mem-fact f1">Vegetarian, no dairy</div>
+        <div class="mem-fact f2">Python developer</div>
+        <div class="mem-fact f3">Deadline: March 15</div>
+        <div class="mem-fact f4">Prefers dark mode</div>
+      </div>
+    </div>
+
+    <!-- Session 2: recall -->
+    <div class="session s2">
+      <div class="session-label">Session 2 (next day)</div>
+      <div class="msg m5">What should I eat for dinner?</div>
+      <div class="recall-box">
+        <div class="recall-label">recalls</div>
+        <div class="recall-fact">Vegetarian, no dairy</div>
+      </div>
+      <div class="msg m6 assistant">How about a tofu stir-fry with rice noodles?</div>
+    </div>
+  </div>
+
+  <style>
+    [data-composition-id="mem0-hero"] {
+      position: relative; overflow: hidden; background: #011627;
+      width: 1920px; height: 540px; font-family: 'Space Mono', monospace; color: #FDFFFC;
+    }
+    .scene { position: relative; width: 1920px; height: 540px; }
+
+    .session { position: absolute; top: 40px; display: flex; flex-direction: column; gap: 12px; }
+    .s1 { left: 60px; width: 520px; }
+    .s2 { left: 1240px; width: 600px; }
+    .session-label { font-size: 24px; font-weight: 700; color: #778DA9; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 8px; }
+
+    .msg {
+      padding: 14px 24px; border-radius: 12px; font-size: 24px; font-weight: 400;
+      border: 2px solid #2EC4B6; color: #2EC4B6; background: rgba(46,196,182,0.08);
+      max-width: 480px;
+    }
+    .msg.assistant {
+      border-color: #bc8cff; color: #bc8cff; background: rgba(188,140,255,0.08);
+      align-self: flex-end;
+    }
+
+    .center { position: absolute; left: 680px; top: 40px; width: 460px; text-align: center; }
+    .mem-label {
+      font-size: 48px; font-weight: 700; color: #FF9F1C; margin-bottom: 16px;
+      letter-spacing: 2px;
+    }
+    .mem-store { display: flex; flex-direction: column; gap: 10px; align-items: center; }
+    .mem-fact {
+      padding: 10px 24px; border-radius: 8px; font-size: 22px; font-weight: 700;
+      background: rgba(63,185,80,0.12); border: 2px solid #3fb950; color: #3fb950;
+    }
+
+    .recall-box {
+      padding: 12px 20px; border-radius: 8px; margin: 4px 0;
+      background: rgba(255,159,28,0.1); border: 2px dashed #FF9F1C;
+      display: flex; align-items: center; gap: 12px;
+    }
+    .recall-label { font-size: 18px; color: #FF9F1C; text-transform: uppercase; font-weight: 700; }
+    .recall-fact { font-size: 22px; color: #3fb950; font-weight: 700; }
+  </style>
+
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+  <script>
+    window.__timelines = window.__timelines || {};
+    var root = document.currentScript.parentElement;
+    var tl = gsap.timeline({ paused: true });
+
+    // Session 1 label
+    tl.from(root.querySelector('.s1 .session-label'), { opacity: 0, duration: 0.4 }, 0);
+
+    // Messages appear one by one
+    tl.from(root.querySelector('.m1'), { opacity: 0, x: -20, duration: 0.4, ease: 'power2.out' }, 0.3);
+    tl.from(root.querySelector('.m2'), { opacity: 0, x: -20, duration: 0.4, ease: 'power2.out' }, 0.7);
+    tl.from(root.querySelector('.m3'), { opacity: 0, x: -20, duration: 0.4, ease: 'power2.out' }, 1.1);
+    tl.from(root.querySelector('.m4'), { opacity: 0, x: -20, duration: 0.4, ease: 'power2.out' }, 1.5);
+
+    // Mem0 label
+    tl.from(root.querySelector('.mem-label'), { opacity: 0, scale: 0.8, duration: 0.5, ease: 'power2.out' }, 0.5);
+
+    // Facts extracted into memory store (timed with messages)
+    tl.from(root.querySelector('.f1'), { opacity: 0, x: -40, duration: 0.4, ease: 'power2.out' }, 0.8);
+    tl.from(root.querySelector('.f2'), { opacity: 0, x: -40, duration: 0.4, ease: 'power2.out' }, 1.2);
+    tl.from(root.querySelector('.f3'), { opacity: 0, x: -40, duration: 0.4, ease: 'power2.out' }, 1.6);
+    tl.from(root.querySelector('.f4'), { opacity: 0, x: -40, duration: 0.4, ease: 'power2.out' }, 2.0);
+
+    // Pause — session break
+    // Session 1 fades slightly
+    tl.to(root.querySelector('.s1'), { opacity: 0.3, duration: 0.6 }, 3.0);
+
+    // Session 2 appears
+    tl.from(root.querySelector('.s2 .session-label'), { opacity: 0, duration: 0.4 }, 3.5);
+    tl.from(root.querySelector('.m5'), { opacity: 0, x: 20, duration: 0.4, ease: 'power2.out' }, 4.0);
+
+    // Memory recall — highlight the relevant fact
+    tl.to(root.querySelector('.f1'), { boxShadow: '0 0 20px rgba(63,185,80,0.7)', duration: 0.4 }, 4.5);
+
+    // Recall box appears
+    tl.from(root.querySelector('.recall-box'), { opacity: 0, y: -10, duration: 0.4, ease: 'power2.out' }, 5.0);
+
+    // Assistant responds
+    tl.from(root.querySelector('.m6'), { opacity: 0, x: 20, duration: 0.5, ease: 'power2.out' }, 5.8);
+
+    // Hold
+    tl.to({}, { duration: 3 });
+
+    window.__timelines["mem0-hero"] = tl;
+  </script>
+</div>
+</body>
+</html>

@@ -153,6 +153,7 @@
   h3 { font-size: 1.2rem; margin: 1.5rem 0 0.75rem; color: var(--purple); }
   p { margin-bottom: 1rem; }
   .subtitle { color: var(--text-muted); margin-bottom: 2rem; font-size: 1.05rem; }
+  .meta { color: var(--text-muted); font-size: 0.8rem; margin-top: -1rem; margin-bottom: 1.5rem; }
 
   /* Term highlighting */
   .term {
@@ -789,8 +790,8 @@
 <div class="main-content">
 
 <h1>Avatar V: The Paper, Explained</h1>
-<p class="subtitle">A beginner-friendly guide to HeyGen's Avatar V technical report.<br>Every AI term is defined. Every concept is grounded in analogy.</p>
-<p style="font-size:0.8rem; color:var(--text-muted); margin-top:-1rem; margin-bottom:1.5rem;">Paper by HeyGen Research (2025) &middot; Explainer published April 13, 2026 &middot; Terence Cho</p>
+<p class="subtitle">A beginner-friendly guide to HeyGen's Avatar V technical report. Every AI term is defined. Every concept is grounded in analogy.</p>
+<p class="meta">Paper by HeyGen Research (2025) &middot; Explainer published April 13, 2026 &middot; Terence Cho</p>
 
 <div class="research-banner">
   <div class="banner-icon">&#x1F3AC;</div>
@@ -804,8 +805,11 @@
   </div>
 </div>
 
+<div class="video-embed">
+  <video src="avatar-v-videos/hero.mp4" autoplay muted loop playsinline></video>
+  <div class="video-caption"><a href="https://github.com/heygen-com/hyperframes" target="_blank" class="badge" title="Made with HyperFrames — HeyGen's HTML-to-video composition framework"><span class="badge-label">made with</span><span class="badge-name">HyperFrames</span></a> Avatar V generates personalized talking videos from just 10 seconds of reference — preserving identity, motion style, and voice across new scripts, languages, and unlimited duration.</div>
+</div>
 
-<!-- ============================================================ -->
 <h2 id="big-picture">The Big Picture</h2>
 
 <p><strong>Avatar V</strong> is a system that takes a short video of a real person and generates new, high-quality talking-head videos of that person saying anything you want. The generated person doesn't just <em>look</em> like the original - they <em>move</em>, <em>talk</em>, and <em>gesture</em> like them too.</p>
