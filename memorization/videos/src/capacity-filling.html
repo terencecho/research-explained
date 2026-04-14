@@ -1,0 +1,362 @@
+<!DOCTYPE html><html><head><meta charset="UTF-8"></head><body>
+<div data-composition-id="capacity-filling" data-width="1920" data-height="540" data-start="0" data-duration="12">
+  <div class="container">
+    <div class="title">Model Capacity: 3.6 Bits Per Parameter</div>
+
+    <div class="visual-area">
+      <!-- Parameter reservoir -->
+      <div class="reservoir-section">
+        <div class="reservoir-label">Model Parameters</div>
+        <div class="reservoir">
+          <div class="reservoir-fill" id="fill"></div>
+          <div class="reservoir-mark" id="mark">
+            <span class="mark-label">Capacity Limit</span>
+          </div>
+        </div>
+        <div class="reservoir-stats">
+          <span class="stat" id="stat-bits">0 bits</span>
+          <span class="stat-sep">/</span>
+          <span class="stat" id="stat-capacity">3.6 bits &times; 6.86M params = 24.7M bits</span>
+        </div>
+      </div>
+
+      <!-- Data tokens streaming in -->
+      <div class="data-section">
+        <div class="data-label" id="phase-label">Phase: Memorizing</div>
+        <div class="tokens-container">
+          <div class="token t1">token</div>
+          <div class="token t2">token</div>
+          <div class="token t3">token</div>
+          <div class="token t4">token</div>
+          <div class="token t5">token</div>
+          <div class="token t6">token</div>
+          <div class="token t7">token</div>
+          <div class="token t8">token</div>
+        </div>
+      </div>
+
+      <!-- Right side: bpp counter -->
+      <div class="bpp-section">
+        <div class="bpp-value" id="bpp-value">0.0</div>
+        <div class="bpp-label">bits / parameter</div>
+        <div class="bpp-bar-container">
+          <div class="bpp-bar" id="bpp-bar"></div>
+          <div class="bpp-target">3.6</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom status -->
+    <div class="status-bar">
+      <div class="status-item">
+        <span class="status-dot memorize" id="dot-mem"></span>
+        <span id="status-mem">Memorizing training data</span>
+      </div>
+      <div class="status-item">
+        <span class="status-dot generalize" id="dot-gen"></span>
+        <span id="status-gen">Waiting to generalize...</span>
+      </div>
+    </div>
+  </div>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap');
+
+    .container {
+      position: absolute;
+      inset: 0;
+      background: #011627;
+      font-family: 'Space Mono', monospace;
+      color: #FDFFFC;
+      padding: 30px 60px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .title {
+      font-size: 36px;
+      font-weight: 700;
+      text-align: center;
+      margin-bottom: 20px;
+      color: #2EC4B6;
+    }
+
+    .visual-area {
+      flex: 1;
+      display: flex;
+      gap: 40px;
+      align-items: center;
+    }
+
+    .reservoir-section {
+      flex: 2;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .reservoir-label {
+      font-size: 22px;
+      font-weight: 700;
+      color: #FDFFFC;
+    }
+
+    .reservoir {
+      width: 100%;
+      height: 120px;
+      background: #0d2137;
+      border: 2px solid #415A77;
+      border-radius: 12px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .reservoir-fill {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 0%;
+      background: linear-gradient(180deg, #2EC4B6 0%, #1a8a80 100%);
+      transition: background 0.5s;
+    }
+
+    .reservoir-mark {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: #FF9F1C;
+      opacity: 0;
+    }
+
+    .mark-label {
+      position: absolute;
+      right: 8px;
+      top: 6px;
+      font-size: 14px;
+      color: #FF9F1C;
+      font-weight: 700;
+    }
+
+    .reservoir-stats {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 18px;
+    }
+
+    .stat { color: #2EC4B6; font-weight: 700; }
+    .stat-sep { color: #415A77; }
+
+    .data-section {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .data-label {
+      font-size: 22px;
+      font-weight: 700;
+      color: #FF9F1C;
+    }
+
+    .tokens-container {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .token {
+      background: #1a2a3a;
+      border: 1px solid #415A77;
+      border-radius: 6px;
+      padding: 4px 16px;
+      font-size: 16px;
+      color: #8b949e;
+      opacity: 0;
+    }
+
+    .bpp-section {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .bpp-value {
+      font-size: 72px;
+      font-weight: 700;
+      color: #2EC4B6;
+      line-height: 1;
+    }
+
+    .bpp-label {
+      font-size: 18px;
+      color: #8b949e;
+    }
+
+    .bpp-bar-container {
+      width: 100%;
+      height: 20px;
+      background: #0d2137;
+      border: 1px solid #415A77;
+      border-radius: 10px;
+      position: relative;
+      overflow: hidden;
+      margin-top: 8px;
+    }
+
+    .bpp-bar {
+      height: 100%;
+      width: 0%;
+      background: #2EC4B6;
+      border-radius: 10px;
+    }
+
+    .bpp-target {
+      position: absolute;
+      right: 8px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 13px;
+      color: #FF9F1C;
+      font-weight: 700;
+    }
+
+    .status-bar {
+      display: flex;
+      gap: 40px;
+      justify-content: center;
+      margin-top: 16px;
+    }
+
+    .status-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 18px;
+    }
+
+    .status-dot {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+    }
+
+    .status-dot.memorize { background: #2EC4B6; }
+    .status-dot.generalize { background: #415A77; }
+  </style>
+
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+  <script>
+    window.__timelines = window.__timelines || {};
+    var root = document.currentScript.parentElement;
+    var tl = gsap.timeline({ paused: true });
+
+    var fill = root.querySelector('#fill');
+    var mark = root.querySelector('#mark');
+    var bppValue = root.querySelector('#bpp-value');
+    var bppBar = root.querySelector('#bpp-bar');
+    var statBits = root.querySelector('#stat-bits');
+    var phaseLabel = root.querySelector('#phase-label');
+    var dotMem = root.querySelector('#dot-mem');
+    var dotGen = root.querySelector('#dot-gen');
+    var statusMem = root.querySelector('#status-mem');
+    var statusGen = root.querySelector('#status-gen');
+    var tokens = root.querySelectorAll('.token');
+
+    // Phase 1: Show the capacity mark
+    tl.to(mark, { opacity: 1, duration: 0.5 }, 0.5);
+
+    // Tokens streaming in
+    tokens.forEach(function(tok, i) {
+      tl.to(tok, { opacity: 1, duration: 0.2 }, 0.3 + i * 0.15);
+      tl.to(tok, {
+        x: -20, opacity: 0.3, duration: 0.4,
+      }, 1.5 + i * 0.3);
+    });
+
+    // Phase 2: Fill the reservoir (memorizing)
+    tl.to(fill, {
+      height: '100%',
+      duration: 5,
+      ease: 'power1.inOut',
+      onUpdate: function() {
+        var pct = this.progress();
+        var bits = Math.round(pct * 24.7 * 10) / 10;
+        var bpp = Math.round(pct * 3.6 * 10) / 10;
+        statBits.textContent = bits.toFixed(1) + 'M bits';
+        bppValue.textContent = bpp.toFixed(1);
+      }
+    }, 1);
+
+    tl.to(bppBar, { width: '100%', duration: 5, ease: 'power1.inOut' }, 1);
+
+    // Phase 3: Hit the wall - flash orange
+    tl.to(fill, {
+      background: 'linear-gradient(180deg, #FF9F1C 0%, #cc7a00 100%)',
+      duration: 0.3
+    }, 6);
+    tl.to(fill, {
+      background: 'linear-gradient(180deg, #2EC4B6 0%, #1a8a80 100%)',
+      duration: 0.5
+    }, 6.5);
+
+    // Phase label changes
+    tl.to(phaseLabel, {
+      color: '#E71D36',
+      duration: 0.01,
+      onComplete: function() { phaseLabel.textContent = 'Phase: Capacity Full!'; }
+    }, 6.2);
+
+    // Phase 4: Transition to generalization
+    tl.to(phaseLabel, {
+      color: '#3fb950',
+      duration: 0.01,
+      onComplete: function() { phaseLabel.textContent = 'Phase: Generalizing'; }
+    }, 7.5);
+
+    tl.to(dotGen, { background: '#3fb950', duration: 0.3 }, 7.5);
+    tl.to(statusGen, {
+      color: '#3fb950',
+      duration: 0.01,
+      onComplete: function() { statusGen.textContent = 'Now generalizing patterns'; }
+    }, 7.5);
+
+    tl.to(dotMem, { background: '#415A77', duration: 0.3 }, 7.5);
+    tl.to(statusMem, {
+      color: '#8b949e',
+      duration: 0.01,
+      onComplete: function() { statusMem.textContent = 'Memorization stopped'; }
+    }, 7.5);
+
+    // Reservoir transitions to green tint (generalization)
+    tl.to(fill, {
+      background: 'linear-gradient(180deg, #3fb950 0%, #1a6b2a 50%, #2EC4B6 100%)',
+      duration: 2
+    }, 8);
+
+    // New tokens come in but don't fill - they transform
+    var newTokenTexts = ['pattern', 'pattern', 'pattern', 'pattern'];
+    tokens.forEach(function(tok, i) {
+      if (i < 4) {
+        tl.to(tok, {
+          opacity: 1, x: 0,
+          background: 'rgba(63,185,80,0.15)',
+          borderColor: '#3fb950',
+          color: '#3fb950',
+          duration: 0.3,
+          onComplete: function() { tok.textContent = newTokenTexts[i]; }
+        }, 8.5 + i * 0.3);
+      }
+    });
+
+    window.__timelines["capacity-filling"] = tl;
+  </script>
+</div>
+</body></html>

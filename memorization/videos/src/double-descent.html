@@ -1,0 +1,233 @@
+<!DOCTYPE html><html><head><meta charset="UTF-8"></head><body>
+<div data-composition-id="double-descent" data-width="1920" data-height="540" data-start="0" data-duration="12">
+  <div class="container">
+    <div class="title">Double Descent: When Data Exceeds Capacity</div>
+
+    <div class="visual-area">
+      <!-- Left: animated chart -->
+      <div class="chart-area">
+        <div class="y-label">Test Loss</div>
+        <div class="chart">
+          <svg viewBox="0 0 800 300" class="chart-svg">
+            <!-- Grid lines -->
+            <line x1="60" y1="20" x2="60" y2="280" stroke="#415A77" stroke-width="1"/>
+            <line x1="60" y1="280" x2="780" y2="280" stroke="#415A77" stroke-width="1"/>
+            <line x1="60" y1="150" x2="780" y2="150" stroke="#415A77" stroke-width="0.5" stroke-dasharray="4"/>
+            <line x1="60" y1="80" x2="780" y2="80" stroke="#415A77" stroke-width="0.5" stroke-dasharray="4"/>
+
+            <!-- Capacity line -->
+            <line x1="350" y1="20" x2="350" y2="280" stroke="#FF9F1C" stroke-width="2" stroke-dasharray="8,4" id="cap-line" opacity="0"/>
+            <text x="350" y="16" fill="#FF9F1C" font-size="16" font-family="Space Mono" text-anchor="middle" id="cap-text" opacity="0">Dataset = Capacity</text>
+
+            <!-- The double descent curve -->
+            <path id="curve" d="" fill="none" stroke="#2EC4B6" stroke-width="4" stroke-linecap="round"/>
+
+            <!-- Zone labels -->
+            <text x="200" y="270" fill="#3fb950" font-size="15" font-family="Space Mono" text-anchor="middle" id="zone1" opacity="0">Memorization Zone</text>
+            <text x="390" y="50" fill="#E71D36" font-size="15" font-family="Space Mono" text-anchor="middle" id="zone2" opacity="0">Danger Zone</text>
+            <text x="620" y="270" fill="#bc8cff" font-size="15" font-family="Space Mono" text-anchor="middle" id="zone3" opacity="0">Generalization Zone</text>
+
+            <!-- Moving dot -->
+            <circle id="dot" cx="60" cy="200" r="8" fill="#2EC4B6" opacity="0"/>
+
+            <!-- X axis labels -->
+            <text x="60" y="298" fill="#8b949e" font-size="13" font-family="Space Mono" text-anchor="start">Small</text>
+            <text x="420" y="298" fill="#8b949e" font-size="13" font-family="Space Mono" text-anchor="middle">Dataset Size</text>
+            <text x="780" y="298" fill="#8b949e" font-size="13" font-family="Space Mono" text-anchor="end">Large</text>
+          </svg>
+        </div>
+      </div>
+
+      <!-- Right: phase explanation cards -->
+      <div class="phase-cards">
+        <div class="phase-card" id="card1">
+          <div class="phase-num c1">1</div>
+          <div class="phase-title">Small Data</div>
+          <div class="phase-desc">Model memorizes everything. Test loss is low because memorized patterns still help.</div>
+        </div>
+        <div class="phase-card" id="card2">
+          <div class="phase-num c2">2</div>
+          <div class="phase-title">Data &asymp; Capacity</div>
+          <div class="phase-desc">Can't memorize all, can't generalize yet. Stretched thin. Loss spikes.</div>
+        </div>
+        <div class="phase-card" id="card3">
+          <div class="phase-num c3">3</div>
+          <div class="phase-title">Large Data</div>
+          <div class="phase-desc">Forced to generalize. Finds reusable patterns. Loss drops to new low.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap');
+
+    .container {
+      position: absolute;
+      inset: 0;
+      background: #011627;
+      font-family: 'Space Mono', monospace;
+      color: #FDFFFC;
+      padding: 24px 50px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .title {
+      font-size: 34px;
+      font-weight: 700;
+      text-align: center;
+      margin-bottom: 16px;
+      color: #2EC4B6;
+    }
+
+    .visual-area {
+      flex: 1;
+      display: flex;
+      gap: 30px;
+    }
+
+    .chart-area {
+      flex: 2;
+      display: flex;
+      position: relative;
+    }
+
+    .y-label {
+      writing-mode: vertical-rl;
+      transform: rotate(180deg);
+      font-size: 15px;
+      color: #8b949e;
+      display: flex;
+      align-items: center;
+      padding-right: 6px;
+    }
+
+    .chart {
+      flex: 1;
+    }
+
+    .chart-svg {
+      width: 100%;
+      height: 100%;
+    }
+
+    .phase-cards {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      justify-content: center;
+      min-width: 320px;
+    }
+
+    .phase-card {
+      background: #0d2137;
+      border: 1px solid #415A77;
+      border-radius: 10px;
+      padding: 14px 18px;
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+      opacity: 0;
+      transform: translateX(20px);
+    }
+
+    .phase-num {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+
+    .phase-num.c1 { background: rgba(63,185,80,0.2); color: #3fb950; }
+    .phase-num.c2 { background: rgba(231,29,54,0.2); color: #E71D36; }
+    .phase-num.c3 { background: rgba(188,140,255,0.2); color: #bc8cff; }
+
+    .phase-title { font-size: 20px; font-weight: 700; }
+    .phase-desc { font-size: 15px; color: #8b949e; margin-top: 4px; }
+  </style>
+
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+  <script>
+    window.__timelines = window.__timelines || {};
+    var root = document.currentScript.parentElement;
+    var tl = gsap.timeline({ paused: true });
+
+    var curve = root.querySelector('#curve');
+    var dot = root.querySelector('#dot');
+    var capLine = root.querySelector('#cap-line');
+    var capText = root.querySelector('#cap-text');
+
+    // Double descent curve points
+    // x: 60 -> 780, y: 280 (bottom/low loss) to 40 (top/high loss)
+    var points = [
+      [60, 200], [120, 180], [180, 165], [220, 160],
+      [280, 170], [320, 200], [350, 240], [370, 250],
+      [390, 240], [420, 200], [460, 160], [500, 130],
+      [560, 100], [620, 85], [680, 75], [740, 70], [780, 68]
+    ];
+
+    // Draw curve progressively
+    var pathSteps = [];
+    for (var i = 0; i < points.length; i++) {
+      var d = 'M' + points[0][0] + ',' + points[0][1];
+      for (var j = 1; j <= i; j++) {
+        d += ' L' + points[j][0] + ',' + points[j][1];
+      }
+      pathSteps.push(d);
+    }
+
+    // Animate the dot appearing
+    tl.to(dot, { opacity: 1, duration: 0.3 }, 0.5);
+
+    // Draw curve segment by segment with dot following
+    var timePerSeg = 0.5;
+    for (var k = 1; k < points.length; k++) {
+      (function(idx) {
+        var t = 0.8 + idx * timePerSeg;
+        tl.to(dot, {
+          attr: { cx: points[idx][0], cy: points[idx][1] },
+          duration: timePerSeg,
+          ease: 'none',
+          onUpdate: function() {
+            curve.setAttribute('d', pathSteps[idx]);
+          }
+        }, t);
+      })(k);
+    }
+
+    // Show capacity line at the right moment
+    tl.to(capLine, { opacity: 1, duration: 0.3 }, 3.5);
+    tl.to(capText, { opacity: 1, duration: 0.3 }, 3.5);
+
+    // Show zone labels
+    tl.to(root.querySelector('#zone1'), { opacity: 1, duration: 0.4 }, 2.0);
+    tl.to(root.querySelector('#zone2'), { opacity: 1, duration: 0.4 }, 4.5);
+    tl.to(root.querySelector('#zone3'), { opacity: 1, duration: 0.4 }, 7.0);
+
+    // Show phase cards
+    tl.to(root.querySelector('#card1'), { opacity: 1, x: 0, duration: 0.4 }, 1.5);
+    tl.to(root.querySelector('#card2'), { opacity: 1, x: 0, duration: 0.4 }, 4.0);
+    tl.to(root.querySelector('#card3'), { opacity: 1, x: 0, duration: 0.4 }, 7.0);
+
+    // Highlight active card
+    tl.to(root.querySelector('#card1'), { borderColor: '#3fb950', duration: 0.3 }, 1.5);
+    tl.to(root.querySelector('#card1'), { borderColor: '#415A77', duration: 0.3 }, 4.0);
+    tl.to(root.querySelector('#card2'), { borderColor: '#E71D36', duration: 0.3 }, 4.0);
+    tl.to(root.querySelector('#card2'), { borderColor: '#415A77', duration: 0.3 }, 7.0);
+    tl.to(root.querySelector('#card3'), { borderColor: '#bc8cff', duration: 0.3 }, 7.0);
+
+    // Dot color changes with zone
+    tl.to(dot, { attr: { fill: '#E71D36' }, duration: 0.2 }, 3.5);
+    tl.to(dot, { attr: { fill: '#bc8cff' }, duration: 0.2 }, 6.0);
+
+    window.__timelines["double-descent"] = tl;
+  </script>
+</div>
+</body></html>
