@@ -8,29 +8,70 @@
 </style>
 </head>
 <body>
-<div data-composition-id="lora-hero" data-width="1920" data-height="540" data-start="0" data-duration="10">
+<div data-composition-id="lora-hero" data-width="1920" data-height="540" data-start="0" data-duration="12">
   <div class="scene">
-    <div class="title">Fine-Tuning vs <span style="color:#2EC4B6;">LoRA</span></div>
-    <div class="content">
-      <div class="col">
-        <div class="col-label" style="color:#E71D36;">Full Fine-Tuning</div>
-        <div class="stat-row">
-          <div class="stat"><div class="stat-val" style="color:#E71D36;">175B</div><div class="stat-label">parameters trained</div></div>
-          <div class="stat"><div class="stat-val" style="color:#E71D36;">1.2 TB</div><div class="stat-label">GPU memory</div></div>
-          <div class="stat"><div class="stat-val" style="color:#E71D36;">350 GB</div><div class="stat-label">per checkpoint</div></div>
+    <div class="bg-gradient"></div>
+
+    <!-- Title -->
+    <div class="title" id="title">Full Fine-Tuning vs <span class="teal">LoRA</span></div>
+
+    <!-- LEFT: Full fine-tuning — a massive block -->
+    <div class="side side-left" id="side-left">
+      <div class="side-label" style="color:#E71D36;">Full Fine-Tuning</div>
+      <div class="block-area">
+        <div class="big-block" id="big-block">
+          <div class="block-inner-label">175B<br>params</div>
         </div>
-        <div class="verdict bad">100 models = 35 TB storage</div>
       </div>
-      <div class="vs">vs</div>
-      <div class="col">
-        <div class="col-label" style="color:#2EC4B6;">LoRA (r=4)</div>
+      <div class="stats">
         <div class="stat-row">
-          <div class="stat"><div class="stat-val" style="color:#2EC4B6;">4.7M</div><div class="stat-label">parameters trained</div></div>
-          <div class="stat"><div class="stat-val" style="color:#2EC4B6;">350 GB</div><div class="stat-label">GPU memory</div></div>
-          <div class="stat"><div class="stat-val" style="color:#2EC4B6;">35 MB</div><div class="stat-label">per checkpoint</div></div>
+          <span class="stat-val" style="color:#E71D36;" id="sv-mem">1.2 TB</span>
+          <span class="stat-label">GPU memory</span>
         </div>
-        <div class="verdict good">100 models = 354 GB storage</div>
+        <div class="stat-row">
+          <span class="stat-val" style="color:#E71D36;" id="sv-disk">350 GB</span>
+          <span class="stat-label">per task checkpoint</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-val" style="color:#E71D36;" id="sv-total">35 TB</span>
+          <span class="stat-label">for 100 tasks</span>
+        </div>
       </div>
+    </div>
+
+    <!-- Center VS -->
+    <div class="vs" id="vs">vs</div>
+
+    <!-- RIGHT: LoRA — a frozen block with a tiny adapter sliver -->
+    <div class="side side-right" id="side-right">
+      <div class="side-label" style="color:#2EC4B6;">LoRA</div>
+      <div class="block-area">
+        <div class="frozen-block" id="frozen-block">
+          <div class="frozen-label">Frozen<br>175B</div>
+          <div class="lora-sliver" id="lora-sliver">
+            <div class="sliver-label">LoRA<br>4.7M</div>
+          </div>
+        </div>
+      </div>
+      <div class="stats">
+        <div class="stat-row">
+          <span class="stat-val" style="color:#2EC4B6;" id="sv-mem2">350 GB</span>
+          <span class="stat-label">GPU memory (shared)</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-val" style="color:#2EC4B6;" id="sv-disk2">35 MB</span>
+          <span class="stat-label">per task checkpoint</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-val" style="color:#2EC4B6;" id="sv-total2">3.5 GB</span>
+          <span class="stat-label">for 100 tasks</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom punchline -->
+    <div class="punchline" id="punchline">
+      Same quality &mdash; <span class="hl-green">10,000&times;</span> fewer trainable parameters
     </div>
   </div>
 
@@ -39,19 +80,105 @@
       position: relative; overflow: hidden; background: #011627;
       width: 1920px; height: 540px; font-family: 'Space Mono', monospace; color: #FDFFFC;
     }
-    .scene { width: 1920px; height: 540px; display: flex; flex-direction: column; align-items: center; }
-    .title { font-size: 48px; font-weight: 700; margin-top: 30px; white-space: nowrap; }
-    .content { flex: 1; display: flex; align-items: center; justify-content: center; gap: 60px; padding: 0 80px; }
-    .col { display: flex; flex-direction: column; align-items: center; gap: 20px; }
-    .col-label { font-size: 36px; font-weight: 700; }
-    .stat-row { display: flex; gap: 40px; }
-    .stat { text-align: center; }
-    .stat-val { font-size: 48px; font-weight: 700; }
-    .stat-label { font-size: 20px; color: #778DA9; margin-top: 4px; }
-    .vs { font-size: 40px; color: #415A77; font-weight: 700; }
-    .verdict { font-size: 26px; font-weight: 700; padding: 10px 28px; border-radius: 10px; }
-    .bad { background: rgba(231,29,54,0.12); border: 2px solid #E71D36; color: #E71D36; }
-    .good { background: rgba(46,196,182,0.12); border: 2px solid #2EC4B6; color: #2EC4B6; }
+    .scene { position: relative; width: 1920px; height: 540px; }
+
+    .bg-gradient {
+      position: absolute; inset: 0;
+      background:
+        radial-gradient(ellipse 50% 70% at 25% 50%, rgba(231,29,54,0.03) 0%, transparent 70%),
+        radial-gradient(ellipse 50% 70% at 75% 50%, rgba(46,196,182,0.03) 0%, transparent 70%),
+        linear-gradient(180deg, #011627 0%, #021e32 100%);
+    }
+
+    .title {
+      position: absolute; top: 18px; left: 50%; transform: translateX(-50%);
+      font-size: 38px; font-weight: 700; white-space: nowrap; opacity: 0;
+      z-index: 10;
+    }
+    .teal { color: #2EC4B6; }
+
+    .side {
+      position: absolute; top: 72px; width: 760px; opacity: 0;
+      display: flex; flex-direction: column; align-items: center;
+    }
+    .side-left { left: 40px; }
+    .side-right { right: 40px; }
+
+    .side-label {
+      font-size: 26px; font-weight: 700; margin-bottom: 12px;
+    }
+
+    .block-area {
+      height: 200px; display: flex; align-items: flex-end;
+      justify-content: center;
+      margin-bottom: 16px;
+    }
+
+    /* Full fine-tuning: massive red block */
+    .big-block {
+      width: 440px; height: 0; border-radius: 10px;
+      background: linear-gradient(180deg, rgba(231,29,54,0.25), rgba(231,29,54,0.08));
+      border: 2.5px solid #E71D36;
+      box-shadow: 0 0 20px rgba(231,29,54,0.15);
+      display: flex; align-items: center; justify-content: center;
+      overflow: hidden;
+    }
+    .block-inner-label {
+      font-size: 32px; font-weight: 700; color: #E71D36;
+      text-align: center; line-height: 1.2; opacity: 0;
+    }
+
+    /* LoRA: frozen block with tiny sliver */
+    .frozen-block {
+      width: 440px; height: 0; border-radius: 10px;
+      background: linear-gradient(180deg, rgba(65,90,119,0.2), rgba(65,90,119,0.06));
+      border: 2px solid #415A77;
+      display: flex; align-items: center; justify-content: center;
+      position: relative; overflow: hidden;
+    }
+    .frozen-label {
+      font-size: 28px; font-weight: 700; color: #415A77;
+      text-align: center; line-height: 1.2; opacity: 0;
+    }
+
+    .lora-sliver {
+      position: absolute; right: -4px; top: 0; bottom: 0;
+      width: 0; border-radius: 0 10px 10px 0;
+      background: linear-gradient(180deg, rgba(46,196,182,0.35), rgba(46,196,182,0.12));
+      border-left: 2.5px solid #2EC4B6;
+      box-shadow: 0 0 16px rgba(46,196,182,0.3);
+      display: flex; align-items: center; justify-content: center;
+      overflow: hidden;
+    }
+    .sliver-label {
+      font-size: 16px; font-weight: 700; color: #2EC4B6;
+      text-align: center; line-height: 1.2;
+      white-space: nowrap; opacity: 0;
+    }
+
+    .vs {
+      position: absolute; top: 220px; left: 50%; transform: translateX(-50%);
+      font-size: 36px; font-weight: 700; color: #415A77; opacity: 0;
+      z-index: 10;
+    }
+
+    .stats {
+      display: flex; flex-direction: column; gap: 6px;
+      align-items: center;
+    }
+    .stat-row { display: flex; align-items: baseline; gap: 10px; opacity: 0; }
+    .stat-val { font-size: 28px; font-weight: 700; }
+    .stat-label { font-size: 17px; font-weight: 400; color: #778DA9; }
+
+    .punchline {
+      position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%);
+      font-size: 24px; font-weight: 700; color: #FDFFFC;
+      background: rgba(63,185,80,0.08);
+      border: 2px solid rgba(63,185,80,0.3);
+      border-radius: 10px; padding: 10px 36px;
+      white-space: nowrap; opacity: 0; z-index: 10;
+    }
+    .hl-green { color: #3fb950; }
   </style>
 
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
@@ -59,20 +186,131 @@
     window.__timelines = window.__timelines || {};
     var root = document.currentScript.parentElement;
     var tl = gsap.timeline({ paused: true });
-    var cols = root.querySelectorAll('.col');
-    tl.from(root.querySelector('.title'), { y: -20, opacity: 0, duration: 0.6, ease: 'power2.out' }, 0);
-    tl.from(cols[0].querySelector('.col-label'), { opacity: 0, duration: 0.5 }, 0.4);
-    cols[0].querySelectorAll('.stat').forEach(function(el, i) {
-      tl.from(el, { opacity: 0, y: 15, duration: 0.5, ease: 'power2.out' }, 0.8 + i * 0.3);
+
+    /* ============================================================
+       PHASE 1 (0-1.5s): Title
+       ============================================================ */
+    tl.to(root.querySelector('#title'), {
+      opacity: 1, duration: 0.6, ease: 'power3.out'
+    }, 0.2);
+    tl.from(root.querySelector('#title'), {
+      y: -20, duration: 0.6, ease: 'power3.out'
+    }, 0.2);
+
+    /* ============================================================
+       PHASE 2 (1.5-5s): Left side — full fine-tuning (the problem)
+       Big red block grows tall. Stats appear. Feels heavy/expensive.
+       ============================================================ */
+    tl.to(root.querySelector('#side-left'), {
+      opacity: 1, duration: 0.4, ease: 'power2.out'
+    }, 1.2);
+
+    // Big block grows — tall and imposing
+    tl.to(root.querySelector('#big-block'), {
+      height: 200, duration: 1.0, ease: 'power3.out'
+    }, 1.5);
+
+    // Inner label fades in
+    tl.to(root.querySelector('.block-inner-label'), {
+      opacity: 1, duration: 0.4, ease: 'power2.out'
+    }, 2.2);
+
+    // Stats stagger in
+    var leftStats = root.querySelectorAll('#side-left .stat-row');
+    leftStats.forEach(function(el, i) {
+      tl.to(el, { opacity: 1, duration: 0.3, ease: 'power2.out' }, 2.8 + i * 0.35);
+      tl.from(el, { x: -15, duration: 0.35, ease: 'power2.out' }, 2.8 + i * 0.35);
     });
-    tl.from(cols[0].querySelector('.verdict'), { opacity: 0, scale: 0.9, duration: 0.5 }, 2.0);
-    tl.from(root.querySelector('.vs'), { opacity: 0, duration: 0.4 }, 2.8);
-    tl.from(cols[1].querySelector('.col-label'), { opacity: 0, duration: 0.5 }, 3.2);
-    cols[1].querySelectorAll('.stat').forEach(function(el, i) {
-      tl.from(el, { opacity: 0, y: 15, duration: 0.5, ease: 'power2.out' }, 3.6 + i * 0.3);
+
+    /* ============================================================
+       PHASE 3 (4-4.5s): VS appears
+       ============================================================ */
+    tl.to(root.querySelector('#vs'), {
+      opacity: 1, duration: 0.3, ease: 'power2.out'
+    }, 4.2);
+    tl.from(root.querySelector('#vs'), {
+      scale: 0.5, duration: 0.4, ease: 'back.out(2)'
+    }, 4.2);
+
+    /* ============================================================
+       PHASE 4 (4.5-8s): Right side — LoRA (the solution)
+       Frozen block same size but muted. Tiny teal sliver pops out.
+       The sliver being tiny IS the point.
+       ============================================================ */
+    tl.to(root.querySelector('#side-right'), {
+      opacity: 1, duration: 0.4, ease: 'power2.out'
+    }, 4.5);
+
+    // Frozen block grows same height as big block
+    tl.to(root.querySelector('#frozen-block'), {
+      height: 200, duration: 0.8, ease: 'power2.out'
+    }, 4.8);
+
+    tl.to(root.querySelector('.frozen-label'), {
+      opacity: 1, duration: 0.4, ease: 'power2.out'
+    }, 5.3);
+
+    // LoRA sliver snaps out — the tiny teal strip
+    tl.to(root.querySelector('#lora-sliver'), {
+      width: 40, duration: 0.5, ease: 'elastic.out(1, 0.5)'
+    }, 5.6);
+
+    tl.to(root.querySelector('.sliver-label'), {
+      opacity: 1, duration: 0.3, ease: 'power2.out'
+    }, 6.0);
+
+    // Sliver glows to draw attention
+    tl.to(root.querySelector('#lora-sliver'), {
+      boxShadow: '0 0 28px rgba(46,196,182,0.5)',
+      duration: 0.4, ease: 'power2.out'
+    }, 6.0);
+    tl.to(root.querySelector('#lora-sliver'), {
+      boxShadow: '0 0 16px rgba(46,196,182,0.3)',
+      duration: 0.6, ease: 'sine.inOut'
+    }, 6.4);
+
+    // Stats stagger in
+    var rightStats = root.querySelectorAll('#side-right .stat-row');
+    rightStats.forEach(function(el, i) {
+      tl.to(el, { opacity: 1, duration: 0.3, ease: 'power2.out' }, 6.5 + i * 0.35);
+      tl.from(el, { x: 15, duration: 0.35, ease: 'power2.out' }, 6.5 + i * 0.35);
     });
-    tl.from(cols[1].querySelector('.verdict'), { opacity: 0, scale: 0.9, duration: 0.5 }, 4.8);
-    tl.to({}, { duration: 3 });
+
+    /* ============================================================
+       PHASE 5 (8-9s): Emphasis — dim left, glow right
+       ============================================================ */
+    tl.to(root.querySelector('#big-block'), {
+      opacity: 0.4, duration: 0.5, ease: 'power2.in'
+    }, 8.2);
+
+    tl.to(root.querySelector('#frozen-block'), {
+      borderColor: '#2EC4B6',
+      duration: 0.4, ease: 'power2.out'
+    }, 8.2);
+
+    /* ============================================================
+       PHASE 6 (9-12s): Punchline + hold
+       ============================================================ */
+    tl.to(root.querySelector('#punchline'), {
+      opacity: 1, duration: 0.01
+    }, 9.0);
+    tl.from(root.querySelector('#punchline'), {
+      y: 15, scale: 0.92, duration: 0.6, ease: 'back.out(1.6)'
+    }, 9.0);
+
+    // Gentle pulse on punchline
+    tl.to(root.querySelector('#punchline'), {
+      boxShadow: '0 0 20px rgba(63,185,80,0.25)',
+      duration: 0.7, ease: 'sine.inOut'
+    }, 9.8);
+    tl.to(root.querySelector('#punchline'), {
+      boxShadow: '0 0 6px rgba(63,185,80,0.1)',
+      duration: 0.7, ease: 'sine.inOut'
+    }, 10.5);
+
+    // Hold
+    tl.to({}, { duration: 0.5 }, 11.5);
+
     window.__timelines["lora-hero"] = tl;
   </script>
 </div>

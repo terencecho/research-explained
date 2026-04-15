@@ -10,39 +10,98 @@
 <body>
 <div data-composition-id="weight-merge" data-width="1920" data-height="540" data-start="0" data-duration="12">
   <div class="scene">
-    <div class="title">Zero Inference Latency</div>
-    <div class="subtitle">LoRA weights merge back into the model at deployment</div>
-    <div class="content">
-      <!-- Training -->
-      <div class="phase">
-        <div class="phase-label" style="color:#FF9F1C;">During Training</div>
-        <div class="diagram">
-          <div class="input-tag">input x</div>
-          <div class="branch">
-            <div class="w-box frozen">W (frozen)</div>
-            <div class="plus-sign">+</div>
-            <div class="w-box trainable">BA (trainable)</div>
+    <div class="bg-gradient"></div>
+
+    <!-- Title -->
+    <div class="title" id="title">Weight Merging</div>
+
+    <!-- ======================== LEFT: During Training ======================== -->
+    <div class="phase phase-left" id="phase-left">
+      <div class="phase-label" id="label-train" style="color:#FF9F1C;">During Training</div>
+
+      <div class="train-diagram">
+        <!-- Input -->
+        <div class="input-tag" id="input-left">input x</div>
+
+        <!-- Fork lines (SVG) -->
+        <svg class="fork-svg" viewBox="0 0 360 40" xmlns="http://www.w3.org/2000/svg">
+          <path id="fork-top" class="fork-path" d="M180,0 L180,10 Q180,20 120,20 L60,20 L60,40" />
+          <path id="fork-bot" class="fork-path" d="M180,0 L180,10 Q180,20 240,20 L300,20 L300,40" />
+        </svg>
+
+        <!-- Parallel paths -->
+        <div class="parallel-row">
+          <div class="w-block frozen" id="w-frozen">
+            <div class="w-inner-label">W</div>
+            <div class="w-sublabel">frozen</div>
           </div>
-          <div class="output-tag">h = Wx + BAx</div>
+          <div class="plus-sign" id="plus-sign">+</div>
+          <div class="ba-block" id="ba-block">
+            <div class="ba-inner">
+              <div class="ba-mat b-mat" id="b-mat">B</div>
+              <div class="ba-times">&times;</div>
+              <div class="ba-mat a-mat" id="a-mat">A</div>
+            </div>
+            <div class="ba-sublabel">trainable</div>
+          </div>
+        </div>
+
+        <!-- Merge lines (SVG) -->
+        <svg class="merge-svg" viewBox="0 0 360 40" xmlns="http://www.w3.org/2000/svg">
+          <path id="merge-top" class="fork-path" d="M60,0 L60,20 Q60,30 120,30 L180,30 L180,40" />
+          <path id="merge-bot" class="fork-path" d="M300,0 L300,20 Q300,30 240,30 L180,30 L180,40" />
+        </svg>
+
+        <!-- Output -->
+        <div class="output-tag" id="output-left">h = Wx + BAx</div>
+      </div>
+    </div>
+
+    <!-- ======================== CENTER: Merge Transition ======================== -->
+    <div class="merge-zone" id="merge-zone">
+      <div class="merge-arrow-track">
+        <div class="merge-arrow" id="merge-arrow">
+          <svg viewBox="0 0 80 40" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="arrow-grad" x1="0" x2="1" y1="0" y2="0">
+                <stop offset="0%" stop-color="#FF9F1C" />
+                <stop offset="100%" stop-color="#2EC4B6" />
+              </linearGradient>
+            </defs>
+            <path d="M0,20 L60,20 M50,8 L68,20 L50,32" stroke="url(#arrow-grad)" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
         </div>
       </div>
+      <div class="merge-label" id="merge-label">merge</div>
+      <div class="merge-eq" id="merge-eq">W' = W + BA</div>
+    </div>
 
-      <!-- Arrow -->
-      <div class="merge-zone">
-        <div class="merge-arrow">&#8594;</div>
-        <div class="merge-text">merge</div>
-      </div>
+    <!-- ======================== RIGHT: At Deployment ======================== -->
+    <div class="phase phase-right" id="phase-right">
+      <div class="phase-label" id="label-deploy" style="color:#2EC4B6;">At Deployment</div>
 
-      <!-- Deployment -->
-      <div class="phase">
-        <div class="phase-label" style="color:#2EC4B6;">At Deployment</div>
-        <div class="diagram">
-          <div class="input-tag">input x</div>
-          <div class="w-box merged">W' = W + BA</div>
-          <div class="output-tag">h = W'x</div>
-          <div class="no-latency">No extra computation!</div>
+      <div class="deploy-diagram">
+        <div class="input-tag" id="input-right">input x</div>
+
+        <div class="merged-block" id="merged-block">
+          <div class="merged-inner">W'</div>
+          <div class="merged-sublabel">single matrix</div>
+        </div>
+
+        <div class="output-tag" id="output-right">h = W'x</div>
+
+        <div class="speed-badge" id="speed-badge">
+          <span class="speed-icon">&#9889;</span> Same speed as original
         </div>
       </div>
+    </div>
+
+    <!-- ======================== BA Ghost (for merge animation) ======================== -->
+    <div class="ba-ghost" id="ba-ghost">BA</div>
+
+    <!-- ======================== Bottom Punchline ======================== -->
+    <div class="punchline" id="punchline">
+      Zero inference latency &mdash; the model doesn't even know LoRA was there
     </div>
   </div>
 
@@ -51,31 +110,163 @@
       position: relative; overflow: hidden; background: #011627;
       width: 1920px; height: 540px; font-family: 'Space Mono', monospace; color: #FDFFFC;
     }
-    .scene { width: 1920px; height: 540px; display: flex; flex-direction: column; align-items: center; }
-    .title { font-size: 48px; font-weight: 700; margin-top: 20px; }
-    .subtitle { font-size: 24px; color: #778DA9; margin-top: 6px; }
-    .content { flex: 1; display: flex; align-items: center; justify-content: center; gap: 40px; padding: 0 60px; }
+    .scene { position: relative; width: 1920px; height: 540px; }
 
-    .phase { display: flex; flex-direction: column; align-items: center; gap: 12px; }
-    .phase-label { font-size: 30px; font-weight: 700; }
-    .diagram { display: flex; flex-direction: column; align-items: center; gap: 16px; }
+    .bg-gradient {
+      position: absolute; inset: 0;
+      background:
+        radial-gradient(ellipse 50% 70% at 25% 55%, rgba(255,159,28,0.04) 0%, transparent 70%),
+        radial-gradient(ellipse 50% 70% at 75% 55%, rgba(46,196,182,0.04) 0%, transparent 70%),
+        linear-gradient(180deg, #011627 0%, #021e32 100%);
+    }
 
-    .input-tag { padding: 10px 28px; border-radius: 20px; font-size: 26px; font-weight: 700; background: rgba(65,90,119,0.3); color: #778DA9; }
-    .output-tag { padding: 10px 28px; border-radius: 20px; font-size: 24px; font-weight: 700; background: rgba(63,185,80,0.12); border: 2px solid #3fb950; color: #3fb950; }
+    /* ---- Title ---- */
+    .title {
+      position: absolute; top: 20px; left: 50%; transform: translateX(-50%);
+      font-size: 40px; font-weight: 700; white-space: nowrap; opacity: 0;
+      z-index: 10;
+    }
 
-    .branch { display: flex; align-items: center; gap: 20px; }
-    .plus-sign { font-size: 40px; color: #415A77; font-weight: 700; }
+    /* ---- Phases ---- */
+    .phase {
+      position: absolute; top: 68px;
+      display: flex; flex-direction: column; align-items: center;
+      opacity: 0;
+    }
+    .phase-left { left: 80px; width: 660px; }
+    .phase-right { right: 80px; width: 520px; }
 
-    .w-box { padding: 18px 36px; border-radius: 10px; font-size: 28px; font-weight: 700; text-align: center; }
-    .frozen { background: rgba(65,90,119,0.2); border: 3px solid #415A77; color: #778DA9; }
-    .trainable { background: rgba(255,159,28,0.12); border: 3px solid #FF9F1C; color: #FF9F1C; }
-    .merged { background: rgba(46,196,182,0.12); border: 3px solid #2EC4B6; color: #2EC4B6; font-size: 32px; padding: 24px 48px; }
+    .phase-label {
+      font-size: 26px; font-weight: 700; margin-bottom: 10px;
+    }
 
-    .merge-zone { display: flex; flex-direction: column; align-items: center; gap: 4px; }
-    .merge-arrow { font-size: 56px; color: #415A77; }
-    .merge-text { font-size: 24px; color: #778DA9; font-weight: 700; }
+    /* ---- Training Diagram ---- */
+    .train-diagram {
+      display: flex; flex-direction: column; align-items: center; gap: 0;
+    }
 
-    .no-latency { font-size: 28px; font-weight: 700; color: #3fb950; }
+    .input-tag, .output-tag {
+      padding: 8px 24px; border-radius: 20px;
+      font-size: 20px; font-weight: 700;
+      background: rgba(65,90,119,0.25); color: #778DA9;
+    }
+
+    .fork-svg, .merge-svg {
+      width: 360px; height: 40px;
+    }
+    .fork-path {
+      fill: none; stroke: #415A77; stroke-width: 2.5;
+      stroke-dasharray: 200; stroke-dashoffset: 200;
+    }
+
+    .parallel-row {
+      display: flex; align-items: center; gap: 16px;
+    }
+
+    .w-block {
+      width: 160px; height: 120px; border-radius: 10px;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+    }
+    .frozen {
+      background: linear-gradient(180deg, rgba(65,90,119,0.2), rgba(65,90,119,0.06));
+      border: 2.5px solid #415A77;
+      box-shadow: 0 0 12px rgba(65,90,119,0.1);
+    }
+    .w-inner-label { font-size: 36px; font-weight: 700; color: #778DA9; }
+    .w-sublabel { font-size: 16px; font-weight: 400; color: #556B83; margin-top: 2px; }
+
+    .plus-sign { font-size: 36px; font-weight: 700; color: #415A77; opacity: 0; }
+
+    .ba-block {
+      display: flex; flex-direction: column; align-items: center;
+      padding: 12px 20px; border-radius: 10px;
+      background: linear-gradient(180deg, rgba(255,159,28,0.15), rgba(46,196,182,0.1));
+      border: 2.5px solid #FF9F1C;
+      box-shadow: 0 0 16px rgba(255,159,28,0.15);
+      opacity: 0; transform: translateX(20px);
+    }
+    .ba-inner { display: flex; align-items: center; gap: 8px; }
+    .ba-mat {
+      width: 50px; height: 70px; border-radius: 6px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 24px; font-weight: 700;
+    }
+    .b-mat {
+      background: rgba(255,159,28,0.2); border: 2px solid #FF9F1C; color: #FF9F1C;
+    }
+    .a-mat {
+      background: rgba(46,196,182,0.2); border: 2px solid #2EC4B6; color: #2EC4B6;
+    }
+    .ba-times { font-size: 22px; font-weight: 700; color: #556B83; }
+    .ba-sublabel { font-size: 16px; font-weight: 400; color: #FF9F1C; margin-top: 4px; }
+
+    /* ---- Merge Zone ---- */
+    .merge-zone {
+      position: absolute; top: 180px; left: 50%; transform: translateX(-50%);
+      display: flex; flex-direction: column; align-items: center; gap: 6px;
+      z-index: 5; width: 160px;
+    }
+    .merge-arrow-track { width: 80px; height: 40px; }
+    .merge-arrow { width: 80px; height: 40px; opacity: 0; }
+    .merge-arrow svg { width: 80px; height: 40px; }
+    .merge-label {
+      font-size: 22px; font-weight: 700; color: #778DA9; opacity: 0;
+    }
+    .merge-eq {
+      font-size: 18px; font-weight: 700; color: #2EC4B6; opacity: 0;
+      background: rgba(46,196,182,0.08); padding: 4px 14px; border-radius: 6px;
+    }
+
+    /* ---- Deployment Diagram ---- */
+    .deploy-diagram {
+      display: flex; flex-direction: column; align-items: center; gap: 14px;
+    }
+
+    .merged-block {
+      width: 200px; height: 140px; border-radius: 12px;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      background: linear-gradient(180deg, rgba(46,196,182,0.2), rgba(46,196,182,0.06));
+      border: 3px solid #2EC4B6;
+      box-shadow: 0 0 20px rgba(46,196,182,0.15);
+      opacity: 0; transform: scale(0.85);
+    }
+    .merged-inner { font-size: 44px; font-weight: 700; color: #2EC4B6; }
+    .merged-sublabel { font-size: 16px; font-weight: 400; color: #2097A0; margin-top: 2px; }
+
+    .speed-badge {
+      padding: 8px 22px; border-radius: 8px;
+      font-size: 18px; font-weight: 700; color: #3fb950;
+      background: rgba(63,185,80,0.08);
+      border: 2px solid rgba(63,185,80,0.3);
+      opacity: 0;
+    }
+    .speed-icon { font-size: 20px; }
+
+    /* ---- BA Ghost (animated merge particle) ---- */
+    .ba-ghost {
+      position: absolute; top: 230px; left: 540px;
+      font-size: 22px; font-weight: 700; color: #FF9F1C;
+      background: rgba(255,159,28,0.15); border: 2px solid #FF9F1C;
+      border-radius: 8px; padding: 6px 16px;
+      opacity: 0; z-index: 20;
+      box-shadow: 0 0 20px rgba(255,159,28,0.3);
+    }
+
+    /* ---- Punchline ---- */
+    .punchline {
+      position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
+      font-size: 24px; font-weight: 700; color: #FDFFFC;
+      background: rgba(63,185,80,0.08);
+      border: 2px solid rgba(63,185,80,0.3);
+      border-radius: 10px; padding: 10px 36px;
+      white-space: nowrap; opacity: 0; z-index: 10;
+    }
+
+    /* ---- Output tag override for green ---- */
+    .output-tag {
+      background: rgba(63,185,80,0.1); border: 2px solid rgba(63,185,80,0.3);
+      color: #3fb950;
+    }
   </style>
 
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
@@ -83,23 +274,204 @@
     window.__timelines = window.__timelines || {};
     var root = document.currentScript.parentElement;
     var tl = gsap.timeline({ paused: true });
-    tl.from(root.querySelector('.title'), { y: -20, opacity: 0, duration: 0.5 }, 0);
-    tl.from(root.querySelector('.subtitle'), { opacity: 0, duration: 0.4 }, 0.3);
-    var phases = root.querySelectorAll('.phase');
-    tl.from(phases[0].querySelector('.phase-label'), { opacity: 0, duration: 0.4 }, 0.6);
-    tl.from(phases[0].querySelector('.input-tag'), { opacity: 0, y: -10, duration: 0.4 }, 0.9);
-    tl.from(root.querySelector('.frozen'), { opacity: 0, x: -20, duration: 0.5, ease: 'power2.out' }, 1.3);
-    tl.from(root.querySelector('.plus-sign'), { opacity: 0, duration: 0.3 }, 1.6);
-    tl.from(root.querySelector('.trainable'), { opacity: 0, x: 20, duration: 0.5, ease: 'power2.out' }, 1.8);
-    tl.from(phases[0].querySelector('.output-tag'), { opacity: 0, y: 10, duration: 0.4 }, 2.4);
-    tl.from(root.querySelector('.merge-arrow'), { opacity: 0, x: -15, duration: 0.4 }, 3.5);
-    tl.from(root.querySelector('.merge-text'), { opacity: 0, duration: 0.3 }, 3.8);
-    tl.from(phases[1].querySelector('.phase-label'), { opacity: 0, duration: 0.4 }, 4.2);
-    tl.from(phases[1].querySelector('.input-tag'), { opacity: 0, y: -10, duration: 0.4 }, 4.5);
-    tl.from(root.querySelector('.merged'), { opacity: 0, scale: 0.9, duration: 0.6, ease: 'power2.out' }, 4.8);
-    tl.from(phases[1].querySelector('.output-tag'), { opacity: 0, y: 10, duration: 0.4 }, 5.5);
-    tl.from(root.querySelector('.no-latency'), { opacity: 0, y: 10, duration: 0.5 }, 6.0);
-    tl.to({}, { duration: 3 });
+
+    /* ============================================================
+       PHASE 1 (0-1.2s): Title
+       ============================================================ */
+    tl.to(root.querySelector('#title'), {
+      opacity: 1, duration: 0.6, ease: 'power3.out'
+    }, 0.2);
+    tl.from(root.querySelector('#title'), {
+      y: -24, duration: 0.6, ease: 'power3.out'
+    }, 0.2);
+
+    /* ============================================================
+       PHASE 2 (1.0-4.5s): Training side — build up the parallel paths
+       Show W frozen, then BA trainable branching off in parallel
+       ============================================================ */
+    // Phase label + container
+    tl.to(root.querySelector('#phase-left'), {
+      opacity: 1, duration: 0.4, ease: 'power2.out'
+    }, 1.0);
+
+    // Input tag
+    tl.from(root.querySelector('#input-left'), {
+      opacity: 0, y: -12, duration: 0.4, ease: 'power2.out'
+    }, 1.2);
+
+    // Fork paths animate (stroke draws)
+    tl.to(root.querySelector('#fork-top'), {
+      strokeDashoffset: 0, duration: 0.6, ease: 'power2.inOut'
+    }, 1.6);
+    tl.to(root.querySelector('#fork-bot'), {
+      strokeDashoffset: 0, duration: 0.6, ease: 'power2.inOut'
+    }, 1.7);
+
+    // W frozen block
+    tl.from(root.querySelector('#w-frozen'), {
+      opacity: 0, scale: 0.85, duration: 0.5, ease: 'power2.out'
+    }, 2.0);
+
+    // Plus sign
+    tl.to(root.querySelector('#plus-sign'), {
+      opacity: 1, duration: 0.3, ease: 'power2.out'
+    }, 2.3);
+
+    // BA block slides in from right
+    tl.to(root.querySelector('#ba-block'), {
+      opacity: 1, x: 0, duration: 0.6, ease: 'back.out(1.6)'
+    }, 2.4);
+
+    // BA block glow pulse
+    tl.to(root.querySelector('#ba-block'), {
+      boxShadow: '0 0 28px rgba(255,159,28,0.35)',
+      duration: 0.4, ease: 'power2.out'
+    }, 3.0);
+    tl.to(root.querySelector('#ba-block'), {
+      boxShadow: '0 0 16px rgba(255,159,28,0.15)',
+      duration: 0.5, ease: 'sine.inOut'
+    }, 3.4);
+
+    // Merge paths animate (stroke draws)
+    tl.to(root.querySelector('#merge-top'), {
+      strokeDashoffset: 0, duration: 0.5, ease: 'power2.inOut'
+    }, 3.2);
+    tl.to(root.querySelector('#merge-bot'), {
+      strokeDashoffset: 0, duration: 0.5, ease: 'power2.inOut'
+    }, 3.3);
+
+    // Output tag
+    tl.from(root.querySelector('#output-left'), {
+      opacity: 0, y: 10, duration: 0.4, ease: 'power2.out'
+    }, 3.6);
+
+    /* ============================================================
+       PHASE 3 (4.5-6s): Center merge arrow + transition animation
+       The BA ghost particle flies from the left BA block across
+       to the right merged block
+       ============================================================ */
+    // Merge arrow
+    tl.to(root.querySelector('#merge-arrow'), {
+      opacity: 1, duration: 0.4, ease: 'power2.out'
+    }, 4.5);
+    tl.from(root.querySelector('#merge-arrow'), {
+      x: -15, duration: 0.5, ease: 'power2.out'
+    }, 4.5);
+
+    // Merge label
+    tl.to(root.querySelector('#merge-label'), {
+      opacity: 1, duration: 0.3, ease: 'power2.out'
+    }, 4.8);
+
+    // Merge equation
+    tl.to(root.querySelector('#merge-eq'), {
+      opacity: 1, duration: 0.4, ease: 'power2.out'
+    }, 5.0);
+    tl.from(root.querySelector('#merge-eq'), {
+      scale: 0.9, duration: 0.4, ease: 'back.out(1.4)'
+    }, 5.0);
+
+    // BA ghost — appears at BA block position, flies to merged block
+    tl.to(root.querySelector('#ba-ghost'), {
+      opacity: 1, duration: 0.2
+    }, 5.3);
+    tl.to(root.querySelector('#ba-ghost'), {
+      x: 680, y: 10,
+      scale: 0.7,
+      duration: 0.8, ease: 'power3.inOut'
+    }, 5.3);
+    tl.to(root.querySelector('#ba-ghost'), {
+      opacity: 0, scale: 0.3,
+      duration: 0.3, ease: 'power2.in'
+    }, 5.9);
+
+    // Dim the BA block after ghost departs
+    tl.to(root.querySelector('#ba-block'), {
+      opacity: 0.3, duration: 0.5, ease: 'power2.in'
+    }, 5.5);
+    tl.to(root.querySelector('#plus-sign'), {
+      opacity: 0.3, duration: 0.5, ease: 'power2.in'
+    }, 5.5);
+
+    /* ============================================================
+       PHASE 4 (5.8-8s): Deployment side appears
+       Merged W' block glows as the ghost arrives
+       ============================================================ */
+    tl.to(root.querySelector('#phase-right'), {
+      opacity: 1, duration: 0.4, ease: 'power2.out'
+    }, 5.8);
+
+    tl.from(root.querySelector('#input-right'), {
+      opacity: 0, y: -12, duration: 0.4, ease: 'power2.out'
+    }, 6.0);
+
+    // Merged block pops in with emphasis
+    tl.to(root.querySelector('#merged-block'), {
+      opacity: 1, scale: 1, duration: 0.7, ease: 'back.out(1.8)'
+    }, 6.2);
+
+    // Merged block glows when ghost "arrives"
+    tl.to(root.querySelector('#merged-block'), {
+      boxShadow: '0 0 40px rgba(46,196,182,0.45)',
+      duration: 0.4, ease: 'power2.out'
+    }, 6.2);
+    tl.to(root.querySelector('#merged-block'), {
+      boxShadow: '0 0 20px rgba(46,196,182,0.15)',
+      duration: 0.6, ease: 'sine.inOut'
+    }, 6.6);
+
+    // Output tag
+    tl.from(root.querySelector('#output-right'), {
+      opacity: 0, y: 10, duration: 0.4, ease: 'power2.out'
+    }, 7.0);
+
+    // Speed badge
+    tl.to(root.querySelector('#speed-badge'), {
+      opacity: 1, duration: 0.01
+    }, 7.4);
+    tl.from(root.querySelector('#speed-badge'), {
+      y: 10, scale: 0.92, duration: 0.5, ease: 'back.out(1.6)'
+    }, 7.4);
+
+    /* ============================================================
+       PHASE 5 (8-9.5s): Emphasis — dim training side, spotlight deploy
+       Visual contrast: training is past, deployment is the outcome
+       ============================================================ */
+    // Dim the entire training side
+    tl.to(root.querySelector('#phase-left'), {
+      opacity: 0.35, duration: 0.6, ease: 'power2.in'
+    }, 8.2);
+
+    // Brighten merged block border
+    tl.to(root.querySelector('#merged-block'), {
+      boxShadow: '0 0 30px rgba(46,196,182,0.35)',
+      borderColor: '#3fb950',
+      duration: 0.5, ease: 'power2.out'
+    }, 8.5);
+
+    /* ============================================================
+       PHASE 6 (9.5-12s): Punchline + hold
+       ============================================================ */
+    tl.to(root.querySelector('#punchline'), {
+      opacity: 1, duration: 0.01
+    }, 9.5);
+    tl.from(root.querySelector('#punchline'), {
+      y: 18, scale: 0.9, duration: 0.7, ease: 'back.out(1.8)'
+    }, 9.5);
+
+    // Punchline glow pulse
+    tl.to(root.querySelector('#punchline'), {
+      boxShadow: '0 0 24px rgba(63,185,80,0.3)',
+      duration: 0.7, ease: 'sine.inOut'
+    }, 10.2);
+    tl.to(root.querySelector('#punchline'), {
+      boxShadow: '0 0 8px rgba(63,185,80,0.1)',
+      duration: 0.7, ease: 'sine.inOut'
+    }, 10.9);
+
+    // Hold
+    tl.to({}, { duration: 0.5 }, 11.5);
+
     window.__timelines["weight-merge"] = tl;
   </script>
 </div>

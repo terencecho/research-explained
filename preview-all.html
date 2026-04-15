@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>All Video Previews</title>
+<style>
+  body { background: #0d1117; color: #e6edf3; font-family: system-ui; padding: 2rem; }
+  h1 { margin-bottom: 0.5rem; }
+  h2 { color: #8b949e; font-size: 1rem; margin: 2rem 0 0.5rem; border-bottom: 1px solid #30363d; padding-bottom: 0.3rem; }
+  .comp-item { border: 1px solid #30363d; border-radius: 8px; overflow: hidden; margin-bottom: 1rem; }
+  .comp-item h3 { padding: 0.4rem 1rem; margin: 0; font-size: 0.9rem; background: #161b22; }
+  .comp-frame { width: 100%; aspect-ratio: 1920/540; border: none; }
+  .controls { padding: 0.4rem 1rem; background: #161b22; display: flex; gap: 0.5rem; }
+  button { background: #238636; color: white; border: none; padding: 0.3rem 0.8rem; border-radius: 4px; cursor: pointer; font-size: 0.8rem; }
+  button:hover { background: #2ea043; }
+  .missing { color: #8b949e; font-style: italic; padding: 0.5rem 1rem; }
+</style>
+</head>
+<body>
+<h1>All Research Explained — Video Previews</h1>
+<p style="color:#8b949e;">Click Play to preview. Refresh page to pick up newly generated files.</p>
+
+<div id="list"></div>
+<script>
+var sections = [
+  { title: 'LoRA', videos: [
+    { file: 'lora/videos/src/hero.html', name: 'Hero' },
+    { file: 'lora/videos/src/low-rank.html', name: 'Low-Rank Decomposition' },
+    { file: 'lora/videos/src/weight-merge.html', name: 'Weight Merge' },
+  ]},
+  { title: 'KV Compaction', videos: [
+    { file: 'kv-compaction/videos/src/hero.html', name: 'Hero' },
+    { file: 'kv-compaction/videos/src/attention-mass.html', name: 'Attention Mass' },
+    { file: 'kv-compaction/videos/src/head-budgets.html', name: 'Head Budgets' },
+    { file: 'kv-compaction/videos/src/agent-loop.html', name: 'Agent Loop' },
+  ]},
+  { title: 'Mem0', videos: [
+    { file: 'mem0/videos/src/hero.html', name: 'Hero' },
+    { file: 'mem0/videos/src/mem0-pipeline.html', name: 'Pipeline' },
+    { file: 'mem0/videos/src/graph-retrieval.html', name: 'Graph Retrieval' },
+  ]},
+];
+
+var list = document.getElementById('list');
+var idx = 0;
+sections.forEach(function(sec) {
+  var h2 = document.createElement('h2');
+  h2.textContent = sec.title;
+  list.appendChild(h2);
+  sec.videos.forEach(function(v) {
+    var item = document.createElement('div');
+    item.className = 'comp-item';
+    var id = 'f-' + idx;
+    item.innerHTML =
+      '<h3>' + v.name + '</h3>' +
+      '<div class="controls">' +
+        '<button onclick="loadAndPlay(\'' + id + '\',\'' + v.file + '\')">Play</button>' +
+        '<button onclick="resetComp(\'' + id + '\')">Reset</button>' +
+      '</div>' +
+      '<iframe class="comp-frame" id="' + id + '" sandbox="allow-scripts allow-same-origin"></iframe>';
+    list.appendChild(item);
+    idx++;
+  });
+});
+
+function loadAndPlay(id, file) {
+  var frame = document.getElementById(id);
+  frame.src = file;
+  frame.onload = function() {
+    setTimeout(function() {
+      try {
+        var tl = frame.contentWindow.__timelines;
+        if (tl) { var k = Object.keys(tl); if (k.length) tl[k[0]].restart(); }
+      } catch(e) {}
+    }, 500);
+  };
+}
+function resetComp(id) {
+  try {
+    var tl = document.getElementById(id).contentWindow.__timelines;
+    if (tl) { var k = Object.keys(tl); if (k.length) tl[k[0]].restart(); }
+  } catch(e) {}
+}
+</script>
+</body>
+</html>

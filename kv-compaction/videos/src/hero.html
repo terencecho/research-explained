@@ -8,50 +8,63 @@
 </style>
 </head>
 <body>
-<div
-  data-composition-id="kv-hero"
-  data-width="1920"
-  data-height="540"
-  data-start="0"
-  data-duration="10"
->
+<div data-composition-id="kv-hero" data-width="1920" data-height="540" data-start="0" data-duration="12">
   <div class="scene">
-    <!-- Left: Full cache -->
-    <div class="cache-panel full-panel">
-      <div class="cache-label">Full KV Cache</div>
-      <div class="cache-grid" id="full-grid"></div>
-      <div class="cache-stat">50,000 tokens</div>
-    </div>
+    <div class="bg-gradient"></div>
 
-    <!-- Center: Compaction -->
-    <div class="center-zone">
-      <div class="compact-arrow">&#8594;</div>
-      <div class="compact-label">Attention<br>Matching</div>
-      <div class="compact-arrow">&#8594;</div>
-    </div>
+    <!-- Title -->
+    <div class="title" id="title">KV Cache <span class="red">50,000</span> tokens &rarr; <span class="teal">1,000</span> tokens</div>
 
-    <!-- Right: Compact cache -->
-    <div class="cache-panel compact-panel">
-      <div class="cache-label" style="color:#2EC4B6;">Compacted Cache</div>
-      <div class="cache-grid-small" id="compact-grid"></div>
-      <div class="cache-stat" style="color:#2EC4B6;">1,000 tokens</div>
-    </div>
-
-    <!-- Bottom: comparison -->
-    <div class="compare-zone">
-      <div class="compare-item">
-        <div class="compare-val" style="color:#E71D36;">100%</div>
-        <div class="compare-desc">original size</div>
+    <!-- LEFT: Full KV Cache — massive dense grid, feels heavy -->
+    <div class="side side-left" id="side-left">
+      <div class="side-label" style="color:#E71D36;">Full KV Cache</div>
+      <div class="grid-container">
+        <div class="full-grid" id="full-grid"></div>
       </div>
-      <div class="compare-vs">vs</div>
-      <div class="compare-item">
-        <div class="compare-val" style="color:#2EC4B6;">2%</div>
-        <div class="compare-desc">compacted size</div>
+      <div class="side-stat"><span class="stat-num" style="color:#E71D36;">50,000</span> <span class="stat-unit">tokens stored</span></div>
+    </div>
+
+    <!-- CENTER: Attention Matching process -->
+    <div class="center-zone" id="center-zone">
+      <div class="scan-line" id="scan-line"></div>
+      <div class="center-icon" id="center-icon">
+        <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+          <circle cx="24" cy="24" r="20" stroke="#FF9F1C" stroke-width="3" fill="none" opacity="0.3"/>
+          <circle cx="24" cy="24" r="10" stroke="#FF9F1C" stroke-width="2.5" fill="rgba(255,159,28,0.15)"/>
+          <circle cx="24" cy="24" r="3" fill="#FF9F1C"/>
+        </svg>
       </div>
-      <div class="compare-eq">=</div>
-      <div class="compare-item">
-        <div class="compare-val" style="color:#3fb950;">~same quality</div>
-        <div class="compare-desc">on downstream tasks</div>
+      <div class="center-label" id="center-label">Attention<br>Matching</div>
+      <div class="center-desc" id="center-desc">keep only tokens<br>the model attends to</div>
+      <div class="arrow-left" id="arrow-left">
+        <svg width="60" height="24" viewBox="0 0 60 24"><path d="M0 12 H50 L42 4" stroke="#415A77" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M50 12 L42 20" stroke="#415A77" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <div class="arrow-right" id="arrow-right">
+        <svg width="60" height="24" viewBox="0 0 60 24"><path d="M0 12 H50 L42 4" stroke="#2EC4B6" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M50 12 L42 20" stroke="#2EC4B6" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+    </div>
+
+    <!-- RIGHT: Compacted KV Cache — small, clean, feels light -->
+    <div class="side side-right" id="side-right">
+      <div class="side-label" style="color:#2EC4B6;">Compacted Cache</div>
+      <div class="compact-container">
+        <div class="compact-grid" id="compact-grid"></div>
+      </div>
+      <div class="side-stat"><span class="stat-num" style="color:#2EC4B6;">1,000</span> <span class="stat-unit">tokens kept</span></div>
+    </div>
+
+    <!-- BOTTOM: Stats bar -->
+    <div class="bottom-bar" id="bottom-bar">
+      <div class="bottom-item" id="bi-size">
+        <span class="bi-val" style="color:#E71D36;">100%</span>
+        <span class="bi-arrow">&rarr;</span>
+        <span class="bi-val" style="color:#2EC4B6;">2%</span>
+        <span class="bi-label">cache size</span>
+      </div>
+      <div class="bottom-sep"></div>
+      <div class="bottom-item" id="bi-quality">
+        <span class="bi-val" style="color:#3fb950;">&asymp; same</span>
+        <span class="bi-label">quality on downstream tasks</span>
       </div>
     </div>
   </div>
@@ -63,36 +76,148 @@
     }
     .scene { position: relative; width: 1920px; height: 540px; }
 
-    .cache-panel { position: absolute; top: 40px; display: flex; flex-direction: column; align-items: center; gap: 12px; }
-    .full-panel { left: 80px; width: 580px; }
-    .compact-panel { left: 1200px; width: 400px; }
-    .cache-label { font-size: 32px; font-weight: 700; color: #E71D36; }
-    .cache-stat { font-size: 26px; font-weight: 700; color: #E71D36; }
+    .bg-gradient {
+      position: absolute; inset: 0;
+      background:
+        radial-gradient(ellipse 45% 65% at 22% 45%, rgba(231,29,54,0.04) 0%, transparent 70%),
+        radial-gradient(ellipse 35% 55% at 80% 45%, rgba(46,196,182,0.04) 0%, transparent 70%),
+        radial-gradient(ellipse 30% 40% at 50% 50%, rgba(255,159,28,0.03) 0%, transparent 60%),
+        linear-gradient(180deg, #011627 0%, #021e32 100%);
+    }
 
-    .cache-grid { display: flex; flex-wrap: wrap; gap: 4px; width: 520px; }
-    .cache-cell { width: 22px; height: 22px; border-radius: 3px; background: #E71D36; opacity: 0.7; }
+    /* Title */
+    .title {
+      position: absolute; top: 16px; left: 50%; transform: translateX(-50%);
+      font-size: 34px; font-weight: 700; white-space: nowrap; opacity: 0;
+      z-index: 10; letter-spacing: -0.5px;
+    }
+    .red { color: #E71D36; }
+    .teal { color: #2EC4B6; }
 
-    .cache-grid-small { display: flex; flex-wrap: wrap; gap: 5px; width: 200px; }
-    .compact-cell { width: 24px; height: 24px; border-radius: 3px; background: #2EC4B6; opacity: 0.85; }
+    /* Sides */
+    .side {
+      position: absolute; top: 66px; opacity: 0;
+      display: flex; flex-direction: column; align-items: center;
+    }
+    .side-left { left: 40px; width: 580px; }
+    .side-right { left: 1420px; width: 460px; }
 
+    .side-label {
+      font-size: 24px; font-weight: 700; margin-bottom: 10px;
+      text-transform: uppercase; letter-spacing: 2px;
+    }
+
+    .side-stat {
+      margin-top: 10px; display: flex; align-items: baseline; gap: 8px;
+    }
+    .stat-num { font-size: 28px; font-weight: 700; }
+    .stat-unit { font-size: 17px; color: #778DA9; }
+
+    /* Full grid: 20 cols x 14 rows = 280 cells in a ~540x308 area */
+    .grid-container {
+      width: 540px; height: 280px;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 12px;
+      background: linear-gradient(180deg, rgba(231,29,54,0.06), rgba(231,29,54,0.02));
+      border: 2px solid rgba(231,29,54,0.2);
+      box-shadow: 0 0 30px rgba(231,29,54,0.08);
+      padding: 10px;
+      overflow: hidden;
+    }
+
+    .full-grid {
+      display: grid;
+      grid-template-columns: repeat(20, 1fr);
+      gap: 2px;
+      width: 100%; height: 100%;
+    }
+
+    .fc {
+      border-radius: 2px;
+      background: #E71D36;
+      opacity: 0;
+    }
+
+    /* Compact grid: 5 cols x 4 rows = 20 cells */
+    .compact-container {
+      width: 180px; height: 140px;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 12px;
+      background: linear-gradient(180deg, rgba(46,196,182,0.08), rgba(46,196,182,0.02));
+      border: 2px solid rgba(46,196,182,0.3);
+      box-shadow: 0 0 24px rgba(46,196,182,0.1);
+      padding: 10px;
+      overflow: hidden;
+    }
+
+    .compact-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 4px;
+      width: 100%; height: 100%;
+    }
+
+    .cc {
+      border-radius: 3px;
+      background: #2EC4B6;
+      opacity: 0;
+    }
+
+    /* Center zone */
     .center-zone {
-      position: absolute; left: 700px; top: 100px; width: 460px;
-      display: flex; flex-direction: column; align-items: center; gap: 8px;
-    }
-    .compact-arrow { font-size: 56px; color: #415A77; }
-    .compact-label {
-      font-size: 36px; font-weight: 700; color: #FF9F1C; text-align: center; line-height: 1.3;
+      position: absolute; left: 660px; top: 80px; width: 340px;
+      display: flex; flex-direction: column; align-items: center;
+      gap: 6px; z-index: 5;
     }
 
-    .compare-zone {
-      position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%);
-      display: flex; align-items: center; gap: 24px;
+    .center-icon { opacity: 0; }
+    .center-label {
+      font-size: 30px; font-weight: 700; color: #FF9F1C;
+      text-align: center; line-height: 1.25; opacity: 0;
     }
-    .compare-item { text-align: center; }
-    .compare-val { font-size: 36px; font-weight: 700; }
-    .compare-desc { font-size: 20px; color: #778DA9; }
-    .compare-vs { font-size: 28px; color: #415A77; font-weight: 700; }
-    .compare-eq { font-size: 36px; color: #415A77; font-weight: 700; }
+    .center-desc {
+      font-size: 16px; font-weight: 400; color: #778DA9;
+      text-align: center; line-height: 1.4; opacity: 0;
+    }
+
+    .arrow-left {
+      position: absolute; left: -30px; top: 110px; opacity: 0;
+    }
+    .arrow-right {
+      position: absolute; right: -30px; top: 110px; opacity: 0;
+    }
+
+    /* Scan line effect on full grid */
+    .scan-line {
+      position: absolute; left: -620px; top: 76px;
+      width: 540px; height: 3px;
+      background: linear-gradient(90deg, transparent 0%, #FF9F1C 40%, #FF9F1C 60%, transparent 100%);
+      box-shadow: 0 0 12px rgba(255,159,28,0.6);
+      opacity: 0; z-index: 10;
+      border-radius: 2px;
+    }
+
+    /* Bottom bar */
+    .bottom-bar {
+      position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
+      display: flex; align-items: center; gap: 32px;
+      background: rgba(1,22,39,0.85);
+      border: 2px solid rgba(119,141,169,0.2);
+      border-radius: 12px; padding: 14px 40px;
+      opacity: 0; z-index: 10;
+    }
+
+    .bottom-item {
+      display: flex; align-items: baseline; gap: 10px;
+    }
+    .bi-val { font-size: 32px; font-weight: 700; }
+    .bi-arrow { font-size: 26px; color: #415A77; font-weight: 700; }
+    .bi-label { font-size: 17px; color: #778DA9; }
+
+    .bottom-sep {
+      width: 2px; height: 36px; background: rgba(119,141,169,0.3);
+      border-radius: 1px;
+    }
   </style>
 
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
@@ -101,47 +226,247 @@
     var root = document.currentScript.parentElement;
     var tl = gsap.timeline({ paused: true });
 
-    // Build full grid (200 cells = visual representation of big cache)
+    // ── Build grids ──────────────────────────────────────────────
     var fullGrid = root.querySelector('#full-grid');
-    for (var i = 0; i < 200; i++) {
+    var FULL_COUNT = 280; // 20x14
+    for (var i = 0; i < FULL_COUNT; i++) {
       var cell = document.createElement('div');
-      cell.className = 'cache-cell';
+      cell.className = 'fc';
+      cell.id = 'fc-' + i;
       fullGrid.appendChild(cell);
     }
 
-    // Build compact grid (20 cells)
     var compactGrid = root.querySelector('#compact-grid');
-    for (var i = 0; i < 20; i++) {
+    var COMPACT_COUNT = 20; // 5x4
+    for (var i = 0; i < COMPACT_COUNT; i++) {
       var cell = document.createElement('div');
-      cell.className = 'compact-cell';
+      cell.className = 'cc';
       cell.id = 'cc-' + i;
       compactGrid.appendChild(cell);
     }
 
-    // Full cache appears
-    tl.from(root.querySelector('.full-panel .cache-label'), { opacity: 0, duration: 0.4 }, 0);
-    tl.from(root.querySelector('#full-grid'), { opacity: 0, scale: 0.95, duration: 0.8, ease: 'power2.out' }, 0.2);
-    tl.from(root.querySelector('.full-panel .cache-stat'), { opacity: 0, duration: 0.4 }, 0.8);
-
-    // Center: Attention Matching
-    tl.from(root.querySelector('.compact-label'), { opacity: 0, scale: 0.8, duration: 0.5, ease: 'power2.out' }, 1.5);
-    root.querySelectorAll('.compact-arrow').forEach(function(el, i) {
-      tl.from(el, { opacity: 0, x: i === 0 ? -15 : 15, duration: 0.4 }, 1.8 + i * 0.3);
-    });
-
-    // Compact cache appears
-    tl.from(root.querySelector('.compact-panel .cache-label'), { opacity: 0, duration: 0.4 }, 2.8);
-    // Compact cells appear row by row
-    for (var i = 0; i < 20; i++) {
-      tl.from(root.querySelector('#cc-' + i), { opacity: 0, scale: 0.5, duration: 0.2, ease: 'power2.out' }, 3.0 + Math.floor(i / 5) * 0.15 + (i % 5) * 0.04);
+    // ── Deterministic pseudo-random for highlight selection ──────
+    function seededShuffle(arr, seed) {
+      var s = seed;
+      function rand() { s = (s * 16807 + 0) % 2147483647; return (s - 1) / 2147483646; }
+      for (var i = arr.length - 1; i > 0; i--) {
+        var j = Math.floor(rand() * (i + 1));
+        var tmp = arr[i]; arr[i] = arr[j]; arr[j] = tmp;
+      }
+      return arr;
     }
-    tl.from(root.querySelector('.compact-panel .cache-stat'), { opacity: 0, duration: 0.4 }, 3.8);
 
-    // Comparison bar at bottom
-    tl.from(root.querySelector('.compare-zone'), { opacity: 0, y: 20, duration: 0.6, ease: 'power2.out' }, 4.5);
+    // Indices that will "light up" as attended tokens
+    var allIdx = [];
+    for (var i = 0; i < FULL_COUNT; i++) allIdx.push(i);
+    var highlighted = seededShuffle(allIdx.slice(), 42).slice(0, 20);
+
+    /* ============================================================
+       PHASE 1 (0-1.2s): Title fades in
+       ============================================================ */
+    tl.to(root.querySelector('#title'), {
+      opacity: 1, duration: 0.6, ease: 'power3.out'
+    }, 0.2);
+    tl.from(root.querySelector('#title'), {
+      y: -18, duration: 0.6, ease: 'power3.out'
+    }, 0.2);
+
+    /* ============================================================
+       PHASE 2 (1.2-4.0s): Left side — full KV cache appears
+       Dense grid fills in waves. Feels massive and heavy.
+       ============================================================ */
+    tl.to(root.querySelector('#side-left'), {
+      opacity: 1, duration: 0.4, ease: 'power2.out'
+    }, 1.2);
+
+    // Grid container border glows as cells fill
+    tl.to(root.querySelector('.grid-container'), {
+      borderColor: 'rgba(231,29,54,0.45)',
+      boxShadow: '0 0 40px rgba(231,29,54,0.15)',
+      duration: 1.2, ease: 'power2.out'
+    }, 1.4);
+
+    // Cells appear in staggered waves (14 rows x 20 cols)
+    for (var row = 0; row < 14; row++) {
+      for (var col = 0; col < 20; col++) {
+        var idx = row * 20 + col;
+        var delay = 1.5 + row * 0.07 + col * 0.008;
+        tl.to(root.querySelector('#fc-' + idx), {
+          opacity: 0.55, duration: 0.12, ease: 'power1.in'
+        }, delay);
+      }
+    }
+
+    // Stat text
+    tl.to(root.querySelector('.side-left .side-stat'), {
+      opacity: 1, duration: 0.4, ease: 'power2.out'
+    }, 3.0);
+    tl.from(root.querySelector('.side-left .side-stat'), {
+      y: 8, duration: 0.4, ease: 'power2.out'
+    }, 3.0);
+
+    // Make side-stat start hidden
+    tl.set(root.querySelector('.side-left .side-stat'), { opacity: 0 }, 0);
+
+    /* ============================================================
+       PHASE 3 (3.5-5.5s): Center — Attention Matching process
+       Icon, label, arrows animate. Scan line sweeps over full grid.
+       ============================================================ */
+    tl.to(root.querySelector('#center-icon'), {
+      opacity: 1, duration: 0.4, ease: 'power2.out'
+    }, 3.5);
+    tl.from(root.querySelector('#center-icon'), {
+      scale: 0.5, rotation: -90, duration: 0.6, ease: 'back.out(1.8)'
+    }, 3.5);
+
+    tl.to(root.querySelector('#center-label'), {
+      opacity: 1, duration: 0.5, ease: 'power2.out'
+    }, 3.8);
+    tl.from(root.querySelector('#center-label'), {
+      y: 12, duration: 0.5, ease: 'power2.out'
+    }, 3.8);
+
+    tl.to(root.querySelector('#center-desc'), {
+      opacity: 1, duration: 0.4, ease: 'power2.out'
+    }, 4.2);
+
+    // Arrows
+    tl.to(root.querySelector('#arrow-left'), {
+      opacity: 1, duration: 0.3, ease: 'power2.out'
+    }, 4.0);
+    tl.from(root.querySelector('#arrow-left'), {
+      x: 20, duration: 0.4, ease: 'power2.out'
+    }, 4.0);
+
+    tl.to(root.querySelector('#arrow-right'), {
+      opacity: 1, duration: 0.3, ease: 'power2.out'
+    }, 4.3);
+    tl.from(root.querySelector('#arrow-right'), {
+      x: -20, duration: 0.4, ease: 'power2.out'
+    }, 4.3);
+
+    // Scan line sweeps down the full grid
+    tl.to(root.querySelector('#scan-line'), {
+      opacity: 1, duration: 0.15
+    }, 4.0);
+    tl.to(root.querySelector('#scan-line'), {
+      top: 350, duration: 1.6, ease: 'power1.inOut'
+    }, 4.0);
+    tl.to(root.querySelector('#scan-line'), {
+      opacity: 0, duration: 0.3
+    }, 5.5);
+
+    /* ============================================================
+       PHASE 4 (4.5-6.0s): Highlight attended tokens in full grid
+       Some cells glow orange — the ones the model "pays attention to."
+       Non-highlighted cells dim further.
+       ============================================================ */
+    // Highlight the 20 "attended" cells
+    for (var h = 0; h < highlighted.length; h++) {
+      var hIdx = highlighted[h];
+      var hDelay = 4.6 + h * 0.04;
+      tl.to(root.querySelector('#fc-' + hIdx), {
+        background: '#FF9F1C',
+        opacity: 1,
+        boxShadow: '0 0 8px rgba(255,159,28,0.6)',
+        duration: 0.15,
+        ease: 'power2.out'
+      }, hDelay);
+    }
+
+    // Dim non-highlighted cells
+    for (var i = 0; i < FULL_COUNT; i++) {
+      if (highlighted.indexOf(i) === -1) {
+        tl.to(root.querySelector('#fc-' + i), {
+          opacity: 0.15, duration: 0.6, ease: 'power2.in'
+        }, 5.6);
+      }
+    }
+
+    // Grid container dims
+    tl.to(root.querySelector('.grid-container'), {
+      borderColor: 'rgba(231,29,54,0.12)',
+      boxShadow: '0 0 10px rgba(231,29,54,0.04)',
+      duration: 0.6, ease: 'power2.in'
+    }, 5.6);
+
+    /* ============================================================
+       PHASE 5 (6.0-8.5s): Right side — compacted cache appears
+       Small grid with bright teal cells. Feels clean and light.
+       ============================================================ */
+    tl.to(root.querySelector('#side-right'), {
+      opacity: 1, duration: 0.4, ease: 'power2.out'
+    }, 6.2);
+
+    // Compact container glows
+    tl.from(root.querySelector('.compact-container'), {
+      scale: 0.85, duration: 0.7, ease: 'back.out(1.5)'
+    }, 6.3);
+    tl.to(root.querySelector('.compact-container'), {
+      boxShadow: '0 0 36px rgba(46,196,182,0.2)',
+      duration: 0.6, ease: 'power2.out'
+    }, 6.5);
+
+    // Compact cells pop in one by one
+    for (var i = 0; i < COMPACT_COUNT; i++) {
+      var row = Math.floor(i / 5);
+      var col = i % 5;
+      var ccDelay = 6.5 + row * 0.15 + col * 0.06;
+      tl.to(root.querySelector('#cc-' + i), {
+        opacity: 0.9, duration: 0.2, ease: 'power2.out'
+      }, ccDelay);
+      tl.from(root.querySelector('#cc-' + i), {
+        scale: 0.3, duration: 0.25, ease: 'back.out(2)'
+      }, ccDelay);
+    }
+
+    // Stat text
+    tl.set(root.querySelector('.side-right .side-stat'), { opacity: 0 }, 0);
+    tl.to(root.querySelector('.side-right .side-stat'), {
+      opacity: 1, duration: 0.4, ease: 'power2.out'
+    }, 7.5);
+    tl.from(root.querySelector('.side-right .side-stat'), {
+      y: 8, duration: 0.4, ease: 'power2.out'
+    }, 7.5);
+
+    /* ============================================================
+       PHASE 6 (8.0-8.5s): Emphasis — pulse the compact grid
+       ============================================================ */
+    tl.to(root.querySelector('.compact-container'), {
+      boxShadow: '0 0 48px rgba(46,196,182,0.35)',
+      borderColor: 'rgba(46,196,182,0.6)',
+      duration: 0.4, ease: 'power2.out'
+    }, 8.0);
+    tl.to(root.querySelector('.compact-container'), {
+      boxShadow: '0 0 24px rgba(46,196,182,0.15)',
+      borderColor: 'rgba(46,196,182,0.3)',
+      duration: 0.6, ease: 'sine.inOut'
+    }, 8.4);
+
+    /* ============================================================
+       PHASE 7 (9.0-12s): Bottom stats bar + hold
+       ============================================================ */
+    tl.to(root.querySelector('#bottom-bar'), {
+      opacity: 1, duration: 0.01
+    }, 9.0);
+    tl.from(root.querySelector('#bottom-bar'), {
+      y: 20, scale: 0.92, duration: 0.6, ease: 'back.out(1.6)'
+    }, 9.0);
+
+    // Glow pulse on bottom bar
+    tl.to(root.querySelector('#bottom-bar'), {
+      borderColor: 'rgba(46,196,182,0.35)',
+      boxShadow: '0 0 24px rgba(46,196,182,0.12)',
+      duration: 0.6, ease: 'sine.inOut'
+    }, 9.8);
+    tl.to(root.querySelector('#bottom-bar'), {
+      borderColor: 'rgba(119,141,169,0.2)',
+      boxShadow: '0 0 0px transparent',
+      duration: 0.8, ease: 'sine.inOut'
+    }, 10.4);
 
     // Hold
-    tl.to({}, { duration: 3 });
+    tl.to({}, { duration: 0.5 }, 11.5);
 
     window.__timelines["kv-hero"] = tl;
   </script>

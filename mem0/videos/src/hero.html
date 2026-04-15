@@ -13,39 +13,112 @@
   data-width="1920"
   data-height="540"
   data-start="0"
-  data-duration="10"
+  data-duration="12"
 >
   <div class="scene">
-    <!-- Session 1 messages scrolling up left side -->
-    <div class="session s1">
-      <div class="session-label">Session 1</div>
-      <div class="msg m1">I'm vegetarian and avoid dairy</div>
-      <div class="msg m2">Working on a Python project</div>
-      <div class="msg m3">My deadline is March 15</div>
-      <div class="msg m4">I prefer dark mode in all apps</div>
+
+    <!-- SVG for extraction lines (Session 1 -> Mem0) and recall line (Mem0 -> Session 2) -->
+    <svg class="connectors" viewBox="0 0 1920 540">
+      <defs>
+        <linearGradient id="grad-extract" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stop-color="#2EC4B6" stop-opacity="0.6"/>
+          <stop offset="100%" stop-color="#3fb950" stop-opacity="0.8"/>
+        </linearGradient>
+        <linearGradient id="grad-recall" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stop-color="#3fb950" stop-opacity="0.8"/>
+          <stop offset="100%" stop-color="#bc8cff" stop-opacity="0.6"/>
+        </linearGradient>
+        <filter id="glow-green">
+          <feGaussianBlur stdDeviation="4" result="blur"/>
+          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+        <filter id="glow-purple">
+          <feGaussianBlur stdDeviation="4" result="blur"/>
+          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+      </defs>
+      <!-- Extraction lines: messages -> memory facts -->
+      <path class="extract-line el1" d="M 530,148 C 590,148 620,138 680,138" stroke="url(#grad-extract)" stroke-width="2" fill="none" stroke-dasharray="6 4"/>
+      <path class="extract-line el2" d="M 530,210 C 590,210 620,198 680,198" stroke="url(#grad-extract)" stroke-width="2" fill="none" stroke-dasharray="6 4"/>
+      <path class="extract-line el3" d="M 530,272 C 590,272 620,258 680,258" stroke="url(#grad-extract)" stroke-width="2" fill="none" stroke-dasharray="6 4"/>
+      <!-- Recall line: memory fact -> Session 2 response -->
+      <path class="recall-line" d="M 1010,138 C 1100,138 1150,220 1240,220" stroke="url(#grad-recall)" stroke-width="3" fill="none" stroke-dasharray="8 4" filter="url(#glow-green)"/>
+    </svg>
+
+    <!-- Column 1: Session 1 -->
+    <div class="col col-s1">
+      <div class="col-header">
+        <div class="session-label">Session 1</div>
+        <div class="session-time">Monday 9:14 AM</div>
+      </div>
+      <div class="chat-area">
+        <div class="msg msg-user m1">
+          <span class="msg-icon">&#9679;</span>
+          I'm vegetarian and avoid dairy
+        </div>
+        <div class="msg msg-user m2">
+          <span class="msg-icon">&#9679;</span>
+          Working on a Python project
+        </div>
+        <div class="msg msg-user m3">
+          <span class="msg-icon">&#9679;</span>
+          My deadline is March 15
+        </div>
+      </div>
     </div>
 
-    <!-- Center: Memory extraction -->
-    <div class="center">
-      <div class="mem-label">Mem0</div>
+    <!-- Column 2: Mem0 Memory Store -->
+    <div class="col col-mem">
+      <div class="col-header">
+        <div class="mem-label">Mem0</div>
+        <div class="mem-sub">persistent memory</div>
+      </div>
       <div class="mem-store">
-        <div class="mem-fact f1">Vegetarian, no dairy</div>
-        <div class="mem-fact f2">Python developer</div>
-        <div class="mem-fact f3">Deadline: March 15</div>
-        <div class="mem-fact f4">Prefers dark mode</div>
+        <div class="mem-fact f1">
+          <span class="fact-dot">&#9632;</span>
+          Vegetarian, no dairy
+        </div>
+        <div class="mem-fact f2">
+          <span class="fact-dot">&#9632;</span>
+          Python developer
+        </div>
+        <div class="mem-fact f3">
+          <span class="fact-dot">&#9632;</span>
+          Deadline: March 15
+        </div>
+      </div>
+      <div class="mem-glow-ring"></div>
+    </div>
+
+    <!-- Column 3: Session 2 -->
+    <div class="col col-s2">
+      <div class="col-header">
+        <div class="session-label s2-label">Session 2</div>
+        <div class="session-time s2-time">Tuesday 6:30 PM</div>
+      </div>
+      <div class="chat-area">
+        <div class="msg msg-user m4">
+          <span class="msg-icon">&#9679;</span>
+          What should I eat for dinner?
+        </div>
+        <div class="recall-badge">
+          <span class="recall-icon">&#8617;</span>
+          recalled: Vegetarian, no dairy
+        </div>
+        <div class="msg msg-assistant m5">
+          <span class="msg-icon-ai">AI</span>
+          Try a tofu stir-fry with coconut rice and roasted vegetables!
+        </div>
       </div>
     </div>
 
-    <!-- Session 2: recall -->
-    <div class="session s2">
-      <div class="session-label">Session 2 (next day)</div>
-      <div class="msg m5">What should I eat for dinner?</div>
-      <div class="recall-box">
-        <div class="recall-label">recalls</div>
-        <div class="recall-fact">Vegetarian, no dairy</div>
-      </div>
-      <div class="msg m6 assistant">How about a tofu stir-fry with rice noodles?</div>
+    <!-- Time-gap divider -->
+    <div class="time-gap">
+      <div class="gap-line"></div>
+      <div class="gap-text">next day</div>
+      <div class="gap-line"></div>
     </div>
+
   </div>
 
   <style>
@@ -55,39 +128,103 @@
     }
     .scene { position: relative; width: 1920px; height: 540px; }
 
-    .session { position: absolute; top: 40px; display: flex; flex-direction: column; gap: 12px; }
-    .s1 { left: 60px; width: 520px; }
-    .s2 { left: 1240px; width: 600px; }
-    .session-label { font-size: 24px; font-weight: 700; color: #778DA9; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 8px; }
+    .connectors {
+      position: absolute; top: 0; left: 0; width: 1920px; height: 540px;
+      pointer-events: none; z-index: 1;
+    }
+    .extract-line, .recall-line { opacity: 0; }
+
+    /* Columns */
+    .col { position: absolute; top: 0; display: flex; flex-direction: column; }
+    .col-s1 { left: 40px; width: 520px; }
+    .col-mem { left: 620px; width: 440px; align-items: center; }
+    .col-s2 { left: 1120px; width: 560px; }
+
+    /* Headers */
+    .col-header { padding: 28px 0 12px 0; }
+    .session-label {
+      font-size: 26px; font-weight: 700; color: #2EC4B6;
+      text-transform: uppercase; letter-spacing: 3px;
+    }
+    .session-time { font-size: 16px; color: #778DA9; margin-top: 2px; }
+    .s2-label { color: #bc8cff; }
+
+    .mem-label {
+      font-size: 44px; font-weight: 700; color: #FF9F1C;
+      letter-spacing: 3px; text-align: center;
+    }
+    .mem-sub {
+      font-size: 16px; color: #778DA9; text-align: center;
+      letter-spacing: 1px; margin-top: 2px;
+    }
+
+    /* Chat messages */
+    .chat-area { display: flex; flex-direction: column; gap: 12px; padding: 0 8px; }
 
     .msg {
-      padding: 14px 24px; border-radius: 12px; font-size: 24px; font-weight: 400;
-      border: 2px solid #2EC4B6; color: #2EC4B6; background: rgba(46,196,182,0.08);
-      max-width: 480px;
+      padding: 12px 20px; border-radius: 12px; font-size: 22px; font-weight: 400;
+      line-height: 1.35; display: flex; align-items: flex-start; gap: 10px;
+      max-width: 500px;
     }
-    .msg.assistant {
-      border-color: #bc8cff; color: #bc8cff; background: rgba(188,140,255,0.08);
-      align-self: flex-end;
+    .msg-user {
+      background: rgba(46,196,182,0.08); border: 2px solid rgba(46,196,182,0.5);
+      color: #2EC4B6;
+    }
+    .msg-icon { font-size: 10px; color: #2EC4B6; margin-top: 7px; flex-shrink: 0; }
+
+    .msg-assistant {
+      background: rgba(188,140,255,0.08); border: 2px solid rgba(188,140,255,0.5);
+      color: #bc8cff;
+    }
+    .msg-icon-ai {
+      font-size: 14px; font-weight: 700; color: #011627; background: #bc8cff;
+      border-radius: 4px; padding: 2px 6px; flex-shrink: 0; margin-top: 1px;
     }
 
-    .center { position: absolute; left: 680px; top: 40px; width: 460px; text-align: center; }
-    .mem-label {
-      font-size: 48px; font-weight: 700; color: #FF9F1C; margin-bottom: 16px;
-      letter-spacing: 2px;
+    /* Memory store */
+    .mem-store {
+      display: flex; flex-direction: column; gap: 10px;
+      align-items: center; width: 100%; padding: 0 12px;
+      position: relative; z-index: 2;
     }
-    .mem-store { display: flex; flex-direction: column; gap: 10px; align-items: center; }
     .mem-fact {
-      padding: 10px 24px; border-radius: 8px; font-size: 22px; font-weight: 700;
-      background: rgba(63,185,80,0.12); border: 2px solid #3fb950; color: #3fb950;
+      padding: 10px 22px; border-radius: 20px; font-size: 20px; font-weight: 700;
+      background: rgba(63,185,80,0.1); border: 2px solid #3fb950; color: #3fb950;
+      display: flex; align-items: center; gap: 8px; white-space: nowrap;
+    }
+    .fact-dot { font-size: 10px; color: #3fb950; }
+
+    .mem-glow-ring {
+      position: absolute; top: 76px; left: 50%; transform: translateX(-50%);
+      width: 380px; height: 220px; border-radius: 24px;
+      border: 2px solid rgba(63,185,80,0.15);
+      box-shadow: inset 0 0 40px rgba(63,185,80,0.05);
+      pointer-events: none; z-index: 0;
     }
 
-    .recall-box {
-      padding: 12px 20px; border-radius: 8px; margin: 4px 0;
-      background: rgba(255,159,28,0.1); border: 2px dashed #FF9F1C;
-      display: flex; align-items: center; gap: 12px;
+    /* Recall badge */
+    .recall-badge {
+      display: flex; align-items: center; gap: 8px;
+      padding: 8px 16px; border-radius: 8px; font-size: 18px; font-weight: 700;
+      color: #3fb950; background: rgba(63,185,80,0.1);
+      border: 2px dashed rgba(63,185,80,0.4);
     }
-    .recall-label { font-size: 18px; color: #FF9F1C; text-transform: uppercase; font-weight: 700; }
-    .recall-fact { font-size: 22px; color: #3fb950; font-weight: 700; }
+    .recall-icon { font-size: 18px; color: #FF9F1C; }
+
+    /* Time gap */
+    .time-gap {
+      position: absolute; top: 0; left: 1098px; height: 540px; width: 44px;
+      display: flex; flex-direction: column; align-items: center;
+      justify-content: center; gap: 8px; z-index: 3;
+    }
+    .gap-line {
+      width: 2px; flex: 1; background: linear-gradient(to bottom, transparent, #415A77 30%, #415A77 70%, transparent);
+    }
+    .gap-text {
+      font-size: 14px; color: #778DA9; text-transform: uppercase;
+      letter-spacing: 2px; writing-mode: vertical-rl; text-orientation: mixed;
+      white-space: nowrap;
+    }
   </style>
 
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
@@ -96,43 +233,156 @@
     var root = document.currentScript.parentElement;
     var tl = gsap.timeline({ paused: true });
 
-    // Session 1 label
-    tl.from(root.querySelector('.s1 .session-label'), { opacity: 0, duration: 0.4 }, 0);
+    /* ── Phase 1: Session 1 label + messages cascade in (0s - 3s) ── */
 
-    // Messages appear one by one
-    tl.from(root.querySelector('.m1'), { opacity: 0, x: -20, duration: 0.4, ease: 'power2.out' }, 0.3);
-    tl.from(root.querySelector('.m2'), { opacity: 0, x: -20, duration: 0.4, ease: 'power2.out' }, 0.7);
-    tl.from(root.querySelector('.m3'), { opacity: 0, x: -20, duration: 0.4, ease: 'power2.out' }, 1.1);
-    tl.from(root.querySelector('.m4'), { opacity: 0, x: -20, duration: 0.4, ease: 'power2.out' }, 1.5);
+    // Session 1 header
+    tl.from(root.querySelector('.col-s1 .session-label'), {
+      opacity: 0, y: -12, duration: 0.5, ease: 'power3.out'
+    }, 0);
+    tl.from(root.querySelector('.col-s1 .session-time'), {
+      opacity: 0, duration: 0.3, ease: 'power2.out'
+    }, 0.2);
 
-    // Mem0 label
-    tl.from(root.querySelector('.mem-label'), { opacity: 0, scale: 0.8, duration: 0.5, ease: 'power2.out' }, 0.5);
+    // Messages cascade
+    tl.from(root.querySelector('.m1'), {
+      opacity: 0, x: -30, duration: 0.5, ease: 'back.out(1.4)'
+    }, 0.4);
+    tl.from(root.querySelector('.m2'), {
+      opacity: 0, x: -30, duration: 0.5, ease: 'back.out(1.4)'
+    }, 0.9);
+    tl.from(root.querySelector('.m3'), {
+      opacity: 0, x: -30, duration: 0.5, ease: 'back.out(1.4)'
+    }, 1.4);
 
-    // Facts extracted into memory store (timed with messages)
-    tl.from(root.querySelector('.f1'), { opacity: 0, x: -40, duration: 0.4, ease: 'power2.out' }, 0.8);
-    tl.from(root.querySelector('.f2'), { opacity: 0, x: -40, duration: 0.4, ease: 'power2.out' }, 1.2);
-    tl.from(root.querySelector('.f3'), { opacity: 0, x: -40, duration: 0.4, ease: 'power2.out' }, 1.6);
-    tl.from(root.querySelector('.f4'), { opacity: 0, x: -40, duration: 0.4, ease: 'power2.out' }, 2.0);
+    /* ── Phase 2: Mem0 store appears, facts extracted (1s - 4s) ── */
 
-    // Pause — session break
-    // Session 1 fades slightly
-    tl.to(root.querySelector('.s1'), { opacity: 0.3, duration: 0.6 }, 3.0);
+    // Mem0 header
+    tl.from(root.querySelector('.mem-label'), {
+      opacity: 0, scale: 0.7, duration: 0.6, ease: 'elastic.out(1, 0.5)'
+    }, 0.6);
+    tl.from(root.querySelector('.mem-sub'), {
+      opacity: 0, duration: 0.3, ease: 'power2.out'
+    }, 0.9);
 
-    // Session 2 appears
-    tl.from(root.querySelector('.s2 .session-label'), { opacity: 0, duration: 0.4 }, 3.5);
-    tl.from(root.querySelector('.m5'), { opacity: 0, x: 20, duration: 0.4, ease: 'power2.out' }, 4.0);
+    // Glow ring fades in
+    tl.from(root.querySelector('.mem-glow-ring'), {
+      opacity: 0, scale: 0.9, duration: 0.8, ease: 'power2.out'
+    }, 0.8);
 
-    // Memory recall — highlight the relevant fact
-    tl.to(root.querySelector('.f1'), { boxShadow: '0 0 20px rgba(63,185,80,0.7)', duration: 0.4 }, 4.5);
+    // Facts appear (timed with messages, slight delay for "extraction" feel)
+    // Fact 1 (after message 1)
+    tl.from(root.querySelector('.f1'), {
+      opacity: 0, x: -30, scale: 0.8, duration: 0.5, ease: 'power3.out'
+    }, 1.0);
+    tl.to(root.querySelector('.el1'), {
+      opacity: 1, duration: 0.4, ease: 'power2.inOut'
+    }, 0.9);
 
-    // Recall box appears
-    tl.from(root.querySelector('.recall-box'), { opacity: 0, y: -10, duration: 0.4, ease: 'power2.out' }, 5.0);
+    // Fact 2 (after message 2)
+    tl.from(root.querySelector('.f2'), {
+      opacity: 0, x: -30, scale: 0.8, duration: 0.5, ease: 'power3.out'
+    }, 1.5);
+    tl.to(root.querySelector('.el2'), {
+      opacity: 1, duration: 0.4, ease: 'power2.inOut'
+    }, 1.4);
 
-    // Assistant responds
-    tl.from(root.querySelector('.m6'), { opacity: 0, x: 20, duration: 0.5, ease: 'power2.out' }, 5.8);
+    // Fact 3 (after message 3)
+    tl.from(root.querySelector('.f3'), {
+      opacity: 0, x: -30, scale: 0.8, duration: 0.5, ease: 'power3.out'
+    }, 2.0);
+    tl.to(root.querySelector('.el3'), {
+      opacity: 1, duration: 0.4, ease: 'power2.inOut'
+    }, 1.9);
 
-    // Hold
-    tl.to({}, { duration: 3 });
+    // Extraction lines fade out after showing
+    tl.to(root.querySelectorAll('.extract-line'), {
+      opacity: 0.3, duration: 0.6, ease: 'power2.in'
+    }, 3.0);
+
+    // Glow ring pulses to show storage complete
+    tl.to(root.querySelector('.mem-glow-ring'), {
+      borderColor: 'rgba(63,185,80,0.4)',
+      boxShadow: 'inset 0 0 60px rgba(63,185,80,0.12), 0 0 20px rgba(63,185,80,0.08)',
+      duration: 0.6, ease: 'power2.inOut'
+    }, 3.0);
+
+    /* ── Phase 3: Time gap + Session 1 dims (3.5s - 5s) ── */
+
+    // Time gap appears
+    tl.from(root.querySelector('.time-gap'), {
+      opacity: 0, duration: 0.6, ease: 'power2.out'
+    }, 3.8);
+
+    // Session 1 dims to show time passing
+    tl.to(root.querySelector('.col-s1'), {
+      opacity: 0.2, duration: 0.8, ease: 'power2.inOut'
+    }, 4.0);
+
+    // Extraction lines dim too
+    tl.to(root.querySelectorAll('.extract-line'), {
+      opacity: 0.08, duration: 0.6, ease: 'power2.in'
+    }, 4.0);
+
+    /* ── Phase 4: Session 2 (5s - 8.5s) ── */
+
+    // Session 2 header
+    tl.from(root.querySelector('.s2-label'), {
+      opacity: 0, y: -12, duration: 0.5, ease: 'power3.out'
+    }, 5.0);
+    tl.from(root.querySelector('.s2-time'), {
+      opacity: 0, duration: 0.3, ease: 'power2.out'
+    }, 5.2);
+
+    // User question
+    tl.from(root.querySelector('.m4'), {
+      opacity: 0, x: 30, duration: 0.5, ease: 'back.out(1.4)'
+    }, 5.5);
+
+    /* ── Phase 5: Memory recall animation (6.5s - 8.5s) ── */
+
+    // Fact 1 glows bright (recall highlight)
+    tl.to(root.querySelector('.f1'), {
+      boxShadow: '0 0 24px rgba(63,185,80,0.7), 0 0 48px rgba(63,185,80,0.3)',
+      scale: 1.08, duration: 0.5, ease: 'power2.out'
+    }, 6.5);
+
+    // Recall line animates in
+    tl.to(root.querySelector('.recall-line'), {
+      opacity: 1, duration: 0.6, ease: 'power2.out'
+    }, 6.8);
+
+    // Recall badge appears
+    tl.from(root.querySelector('.recall-badge'), {
+      opacity: 0, y: -8, scale: 0.9, duration: 0.5, ease: 'power3.out'
+    }, 7.2);
+
+    // Fact glow settles
+    tl.to(root.querySelector('.f1'), {
+      boxShadow: '0 0 12px rgba(63,185,80,0.4)', scale: 1.0,
+      duration: 0.4, ease: 'power2.inOut'
+    }, 7.6);
+
+    /* ── Phase 6: AI response (8s - 9.5s) ── */
+
+    tl.from(root.querySelector('.m5'), {
+      opacity: 0, x: 30, y: 8, duration: 0.6, ease: 'power2.out'
+    }, 8.2);
+
+    // Subtle glow on the assistant message border
+    tl.to(root.querySelector('.m5'), {
+      boxShadow: '0 0 16px rgba(188,140,255,0.25)',
+      duration: 0.4, ease: 'power2.out'
+    }, 8.6);
+
+    /* ── Phase 7: Hold and settle (9.5s - 12s) ── */
+
+    // Recall line fades to subtle
+    tl.to(root.querySelector('.recall-line'), {
+      opacity: 0.4, duration: 0.6, ease: 'power2.in'
+    }, 9.5);
+
+    // Hold at final state
+    tl.to({}, { duration: 2.2 });
 
     window.__timelines["mem0-hero"] = tl;
   </script>

@@ -10,37 +10,58 @@
 <body>
 <div data-composition-id="low-rank" data-width="1920" data-height="540" data-start="0" data-duration="12">
   <div class="scene">
-    <div class="title">Low-Rank Decomposition</div>
-    <div class="subtitle">Instead of updating a huge matrix, update two tiny ones</div>
-    <div class="content">
-      <!-- Full update -->
-      <div class="side">
-        <div class="plabel" style="color:#E71D36;">Full Update &Delta;W</div>
-        <div class="big-matrix"></div>
-        <div class="dim-label">12,288 &times; 12,288</div>
-        <div class="param-count" style="color:#E71D36;">150M parameters</div>
-      </div>
+    <div class="bg-gradient"></div>
 
-      <div class="eq-sign">=</div>
+    <!-- Title -->
+    <div class="title" id="lr-title">Low-Rank Decomposition</div>
+    <div class="subtitle" id="lr-subtitle">The core trick behind LoRA</div>
 
-      <!-- Low-rank -->
-      <div class="side">
-        <div class="plabel" style="color:#2EC4B6;">LoRA: B &times; A</div>
-        <div class="lr-pair">
-          <div class="lr-col">
-            <div class="tall-matrix"></div>
-            <div class="dim-label">12,288 &times; 4</div>
-            <div class="mat-name">B</div>
-          </div>
-          <div class="times-sign">&times;</div>
-          <div class="lr-col">
-            <div class="wide-matrix"></div>
-            <div class="dim-label">4 &times; 12,288</div>
-            <div class="mat-name">A</div>
-          </div>
+    <!-- LEFT SIDE: Full delta-W (the problem) -->
+    <div class="left-panel" id="lr-left">
+      <div class="panel-label" style="color:#E71D36;">Full Update &Delta;W</div>
+      <div class="matrix-area">
+        <div class="big-matrix" id="lr-big-matrix">
+          <div class="matrix-grid" id="lr-grid"></div>
+          <div class="matrix-inner-label" id="lr-inner-label">12,288 &times; 12,288</div>
         </div>
-        <div class="param-count" style="color:#2EC4B6;">98K parameters (0.07%)</div>
       </div>
+      <div class="param-badge red-badge" id="lr-param-full">
+        <span class="param-val">150,528,000</span> parameters
+      </div>
+    </div>
+
+    <!-- Center equals -->
+    <div class="eq-sign" id="lr-eq">=</div>
+
+    <!-- RIGHT SIDE: B x A (the solution) -->
+    <div class="right-panel" id="lr-right">
+      <div class="panel-label" style="color:#2EC4B6;">LoRA: B &times; A</div>
+      <div class="decomp-area">
+        <!-- Matrix B: tall thin -->
+        <div class="lr-col">
+          <div class="mat-b" id="lr-mat-b">
+            <div class="mat-label-inside">B</div>
+          </div>
+          <div class="dim-label" id="lr-dim-b">12,288 &times; 4</div>
+        </div>
+        <!-- Multiply sign -->
+        <div class="times-sign" id="lr-times">&times;</div>
+        <!-- Matrix A: wide thin -->
+        <div class="lr-col">
+          <div class="mat-a" id="lr-mat-a">
+            <div class="mat-label-inside">A</div>
+          </div>
+          <div class="dim-label" id="lr-dim-a">4 &times; 12,288</div>
+        </div>
+      </div>
+      <div class="param-badge teal-badge" id="lr-param-lora">
+        <span class="param-val">98,304</span> parameters <span class="pct">(0.07%)</span>
+      </div>
+    </div>
+
+    <!-- Bottom punchline -->
+    <div class="punchline" id="lr-punchline">
+      Same update &mdash; <span class="hl-orange">1,500&times;</span> fewer parameters
     </div>
   </div>
 
@@ -49,26 +70,150 @@
       position: relative; overflow: hidden; background: #011627;
       width: 1920px; height: 540px; font-family: 'Space Mono', monospace; color: #FDFFFC;
     }
-    .scene { width: 1920px; height: 540px; display: flex; flex-direction: column; align-items: center; }
-    .title { font-size: 48px; font-weight: 700; margin-top: 20px; }
-    .subtitle { font-size: 24px; color: #778DA9; margin-top: 6px; }
-    .content { flex: 1; display: flex; align-items: center; justify-content: center; gap: 60px; padding: 0 100px; }
+    .scene { position: relative; width: 1920px; height: 540px; }
 
-    .side { display: flex; flex-direction: column; align-items: center; gap: 10px; }
-    .plabel { font-size: 30px; font-weight: 700; }
+    .bg-gradient {
+      position: absolute; inset: 0;
+      background:
+        radial-gradient(ellipse 50% 70% at 28% 50%, rgba(231,29,54,0.04) 0%, transparent 70%),
+        radial-gradient(ellipse 50% 70% at 72% 50%, rgba(46,196,182,0.04) 0%, transparent 70%),
+        linear-gradient(180deg, #011627 0%, #021e32 100%);
+    }
 
-    .big-matrix { width: 260px; height: 260px; border-radius: 6px; background: rgba(231,29,54,0.2); border: 3px solid #E71D36; }
-    .tall-matrix { width: 36px; height: 220px; border-radius: 6px; background: rgba(46,196,182,0.2); border: 3px solid #2EC4B6; }
-    .wide-matrix { width: 220px; height: 36px; border-radius: 6px; background: rgba(46,196,182,0.2); border: 3px solid #2EC4B6; }
+    /* Title + subtitle */
+    .title {
+      position: absolute; top: 20px; left: 50%; transform: translateX(-50%);
+      font-size: 40px; font-weight: 700; white-space: nowrap; opacity: 0;
+      z-index: 10;
+    }
+    .subtitle {
+      position: absolute; top: 68px; left: 50%; transform: translateX(-50%);
+      font-size: 20px; font-weight: 400; color: #778DA9;
+      white-space: nowrap; opacity: 0; z-index: 10;
+    }
 
-    .dim-label { font-size: 20px; color: #778DA9; }
-    .param-count { font-size: 26px; font-weight: 700; }
-    .mat-name { font-size: 28px; font-weight: 700; color: #2EC4B6; }
-    .eq-sign { font-size: 56px; color: #415A77; font-weight: 700; }
+    /* Left panel */
+    .left-panel {
+      position: absolute; top: 100px; left: 60px; width: 720px;
+      display: flex; flex-direction: column; align-items: center;
+      opacity: 0;
+    }
+    .panel-label {
+      font-size: 28px; font-weight: 700; margin-bottom: 14px;
+    }
 
-    .lr-pair { display: flex; align-items: center; gap: 20px; }
-    .lr-col { display: flex; flex-direction: column; align-items: center; gap: 6px; }
-    .times-sign { font-size: 36px; color: #415A77; font-weight: 700; }
+    .matrix-area {
+      display: flex; align-items: center; justify-content: center;
+      height: 280px;
+    }
+
+    .big-matrix {
+      width: 0; height: 0; border-radius: 8px;
+      background: linear-gradient(135deg, rgba(231,29,54,0.22) 0%, rgba(231,29,54,0.06) 100%);
+      border: 2.5px solid #E71D36;
+      box-shadow: 0 0 30px rgba(231,29,54,0.12);
+      display: flex; align-items: center; justify-content: center;
+      position: relative; overflow: hidden;
+    }
+
+    /* Subtle grid pattern inside the big matrix */
+    .matrix-grid {
+      position: absolute; inset: 0; opacity: 0;
+      background-image:
+        linear-gradient(rgba(231,29,54,0.08) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(231,29,54,0.08) 1px, transparent 1px);
+      background-size: 20px 20px;
+    }
+
+    .matrix-inner-label {
+      font-size: 22px; font-weight: 700; color: rgba(231,29,54,0.8);
+      text-align: center; opacity: 0; z-index: 2;
+    }
+
+    .param-badge {
+      margin-top: 14px; padding: 8px 24px; border-radius: 8px;
+      font-size: 22px; font-weight: 700; white-space: nowrap; opacity: 0;
+    }
+    .red-badge {
+      color: #E71D36;
+      background: rgba(231,29,54,0.08);
+      border: 1.5px solid rgba(231,29,54,0.25);
+    }
+    .teal-badge {
+      color: #2EC4B6;
+      background: rgba(46,196,182,0.08);
+      border: 1.5px solid rgba(46,196,182,0.25);
+    }
+    .param-val { font-weight: 700; }
+    .pct { color: #FF9F1C; font-weight: 700; }
+
+    /* Center equals */
+    .eq-sign {
+      position: absolute; top: 240px; left: 50%; transform: translateX(-50%);
+      font-size: 60px; font-weight: 700; color: #415A77; opacity: 0;
+      z-index: 10;
+    }
+
+    /* Right panel */
+    .right-panel {
+      position: absolute; top: 100px; right: 60px; width: 720px;
+      display: flex; flex-direction: column; align-items: center;
+      opacity: 0;
+    }
+
+    .decomp-area {
+      display: flex; align-items: center; justify-content: center;
+      gap: 24px; height: 280px;
+    }
+
+    .lr-col {
+      display: flex; flex-direction: column; align-items: center; gap: 8px;
+    }
+
+    /* Matrix B: tall thin sliver */
+    .mat-b {
+      width: 36px; height: 0; border-radius: 6px;
+      background: linear-gradient(180deg, rgba(46,196,182,0.30) 0%, rgba(46,196,182,0.10) 100%);
+      border: 2.5px solid #2EC4B6;
+      box-shadow: 0 0 18px rgba(46,196,182,0.15);
+      display: flex; align-items: center; justify-content: center;
+      overflow: hidden;
+    }
+
+    /* Matrix A: wide thin sliver */
+    .mat-a {
+      width: 0; height: 36px; border-radius: 6px;
+      background: linear-gradient(90deg, rgba(46,196,182,0.30) 0%, rgba(46,196,182,0.10) 100%);
+      border: 2.5px solid #2EC4B6;
+      box-shadow: 0 0 18px rgba(46,196,182,0.15);
+      display: flex; align-items: center; justify-content: center;
+      overflow: hidden;
+    }
+
+    .mat-label-inside {
+      font-size: 18px; font-weight: 700; color: #2EC4B6; opacity: 0;
+      white-space: nowrap;
+    }
+
+    .dim-label {
+      font-size: 16px; color: #778DA9; opacity: 0; white-space: nowrap;
+    }
+
+    .times-sign {
+      font-size: 40px; font-weight: 700; color: #415A77; opacity: 0;
+      margin-bottom: 28px;
+    }
+
+    /* Punchline */
+    .punchline {
+      position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
+      font-size: 26px; font-weight: 700; color: #FDFFFC;
+      background: rgba(255,159,28,0.06);
+      border: 2px solid rgba(255,159,28,0.3);
+      border-radius: 10px; padding: 12px 40px;
+      white-space: nowrap; opacity: 0; z-index: 10;
+    }
+    .hl-orange { color: #FF9F1C; }
   </style>
 
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
@@ -76,22 +221,185 @@
     window.__timelines = window.__timelines || {};
     var root = document.currentScript.parentElement;
     var tl = gsap.timeline({ paused: true });
-    tl.from(root.querySelector('.title'), { y: -20, opacity: 0, duration: 0.5 }, 0);
-    tl.from(root.querySelector('.subtitle'), { opacity: 0, duration: 0.4 }, 0.3);
-    var sides = root.querySelectorAll('.side');
-    tl.from(sides[0].querySelector('.plabel'), { opacity: 0, duration: 0.4 }, 0.6);
-    tl.from(root.querySelector('.big-matrix'), { opacity: 0, scale: 0.8, duration: 0.7, ease: 'power2.out' }, 0.8);
-    tl.from(sides[0].querySelector('.dim-label'), { opacity: 0, duration: 0.3 }, 1.4);
-    tl.from(sides[0].querySelector('.param-count'), { opacity: 0, duration: 0.3 }, 1.7);
-    tl.from(root.querySelector('.eq-sign'), { opacity: 0, duration: 0.4 }, 2.5);
-    tl.from(sides[1].querySelector('.plabel'), { opacity: 0, duration: 0.4 }, 3.0);
-    tl.from(root.querySelector('.tall-matrix'), { opacity: 0, scaleY: 0, duration: 0.6, ease: 'power2.out' }, 3.3);
-    tl.from(root.querySelector('.times-sign'), { opacity: 0, duration: 0.3 }, 3.7);
-    tl.from(root.querySelector('.wide-matrix'), { opacity: 0, scaleX: 0, duration: 0.6, ease: 'power2.out' }, 3.8);
-    sides[1].querySelectorAll('.dim-label').forEach(function(el, i) { tl.from(el, { opacity: 0, duration: 0.3 }, 4.4 + i * 0.2); });
-    root.querySelectorAll('.mat-name').forEach(function(el, i) { tl.from(el, { opacity: 0, duration: 0.3 }, 4.6 + i * 0.2); });
-    tl.from(sides[1].querySelector('.param-count'), { opacity: 0, y: 10, duration: 0.4 }, 5.2);
-    tl.to({}, { duration: 3 });
+
+    /* ============================================================
+       PHASE 1 (0-1.2s): Title + subtitle
+       ============================================================ */
+    tl.to(root.querySelector('#lr-title'), {
+      opacity: 1, duration: 0.6, ease: 'power3.out'
+    }, 0.2);
+    tl.from(root.querySelector('#lr-title'), {
+      y: -24, duration: 0.6, ease: 'power3.out'
+    }, 0.2);
+
+    tl.to(root.querySelector('#lr-subtitle'), {
+      opacity: 1, duration: 0.5, ease: 'power2.out'
+    }, 0.6);
+    tl.from(root.querySelector('#lr-subtitle'), {
+      y: -10, duration: 0.5, ease: 'power2.out'
+    }, 0.6);
+
+    /* ============================================================
+       PHASE 2 (1.2-4.0s): Big red matrix appears (imposing)
+       ============================================================ */
+    tl.to(root.querySelector('#lr-left'), {
+      opacity: 1, duration: 0.4, ease: 'power2.out'
+    }, 1.2);
+
+    // Big matrix grows from center — square and massive
+    tl.to(root.querySelector('#lr-big-matrix'), {
+      width: 260, height: 260, duration: 1.2, ease: 'power3.out'
+    }, 1.5);
+
+    // Grid pattern fades in
+    tl.to(root.querySelector('#lr-grid'), {
+      opacity: 1, duration: 0.6, ease: 'power2.out'
+    }, 2.2);
+
+    // Inner dimension label
+    tl.to(root.querySelector('#lr-inner-label'), {
+      opacity: 1, duration: 0.4, ease: 'power2.out'
+    }, 2.5);
+
+    // Red glow pulse to emphasize size
+    tl.to(root.querySelector('#lr-big-matrix'), {
+      boxShadow: '0 0 50px rgba(231,29,54,0.25)',
+      duration: 0.5, ease: 'power2.out'
+    }, 2.8);
+    tl.to(root.querySelector('#lr-big-matrix'), {
+      boxShadow: '0 0 30px rgba(231,29,54,0.12)',
+      duration: 0.6, ease: 'sine.inOut'
+    }, 3.3);
+
+    // 150M parameter badge
+    tl.to(root.querySelector('#lr-param-full'), {
+      opacity: 1, duration: 0.4, ease: 'power2.out'
+    }, 3.2);
+    tl.from(root.querySelector('#lr-param-full'), {
+      y: 12, scale: 0.9, duration: 0.5, ease: 'back.out(1.8)'
+    }, 3.2);
+
+    /* ============================================================
+       PHASE 3 (4.0-4.6s): Equals sign
+       ============================================================ */
+    tl.to(root.querySelector('#lr-eq'), {
+      opacity: 1, duration: 0.01
+    }, 4.0);
+    tl.from(root.querySelector('#lr-eq'), {
+      scale: 0.3, duration: 0.5, ease: 'back.out(2.5)'
+    }, 4.0);
+
+    /* ============================================================
+       PHASE 4 (4.5-7.5s): B x A slivers snap in (tiny by comparison)
+       ============================================================ */
+    tl.to(root.querySelector('#lr-right'), {
+      opacity: 1, duration: 0.4, ease: 'power2.out'
+    }, 4.5);
+
+    // Matrix B: tall thin sliver grows downward
+    tl.to(root.querySelector('#lr-mat-b'), {
+      height: 240, duration: 0.7, ease: 'elastic.out(1, 0.6)'
+    }, 5.0);
+
+    // B label
+    tl.to(root.querySelector('#lr-mat-b .mat-label-inside'), {
+      opacity: 1, duration: 0.3, ease: 'power2.out'
+    }, 5.4);
+
+    // B dimension
+    tl.to(root.querySelector('#lr-dim-b'), {
+      opacity: 1, duration: 0.3, ease: 'power2.out'
+    }, 5.5);
+
+    // Multiply sign
+    tl.to(root.querySelector('#lr-times'), {
+      opacity: 1, duration: 0.3, ease: 'power2.out'
+    }, 5.6);
+
+    // Matrix A: wide thin sliver grows rightward
+    tl.to(root.querySelector('#lr-mat-a'), {
+      width: 240, duration: 0.7, ease: 'elastic.out(1, 0.6)'
+    }, 5.8);
+
+    // A label
+    tl.to(root.querySelector('#lr-mat-a .mat-label-inside'), {
+      opacity: 1, duration: 0.3, ease: 'power2.out'
+    }, 6.2);
+
+    // A dimension
+    tl.to(root.querySelector('#lr-dim-a'), {
+      opacity: 1, duration: 0.3, ease: 'power2.out'
+    }, 6.3);
+
+    // Glow pulse on both slivers
+    tl.to(root.querySelector('#lr-mat-b'), {
+      boxShadow: '0 0 32px rgba(46,196,182,0.4)',
+      duration: 0.4, ease: 'power2.out'
+    }, 6.5);
+    tl.to(root.querySelector('#lr-mat-a'), {
+      boxShadow: '0 0 32px rgba(46,196,182,0.4)',
+      duration: 0.4, ease: 'power2.out'
+    }, 6.5);
+    tl.to(root.querySelector('#lr-mat-b'), {
+      boxShadow: '0 0 18px rgba(46,196,182,0.15)',
+      duration: 0.5, ease: 'sine.inOut'
+    }, 6.9);
+    tl.to(root.querySelector('#lr-mat-a'), {
+      boxShadow: '0 0 18px rgba(46,196,182,0.15)',
+      duration: 0.5, ease: 'sine.inOut'
+    }, 6.9);
+
+    // 98K parameter badge
+    tl.to(root.querySelector('#lr-param-lora'), {
+      opacity: 1, duration: 0.4, ease: 'power2.out'
+    }, 7.0);
+    tl.from(root.querySelector('#lr-param-lora'), {
+      y: 12, scale: 0.9, duration: 0.5, ease: 'back.out(1.8)'
+    }, 7.0);
+
+    /* ============================================================
+       PHASE 5 (7.5-8.5s): Contrast emphasis — dim the big matrix
+       ============================================================ */
+    tl.to(root.querySelector('#lr-big-matrix'), {
+      opacity: 0.35, duration: 0.6, ease: 'power2.in'
+    }, 7.8);
+    tl.to(root.querySelector('#lr-param-full'), {
+      opacity: 0.35, duration: 0.6, ease: 'power2.in'
+    }, 7.8);
+
+    // Brighten teal slivers
+    tl.to(root.querySelector('#lr-mat-b'), {
+      borderColor: '#5eeadb',
+      duration: 0.5, ease: 'power2.out'
+    }, 8.0);
+    tl.to(root.querySelector('#lr-mat-a'), {
+      borderColor: '#5eeadb',
+      duration: 0.5, ease: 'power2.out'
+    }, 8.0);
+
+    /* ============================================================
+       PHASE 6 (8.8-12s): Punchline + hold
+       ============================================================ */
+    tl.to(root.querySelector('#lr-punchline'), {
+      opacity: 1, duration: 0.01
+    }, 8.8);
+    tl.from(root.querySelector('#lr-punchline'), {
+      y: 18, scale: 0.9, duration: 0.6, ease: 'back.out(1.8)'
+    }, 8.8);
+
+    // Gentle glow pulse on punchline
+    tl.to(root.querySelector('#lr-punchline'), {
+      boxShadow: '0 0 24px rgba(255,159,28,0.2)',
+      duration: 0.7, ease: 'sine.inOut'
+    }, 9.6);
+    tl.to(root.querySelector('#lr-punchline'), {
+      boxShadow: '0 0 6px rgba(255,159,28,0.08)',
+      duration: 0.8, ease: 'sine.inOut'
+    }, 10.3);
+
+    // Hold to end
+    tl.to({}, { duration: 0.5 }, 11.5);
+
     window.__timelines["low-rank"] = tl;
   </script>
 </div>

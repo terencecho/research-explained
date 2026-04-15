@@ -16,87 +16,158 @@
   data-duration="14"
 >
   <div class="scene">
+    <!-- Title -->
     <div class="title">Latent Briefing: Task-Guided Compaction</div>
 
-    <!-- Orchestrator box -->
-    <div class="orch-box">
-      <div class="box-label" style="color:#bc8cff;">ORCHESTRATOR</div>
-      <div class="trajectory">
-        <div class="traj-line tl1">hypothesis A tested...</div>
-        <div class="traj-line tl2">passage on p.12 relevant...</div>
-        <div class="traj-line tl3">dead end: section 4...</div>
-        <div class="traj-line tl4">cross-ref found p.3 + p.18...</div>
-        <div class="traj-line tl5">new hypothesis B...</div>
+    <!-- SVG layer for arrows and particles -->
+    <svg class="pipe-svg" viewBox="0 0 1920 540" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="grad-purple" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" style="stop-color:#bc8cff;stop-opacity:0.25"/>
+          <stop offset="100%" style="stop-color:#bc8cff;stop-opacity:0.05"/>
+        </linearGradient>
+        <linearGradient id="grad-orange" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" style="stop-color:#FF9F1C;stop-opacity:0.25"/>
+          <stop offset="100%" style="stop-color:#FF9F1C;stop-opacity:0.05"/>
+        </linearGradient>
+        <linearGradient id="grad-teal" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" style="stop-color:#2EC4B6;stop-opacity:0.25"/>
+          <stop offset="100%" style="stop-color:#2EC4B6;stop-opacity:0.05"/>
+        </linearGradient>
+        <filter id="glow-purple">
+          <feGaussianBlur stdDeviation="6" result="blur"/>
+          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+        <filter id="glow-orange">
+          <feGaussianBlur stdDeviation="6" result="blur"/>
+          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+        <filter id="glow-teal">
+          <feGaussianBlur stdDeviation="6" result="blur"/>
+          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+        <filter id="glow-particle">
+          <feGaussianBlur stdDeviation="3" result="blur"/>
+          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+      </defs>
+
+      <!-- Connector: Orchestrator -> Compaction -->
+      <line class="conn conn-1" x1="530" y1="300" x2="660" y2="300" stroke="#415A77" stroke-width="3" stroke-dasharray="8 4"/>
+      <!-- Connector: Compaction -> Worker -->
+      <line class="conn conn-2" x1="1250" y1="300" x2="1380" y2="300" stroke="#415A77" stroke-width="3" stroke-dasharray="8 4"/>
+      <!-- Connector: Task Query -> Compaction -->
+      <line class="conn conn-3" x1="955" y1="120" x2="955" y2="180" stroke="#FF9F1C" stroke-width="2" stroke-dasharray="6 3"/>
+
+      <!-- Arrow heads -->
+      <polygon class="conn conn-arrow-1" points="660,293 660,307 678,300" fill="#415A77"/>
+      <polygon class="conn conn-arrow-2" points="1380,293 1380,307 1398,300" fill="#415A77"/>
+      <polygon class="conn conn-arrow-3" points="948,180 962,180 955,196" fill="#FF9F1C"/>
+
+      <!-- Particles: Orch -> Compact (purple to orange) -->
+      <circle class="particle p-oc p-oc-0" cx="530" cy="290" r="5" fill="#bc8cff" filter="url(#glow-particle)" opacity="0"/>
+      <circle class="particle p-oc p-oc-1" cx="530" cy="300" r="4" fill="#bc8cff" filter="url(#glow-particle)" opacity="0"/>
+      <circle class="particle p-oc p-oc-2" cx="530" cy="310" r="5" fill="#bc8cff" filter="url(#glow-particle)" opacity="0"/>
+      <circle class="particle p-oc p-oc-3" cx="530" cy="295" r="3" fill="#bc8cff" filter="url(#glow-particle)" opacity="0"/>
+      <circle class="particle p-oc p-oc-4" cx="530" cy="305" r="4" fill="#bc8cff" filter="url(#glow-particle)" opacity="0"/>
+
+      <!-- Particles: Compact -> Worker (teal) -->
+      <circle class="particle p-cw p-cw-0" cx="1250" cy="290" r="5" fill="#2EC4B6" filter="url(#glow-particle)" opacity="0"/>
+      <circle class="particle p-cw p-cw-1" cx="1250" cy="300" r="4" fill="#2EC4B6" filter="url(#glow-particle)" opacity="0"/>
+      <circle class="particle p-cw p-cw-2" cx="1250" cy="310" r="3" fill="#2EC4B6" filter="url(#glow-particle)" opacity="0"/>
+
+      <!-- Particles: Task Query -> Compaction (orange, vertical) -->
+      <circle class="particle p-tq p-tq-0" cx="955" cy="120" r="4" fill="#FF9F1C" filter="url(#glow-particle)" opacity="0"/>
+      <circle class="particle p-tq p-tq-1" cx="950" cy="120" r="3" fill="#FF9F1C" filter="url(#glow-particle)" opacity="0"/>
+    </svg>
+
+    <!-- Orchestrator Box -->
+    <div class="box orch-box">
+      <div class="box-border orch-border"></div>
+      <div class="box-fill orch-fill"></div>
+      <div class="box-inner">
+        <div class="box-label" style="color:#bc8cff;">ORCHESTRATOR</div>
+        <div class="trajectory">
+          <div class="traj-line tl-0"><span class="tl-marker">&#9679;</span> hypothesis A tested...</div>
+          <div class="traj-line tl-1"><span class="tl-marker">&#9679;</span> passage on p.12 relevant...</div>
+          <div class="traj-line tl-2"><span class="tl-marker">&#9679;</span> dead end: section 4...</div>
+          <div class="traj-line tl-3"><span class="tl-marker">&#9679;</span> cross-ref found p.3 + p.18...</div>
+          <div class="traj-line tl-4"><span class="tl-marker">&#9679;</span> new hypothesis B...</div>
+        </div>
+        <div class="traj-footer">reasoning trajectory</div>
       </div>
-      <div class="traj-label">reasoning trajectory</div>
     </div>
 
-    <!-- Arrow 1: trajectory to compaction -->
-    <div class="arrow a1">
-      <div class="arrow-line"></div>
-      <div class="arrow-head">&#9654;</div>
-    </div>
-
-    <!-- Task query -->
+    <!-- Task Query floating above compaction -->
     <div class="task-query">
-      <div class="tq-label">task query</div>
+      <div class="tq-badge">TASK QUERY</div>
       <div class="tq-text">"Verify claim on p.12"</div>
     </div>
 
-    <!-- Arrow from task to compactor -->
-    <div class="arrow a2">
-      <div class="arrow-line"></div>
-      <div class="arrow-head">&#9660;</div>
+    <!-- Compaction Box -->
+    <div class="box compact-box">
+      <div class="box-border compact-border"></div>
+      <div class="box-fill compact-fill"></div>
+      <div class="box-inner">
+        <div class="box-label" style="color:#FF9F1C;">COMPACTION</div>
+        <div class="compact-visual">
+          <div class="cv-section cv-full-section">
+            <div class="cv-sublabel">all tokens</div>
+            <div class="cv-full">
+              <div class="cv-token ct-keep"></div>
+              <div class="cv-token ct-drop"></div>
+              <div class="cv-token ct-keep"></div>
+              <div class="cv-token ct-drop"></div>
+              <div class="cv-token ct-drop"></div>
+              <div class="cv-token ct-keep"></div>
+              <div class="cv-token ct-drop"></div>
+              <div class="cv-token ct-keep"></div>
+              <div class="cv-token ct-drop"></div>
+              <div class="cv-token ct-keep"></div>
+              <div class="cv-token ct-drop"></div>
+              <div class="cv-token ct-keep"></div>
+            </div>
+          </div>
+          <div class="cv-arrow-zone">
+            <div class="cv-arrow-icon">&#10132;</div>
+            <div class="cv-filter-label">filter</div>
+          </div>
+          <div class="cv-section cv-kept-section">
+            <div class="cv-sublabel">kept</div>
+            <div class="cv-compact">
+              <div class="cv-token ct-kept"></div>
+              <div class="cv-token ct-kept"></div>
+              <div class="cv-token ct-kept"></div>
+              <div class="cv-token ct-kept"></div>
+              <div class="cv-token ct-kept"></div>
+              <div class="cv-token ct-kept"></div>
+            </div>
+          </div>
+        </div>
+        <div class="compact-stat">50% tokens kept <span style="color:#3fb950;">&#10003;</span> task-relevant</div>
+      </div>
     </div>
 
-    <!-- Compaction box -->
-    <div class="compact-box">
-      <div class="box-label" style="color:#FF9F1C;">COMPACTION</div>
-      <div class="compact-visual">
-        <div class="cv-full">
-          <div class="cv-token ct-keep"></div>
-          <div class="cv-token ct-drop"></div>
-          <div class="cv-token ct-keep"></div>
-          <div class="cv-token ct-drop"></div>
-          <div class="cv-token ct-drop"></div>
-          <div class="cv-token ct-keep"></div>
-          <div class="cv-token ct-drop"></div>
-          <div class="cv-token ct-keep"></div>
-          <div class="cv-token ct-drop"></div>
-          <div class="cv-token ct-keep"></div>
+    <!-- Worker Box -->
+    <div class="box worker-box">
+      <div class="box-border worker-border"></div>
+      <div class="box-fill worker-fill"></div>
+      <div class="box-inner">
+        <div class="box-label" style="color:#2EC4B6;">WORKER</div>
+        <div class="worker-cache">
+          <div class="wc-label">compacted KV cache</div>
+          <div class="wc-bars">
+            <div class="wc-bar wb-0"></div>
+            <div class="wc-bar wb-1"></div>
+            <div class="wc-bar wb-2"></div>
+            <div class="wc-bar wb-3"></div>
+            <div class="wc-bar wb-4"></div>
+          </div>
         </div>
-        <div class="cv-arrow">&#8594;</div>
-        <div class="cv-compact">
-          <div class="cv-token ct-kept"></div>
-          <div class="cv-token ct-kept"></div>
-          <div class="cv-token ct-kept"></div>
-          <div class="cv-token ct-kept"></div>
-          <div class="cv-token ct-kept"></div>
+        <div class="worker-out">
+          <span class="wo-icon">&#9889;</span> focused response
         </div>
       </div>
-      <div class="compact-stat">50% tokens kept (task-relevant)</div>
-    </div>
-
-    <!-- Arrow 2: compaction to worker -->
-    <div class="arrow a3">
-      <div class="arrow-line"></div>
-      <div class="arrow-head">&#9654;</div>
-    </div>
-
-    <!-- Worker box -->
-    <div class="worker-box">
-      <div class="box-label" style="color:#2EC4B6;">WORKER</div>
-      <div class="worker-cache">
-        <div class="wc-label">compacted KV cache</div>
-        <div class="wc-bars">
-          <div class="wc-bar"></div>
-          <div class="wc-bar"></div>
-          <div class="wc-bar"></div>
-          <div class="wc-bar"></div>
-          <div class="wc-bar"></div>
-        </div>
-      </div>
-      <div class="worker-out">focused response</div>
     </div>
   </div>
 
@@ -106,79 +177,129 @@
       width: 1920px; height: 540px; font-family: 'Space Mono', monospace; color: #FDFFFC;
     }
     .scene { position: relative; width: 1920px; height: 540px; }
+
+    /* Title */
     .title {
-      position: absolute; top: 16px; left: 50%; transform: translateX(-50%);
-      font-size: 44px; font-weight: 700; white-space: nowrap;
+      position: absolute; top: 14px; left: 50%; transform: translateX(-50%);
+      font-size: 36px; font-weight: 700; white-space: nowrap; z-index: 10;
+      background: linear-gradient(90deg, #bc8cff 0%, #FF9F1C 50%, #2EC4B6 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    /* SVG overlay */
+    .pipe-svg {
+      position: absolute; top: 0; left: 0; width: 1920px; height: 540px;
+      z-index: 5; pointer-events: none;
+    }
+
+    /* Box system: absolute positioned with layered border + fill */
+    .box { position: absolute; z-index: 2; }
+    .box-border {
+      position: absolute; inset: 0; border-radius: 14px; border: 2px solid;
+    }
+    .box-fill {
+      position: absolute; inset: 0; border-radius: 14px;
+    }
+    .box-inner {
+      position: relative; padding: 18px 22px; z-index: 1;
+    }
+    .box-label {
+      font-size: 24px; font-weight: 700; letter-spacing: 2px;
+      text-transform: uppercase; margin-bottom: 10px;
     }
 
     /* Orchestrator */
     .orch-box {
-      position: absolute; left: 40px; top: 80px; width: 460px; height: 420px;
-      border: 2px solid #bc8cff; border-radius: 12px; padding: 20px;
-      background: rgba(188,140,255,0.05);
+      left: 40px; top: 72px; width: 480px; height: 430px;
     }
-    .box-label { font-size: 28px; font-weight: 700; margin-bottom: 14px; letter-spacing: 1px; }
-    .trajectory { display: flex; flex-direction: column; gap: 8px; }
+    .orch-border { border-color: #bc8cff; }
+    .orch-fill { background: url("data:image/svg+xml,") no-repeat; background: linear-gradient(135deg, rgba(188,140,255,0.15) 0%, rgba(188,140,255,0.02) 100%); }
+    .trajectory { display: flex; flex-direction: column; gap: 7px; margin-top: 4px; }
     .traj-line {
-      font-size: 20px; color: #778DA9; padding: 7px 12px;
-      background: rgba(119,141,169,0.1); border-radius: 4px; border-left: 4px solid #415A77;
+      font-size: 17px; color: #778DA9; padding: 8px 14px;
+      background: rgba(119,141,169,0.08); border-radius: 6px;
+      border-left: 3px solid #415A77; white-space: nowrap;
+      overflow: hidden; text-overflow: ellipsis;
     }
-    .traj-label { position: absolute; bottom: 14px; left: 20px; font-size: 18px; color: #415A77; text-transform: uppercase; letter-spacing: 1px; }
+    .tl-marker { color: #bc8cff; font-size: 10px; margin-right: 6px; }
+    .traj-footer {
+      position: absolute; bottom: 14px; left: 22px;
+      font-size: 16px; color: #415A77; text-transform: uppercase; letter-spacing: 2px;
+    }
 
     /* Task query */
     .task-query {
-      position: absolute; left: 620px; top: 78px; width: 340px; text-align: center;
+      position: absolute; left: 810px; top: 60px; width: 290px;
+      text-align: center; z-index: 10;
     }
-    .tq-label { font-size: 20px; color: #FF9F1C; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
-    .tq-text { font-size: 28px; font-weight: 700; color: #FF9F1C; }
-
-    /* Arrows */
-    .arrow { position: absolute; display: flex; align-items: center; color: #415A77; }
-    .a1 { left: 510px; top: 280px; flex-direction: row; gap: 4px; }
-    .a1 .arrow-line { width: 80px; height: 3px; background: #415A77; }
-    .a2 { left: 780px; top: 135px; flex-direction: column; gap: 4px; }
-    .a2 .arrow-line { width: 3px; height: 55px; background: #FF9F1C; }
-    .a2 .arrow-head { color: #FF9F1C; font-size: 18px; }
-    .a3 { left: 1090px; top: 280px; flex-direction: row; gap: 4px; }
-    .a3 .arrow-line { width: 80px; height: 3px; background: #415A77; }
-    .arrow-head { font-size: 18px; }
+    .tq-badge {
+      display: inline-block; font-size: 16px; font-weight: 700; color: #011627;
+      background: #FF9F1C; padding: 4px 14px; border-radius: 20px;
+      letter-spacing: 1px; margin-bottom: 6px;
+    }
+    .tq-text {
+      font-size: 22px; font-weight: 700; color: #FF9F1C;
+      text-shadow: 0 0 20px rgba(255,159,28,0.3);
+    }
 
     /* Compaction */
     .compact-box {
-      position: absolute; left: 600px; top: 200px; width: 480px; height: 260px;
-      border: 2px solid #FF9F1C; border-radius: 12px; padding: 20px;
-      background: rgba(255,159,28,0.05);
+      left: 660px; top: 190px; width: 580px; height: 310px;
     }
-    .compact-visual { display: flex; align-items: center; gap: 16px; margin-top: 10px; }
-    .cv-full { display: flex; gap: 6px; flex-wrap: wrap; width: 180px; }
-    .cv-compact { display: flex; gap: 6px; flex-wrap: wrap; width: 100px; }
-    .cv-arrow { font-size: 36px; color: #FF9F1C; }
-    .cv-token { width: 30px; height: 30px; border-radius: 4px; }
-    .ct-keep { background: #2EC4B6; }
-    .ct-drop { background: #415A77; opacity: 0.4; }
-    .ct-kept { background: #2EC4B6; }
-    .compact-stat { font-size: 22px; color: #FF9F1C; margin-top: 16px; }
+    .compact-border { border-color: #FF9F1C; }
+    .compact-fill { background: linear-gradient(135deg, rgba(255,159,28,0.15) 0%, rgba(255,159,28,0.02) 100%); }
+    .compact-visual {
+      display: flex; align-items: center; gap: 14px; margin-top: 8px;
+    }
+    .cv-section { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+    .cv-sublabel { font-size: 14px; color: #778DA9; text-transform: uppercase; letter-spacing: 1px; }
+    .cv-full { display: flex; gap: 5px; flex-wrap: wrap; width: 190px; }
+    .cv-compact { display: flex; gap: 5px; flex-wrap: wrap; width: 120px; }
+    .cv-arrow-zone { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+    .cv-arrow-icon { font-size: 32px; color: #FF9F1C; }
+    .cv-filter-label { font-size: 14px; color: #FF9F1C; text-transform: uppercase; letter-spacing: 1px; }
+    .cv-token { width: 28px; height: 28px; border-radius: 4px; }
+    .ct-keep { background: linear-gradient(135deg, #2EC4B6, #26a69a); box-shadow: 0 0 8px rgba(46,196,182,0.3); }
+    .ct-drop { background: #415A77; opacity: 0.5; }
+    .ct-kept { background: linear-gradient(135deg, #2EC4B6, #26a69a); box-shadow: 0 0 10px rgba(46,196,182,0.4); }
+    .compact-stat {
+      font-size: 19px; color: #FF9F1C; margin-top: 14px;
+      padding: 6px 16px; background: rgba(255,159,28,0.08); border-radius: 8px;
+      display: inline-block;
+    }
 
     /* Worker */
     .worker-box {
-      position: absolute; left: 1180px; top: 120px; width: 420px; height: 340px;
-      border: 2px solid #2EC4B6; border-radius: 12px; padding: 20px;
-      background: rgba(46,196,182,0.05);
+      left: 1390px; top: 110px; width: 490px; height: 390px;
     }
-    .worker-cache { margin-top: 10px; }
-    .wc-label { font-size: 20px; color: #778DA9; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
-    .wc-bars { display: flex; gap: 8px; }
-    .wc-bar { width: 50px; height: 90px; background: #2EC4B6; border-radius: 4px; opacity: 0.7; }
+    .worker-border { border-color: #2EC4B6; }
+    .worker-fill { background: linear-gradient(135deg, rgba(46,196,182,0.15) 0%, rgba(46,196,182,0.02) 100%); }
+    .worker-cache { margin-top: 8px; }
+    .wc-label {
+      font-size: 16px; color: #778DA9; text-transform: uppercase;
+      letter-spacing: 1px; margin-bottom: 12px;
+    }
+    .wc-bars { display: flex; gap: 10px; align-items: flex-end; height: 140px; }
+    .wc-bar {
+      width: 56px; border-radius: 4px 4px 0 0; opacity: 0.85;
+      background: linear-gradient(180deg, #2EC4B6 0%, #1a9e92 100%);
+      box-shadow: 0 0 12px rgba(46,196,182,0.25);
+    }
+    .wb-0 { height: 140px; }
+    .wb-1 { height: 105px; }
+    .wb-2 { height: 120px; }
+    .wb-3 { height: 80px; }
+    .wb-4 { height: 95px; }
     .worker-out {
-      margin-top: 24px; padding: 14px 20px; background: rgba(46,196,182,0.15);
-      border-radius: 8px; font-size: 24px; color: #2EC4B6; font-weight: 700; text-align: center;
+      margin-top: 20px; padding: 14px 22px;
+      background: linear-gradient(90deg, rgba(46,196,182,0.2) 0%, rgba(46,196,182,0.05) 100%);
+      border: 1px solid rgba(46,196,182,0.3);
+      border-radius: 10px; font-size: 22px; color: #2EC4B6;
+      font-weight: 700; text-align: center;
+      text-shadow: 0 0 16px rgba(46,196,182,0.3);
     }
-
-    /* Cycle label */
-    .cycle-note {
-      position: absolute; right: 60px; bottom: 30px; font-size: 22px; color: #778DA9;
-      font-style: italic;
-    }
+    .wo-icon { font-size: 20px; margin-right: 4px; }
   </style>
 
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
@@ -187,63 +308,207 @@
     var root = document.currentScript.parentElement;
     var tl = gsap.timeline({ paused: true });
 
-    // Title
-    tl.from(root.querySelector('.title'), { y: -20, opacity: 0, duration: 0.5, ease: 'power2.out' }, 0);
+    /* ---- PHASE 1: Title (0s - 0.6s) ---- */
+    tl.from(root.querySelector('.title'), {
+      y: -30, opacity: 0, scale: 0.95, duration: 0.7, ease: 'power3.out'
+    }, 0);
 
-    // Orchestrator box
-    tl.from(root.querySelector('.orch-box'), { opacity: 0, x: -40, duration: 0.6, ease: 'power2.out' }, 0.3);
-    // Trajectory lines animate in one by one
+    /* ---- PHASE 2: Orchestrator box (0.4s - 2.5s) ---- */
+    tl.from(root.querySelector('.orch-box'), {
+      opacity: 0, x: -60, scale: 0.92, duration: 0.8, ease: 'power2.out'
+    }, 0.4);
+    // Glow pulse on border
+    tl.fromTo(root.querySelector('.orch-border'), {
+      boxShadow: '0 0 0px rgba(188,140,255,0)'
+    }, {
+      boxShadow: '0 0 30px rgba(188,140,255,0.3)', duration: 0.6, ease: 'power1.in'
+    }, 0.8);
+
+    // Trajectory lines stagger in
     root.querySelectorAll('.traj-line').forEach(function(el, i) {
-      tl.from(el, { opacity: 0, x: -15, duration: 0.35, ease: 'power2.out' }, 0.8 + i * 0.25);
+      tl.from(el, {
+        opacity: 0, x: -25, duration: 0.4, ease: 'power2.out'
+      }, 1.0 + i * 0.22);
+      // Highlight the relevant line (index 1 = "passage on p.12")
+      if (i === 1) {
+        tl.to(el, {
+          borderLeftColor: '#bc8cff', color: '#FDFFFC',
+          background: 'rgba(188,140,255,0.15)', duration: 0.4, ease: 'power1.inOut'
+        }, 2.6);
+      }
+    });
+    tl.from(root.querySelector('.traj-footer'), {
+      opacity: 0, duration: 0.4
+    }, 2.0);
+
+    /* ---- PHASE 3: Task Query drops in (2.4s) ---- */
+    tl.from(root.querySelector('.task-query'), {
+      opacity: 0, y: -40, scale: 0.85, duration: 0.6, ease: 'back.out(1.4)'
+    }, 2.4);
+    // Badge pulse
+    tl.fromTo(root.querySelector('.tq-badge'), {
+      boxShadow: '0 0 0px rgba(255,159,28,0)'
+    }, {
+      boxShadow: '0 0 20px rgba(255,159,28,0.5)', duration: 0.5, ease: 'power1.in'
+    }, 2.8);
+
+    /* ---- PHASE 4: Connectors + Arrows (3.0s) ---- */
+    root.querySelectorAll('.conn').forEach(function(el) {
+      tl.from(el, { opacity: 0, duration: 0.4, ease: 'power1.in' }, 3.0);
     });
 
-    // Task query drops in
-    tl.from(root.querySelector('.task-query'), { opacity: 0, y: -20, duration: 0.5, ease: 'power2.out' }, 2.2);
+    /* ---- PHASE 5: Particles Orch -> Compact (3.4s - 4.8s) ---- */
+    root.querySelectorAll('.p-oc').forEach(function(el, i) {
+      var delay = 3.4 + i * 0.18;
+      tl.to(el, { opacity: 0.9, duration: 0.1 }, delay);
+      tl.to(el, {
+        attr: { cx: 660 }, duration: 0.7,
+        ease: 'power2.inOut'
+      }, delay);
+      tl.to(el, {
+        attr: { fill: '#FF9F1C' }, duration: 0.4
+      }, delay + 0.35);
+      tl.to(el, { opacity: 0, duration: 0.15 }, delay + 0.65);
+    });
 
-    // Arrow from task to compaction
-    tl.from(root.querySelector('.a2'), { opacity: 0, duration: 0.3 }, 2.8);
+    // Task query particles (vertical drop)
+    root.querySelectorAll('.p-tq').forEach(function(el, i) {
+      var delay = 3.6 + i * 0.25;
+      tl.to(el, { opacity: 0.9, duration: 0.1 }, delay);
+      tl.to(el, {
+        attr: { cy: 196 }, duration: 0.5, ease: 'power2.in'
+      }, delay);
+      tl.to(el, { opacity: 0, duration: 0.1 }, delay + 0.45);
+    });
 
-    // Arrow from orchestrator to compaction
-    tl.from(root.querySelector('.a1'), { opacity: 0, x: -15, duration: 0.3 }, 3.0);
+    /* ---- PHASE 6: Compaction box (3.8s - 6.5s) ---- */
+    tl.from(root.querySelector('.compact-box'), {
+      opacity: 0, scale: 0.88, duration: 0.7, ease: 'power2.out'
+    }, 3.8);
+    tl.fromTo(root.querySelector('.compact-border'), {
+      boxShadow: '0 0 0px rgba(255,159,28,0)'
+    }, {
+      boxShadow: '0 0 30px rgba(255,159,28,0.3)', duration: 0.5, ease: 'power1.in'
+    }, 4.2);
 
-    // Compaction box
-    tl.from(root.querySelector('.compact-box'), { opacity: 0, scale: 0.9, duration: 0.5, ease: 'power2.out' }, 3.3);
-
-    // Token grid: full tokens appear
+    // "all tokens" sublabel + full token grid
+    tl.from(root.querySelector('.cv-full-section .cv-sublabel'), {
+      opacity: 0, duration: 0.3
+    }, 4.3);
     root.querySelectorAll('.cv-full .cv-token').forEach(function(el, i) {
-      tl.from(el, { scale: 0, duration: 0.2, ease: 'back.out(2)' }, 3.8 + i * 0.06);
+      tl.from(el, {
+        scale: 0, rotation: 45, duration: 0.25, ease: 'back.out(2.5)'
+      }, 4.4 + i * 0.05);
     });
 
-    // Arrow inside compaction
-    tl.from(root.querySelector('.cv-arrow'), { opacity: 0, x: -8, duration: 0.3 }, 4.8);
+    // Arrow + filter label
+    tl.from(root.querySelector('.cv-arrow-zone'), {
+      opacity: 0, x: -10, duration: 0.3, ease: 'power2.out'
+    }, 5.2);
 
-    // Drop tokens fade out, kept tokens appear
+    // Drop tokens shrink and fade
     root.querySelectorAll('.ct-drop').forEach(function(el, i) {
-      tl.to(el, { opacity: 0.1, scale: 0.7, duration: 0.4 }, 5.0 + i * 0.05);
+      tl.to(el, {
+        opacity: 0.1, scale: 0.5, duration: 0.5, ease: 'power2.in'
+      }, 5.4 + i * 0.04);
     });
+
+    // Kept section appears
+    tl.from(root.querySelector('.cv-kept-section .cv-sublabel'), {
+      opacity: 0, duration: 0.3
+    }, 5.8);
     root.querySelectorAll('.cv-compact .cv-token').forEach(function(el, i) {
-      tl.from(el, { scale: 0, duration: 0.25, ease: 'back.out(2)' }, 5.3 + i * 0.08);
+      tl.from(el, {
+        scale: 0, rotation: -30, duration: 0.3, ease: 'back.out(2)'
+      }, 5.9 + i * 0.08);
     });
 
-    // Compact stat
-    tl.from(root.querySelector('.compact-stat'), { opacity: 0, duration: 0.3 }, 6.0);
+    // Stat line
+    tl.from(root.querySelector('.compact-stat'), {
+      opacity: 0, y: 10, duration: 0.4, ease: 'power2.out'
+    }, 6.6);
 
-    // Arrow to worker
-    tl.from(root.querySelector('.a3'), { opacity: 0, x: -15, duration: 0.3 }, 6.5);
+    /* ---- PHASE 7: Particles Compact -> Worker (7.0s - 8.0s) ---- */
+    root.querySelectorAll('.p-cw').forEach(function(el, i) {
+      var delay = 7.0 + i * 0.2;
+      tl.to(el, { opacity: 0.9, duration: 0.1 }, delay);
+      tl.to(el, {
+        attr: { cx: 1390 }, duration: 0.7, ease: 'power2.inOut'
+      }, delay);
+      tl.to(el, { opacity: 0, duration: 0.15 }, delay + 0.6);
+    });
 
-    // Worker box
-    tl.from(root.querySelector('.worker-box'), { opacity: 0, x: 40, duration: 0.6, ease: 'power2.out' }, 6.8);
+    /* ---- PHASE 8: Worker box (7.4s - 10s) ---- */
+    tl.from(root.querySelector('.worker-box'), {
+      opacity: 0, x: 60, scale: 0.92, duration: 0.8, ease: 'power2.out'
+    }, 7.4);
+    tl.fromTo(root.querySelector('.worker-border'), {
+      boxShadow: '0 0 0px rgba(46,196,182,0)'
+    }, {
+      boxShadow: '0 0 30px rgba(46,196,182,0.3)', duration: 0.5, ease: 'power1.in'
+    }, 7.8);
 
-    // Worker cache bars grow
+    tl.from(root.querySelector('.wc-label'), {
+      opacity: 0, duration: 0.3
+    }, 8.0);
+
+    // Worker cache bars grow up with stagger
     root.querySelectorAll('.wc-bar').forEach(function(el, i) {
-      tl.from(el, { height: 0, duration: 0.4, ease: 'power2.out' }, 7.2 + i * 0.08);
+      tl.from(el, {
+        height: 0, opacity: 0, duration: 0.5, ease: 'power3.out'
+      }, 8.2 + i * 0.12);
     });
 
     // Worker output
-    tl.from(root.querySelector('.worker-out'), { opacity: 0, y: 10, duration: 0.4 }, 8.0);
+    tl.from(root.querySelector('.worker-out'), {
+      opacity: 0, y: 15, scale: 0.95, duration: 0.5, ease: 'back.out(1.2)'
+    }, 9.2);
+    // Glow pulse on output
+    tl.fromTo(root.querySelector('.worker-out'), {
+      boxShadow: '0 0 0px rgba(46,196,182,0)'
+    }, {
+      boxShadow: '0 0 24px rgba(46,196,182,0.4)', duration: 0.6, ease: 'power1.inOut'
+    }, 9.5);
 
-    // Hold
-    tl.to({}, { duration: 3 });
+    /* ---- PHASE 9: Second wave of particles for polish (10.0s) ---- */
+    root.querySelectorAll('.p-oc').forEach(function(el, i) {
+      var delay = 10.0 + i * 0.15;
+      tl.set(el, { attr: { cx: 530 }, opacity: 0 }, delay);
+      tl.to(el, { opacity: 0.7, duration: 0.1 }, delay);
+      tl.to(el, {
+        attr: { cx: 660 }, duration: 0.6, ease: 'power1.inOut'
+      }, delay);
+      tl.to(el, {
+        attr: { fill: '#FF9F1C' }, duration: 0.3
+      }, delay + 0.3);
+      tl.to(el, { opacity: 0, duration: 0.1 }, delay + 0.55);
+    });
+    root.querySelectorAll('.p-cw').forEach(function(el, i) {
+      var delay = 10.5 + i * 0.18;
+      tl.set(el, { attr: { cx: 1250 }, opacity: 0 }, delay);
+      tl.to(el, { opacity: 0.7, duration: 0.1 }, delay);
+      tl.to(el, {
+        attr: { cx: 1390 }, duration: 0.6, ease: 'power1.inOut'
+      }, delay);
+      tl.to(el, { opacity: 0, duration: 0.1 }, delay + 0.55);
+    });
+
+    /* ---- PHASE 10: Subtle pulse on all three boxes (11.5s) ---- */
+    tl.to(root.querySelector('.orch-border'), {
+      boxShadow: '0 0 40px rgba(188,140,255,0.4)', duration: 0.6,
+      ease: 'sine.inOut', yoyo: true, repeat: 1
+    }, 11.5);
+    tl.to(root.querySelector('.compact-border'), {
+      boxShadow: '0 0 40px rgba(255,159,28,0.4)', duration: 0.6,
+      ease: 'sine.inOut', yoyo: true, repeat: 1
+    }, 11.5);
+    tl.to(root.querySelector('.worker-border'), {
+      boxShadow: '0 0 40px rgba(46,196,182,0.4)', duration: 0.6,
+      ease: 'sine.inOut', yoyo: true, repeat: 1
+    }, 11.5);
+
+    /* ---- Hold to 14s ---- */
+    tl.to({}, { duration: 0.8 });
 
     window.__timelines["agent-loop"] = tl;
   </script>

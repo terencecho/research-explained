@@ -16,68 +16,265 @@
   data-duration="12"
 >
   <div class="scene">
-    <div class="title">Nonuniform Head Budgets</div>
-    <div class="subtitle">Not all attention heads need the same KV capacity</div>
+    <!-- SVG defs for gradients and glow filter -->
+    <svg width="0" height="0" style="position:absolute;">
+      <defs>
+        <linearGradient id="grad-teal" x1="0" y1="1" x2="0" y2="0">
+          <stop offset="0%" stop-color="#1a8a80"/>
+          <stop offset="100%" stop-color="#2EC4B6"/>
+        </linearGradient>
+        <linearGradient id="grad-muted" x1="0" y1="1" x2="0" y2="0">
+          <stop offset="0%" stop-color="#3d5a73"/>
+          <stop offset="100%" stop-color="#566f88"/>
+        </linearGradient>
+        <linearGradient id="grad-uniform" x1="0" y1="1" x2="0" y2="0">
+          <stop offset="0%" stop-color="#415A77"/>
+          <stop offset="100%" stop-color="#5e7a96"/>
+        </linearGradient>
+        <filter id="glow-teal">
+          <feGaussianBlur in="SourceGraphic" stdDeviation="6" result="blur"/>
+          <feColorMatrix in="blur" type="matrix"
+            values="0 0 0 0 0.18
+                    0 0 0 0 0.77
+                    0 0 0 0 0.71
+                    0 0 0 0.6 0" result="glow"/>
+          <feMerge>
+            <feMergeNode in="glow"/>
+            <feMergeNode in="SourceGraphic"/>
+          </feMerge>
+        </filter>
+      </defs>
+    </svg>
 
-    <!-- Phase 1: Uniform allocation -->
-    <div class="phase-label phase-1">UNIFORM: every head gets equal budget</div>
+    <!-- Title -->
+    <div class="title">Per-Head Budget Allocation</div>
+    <div class="subtitle">Not all attention heads need the same KV cache budget</div>
 
-    <!-- Head grid - 12 heads shown as squares -->
-    <div class="head-grid" id="heads">
-      <div class="head-col" id="h0"><div class="head-bar hbar" style="height:60px;"></div><div class="hlbl">L0 H0</div><div class="htag insensitive">local</div></div>
-      <div class="head-col" id="h1"><div class="head-bar hbar" style="height:60px;"></div><div class="hlbl">L2 H1</div><div class="htag insensitive">local</div></div>
-      <div class="head-col" id="h2"><div class="head-bar hbar" style="height:60px;"></div><div class="hlbl">L5 H0</div><div class="htag sensitive">retrieval</div></div>
-      <div class="head-col" id="h3"><div class="head-bar hbar" style="height:60px;"></div><div class="hlbl">L7 H1</div><div class="htag insensitive">local</div></div>
-      <div class="head-col" id="h4"><div class="head-bar hbar" style="height:60px;"></div><div class="hlbl">L10 H0</div><div class="htag insensitive">local</div></div>
-      <div class="head-col" id="h5"><div class="head-bar hbar" style="height:60px;"></div><div class="hlbl">L12 H2</div><div class="htag sensitive">retrieval</div></div>
-      <div class="head-col" id="h6"><div class="head-bar hbar" style="height:60px;"></div><div class="hlbl">L15 H1</div><div class="htag insensitive">local</div></div>
-      <div class="head-col" id="h7"><div class="head-bar hbar" style="height:60px;"></div><div class="hlbl">L15 H2</div><div class="htag sensitive">retrieval</div></div>
-      <div class="head-col" id="h8"><div class="head-bar hbar" style="height:60px;"></div><div class="hlbl">L20 H0</div><div class="htag insensitive">local</div></div>
-      <div class="head-col" id="h9"><div class="head-bar hbar" style="height:60px;"></div><div class="hlbl">L21 H2</div><div class="htag sensitive">retrieval</div></div>
-      <div class="head-col" id="h10"><div class="head-bar hbar" style="height:60px;"></div><div class="hlbl">L28 H0</div><div class="htag insensitive">local</div></div>
-      <div class="head-col" id="h11"><div class="head-bar hbar" style="height:60px;"></div><div class="hlbl">L33 H1</div><div class="htag insensitive">local</div></div>
+    <!-- Side-by-side panels -->
+    <!-- LEFT: Uniform Budget -->
+    <div class="panel panel-left" id="panel-uniform">
+      <div class="panel-title" style="color:#FF9F1C;">Uniform Budget</div>
+      <div class="bar-area">
+        <!-- 8 bars: heads 0-7, types: L L R L L R L R -->
+        <div class="bar-col">
+          <div class="bar-wrap"><div class="bar bar-uniform" id="ub0"></div></div>
+          <div class="bar-label">H0</div>
+          <div class="bar-tag tag-local">local</div>
+        </div>
+        <div class="bar-col">
+          <div class="bar-wrap"><div class="bar bar-uniform" id="ub1"></div></div>
+          <div class="bar-label">H1</div>
+          <div class="bar-tag tag-local">local</div>
+        </div>
+        <div class="bar-col">
+          <div class="bar-wrap"><div class="bar bar-uniform" id="ub2"></div></div>
+          <div class="bar-label">H2</div>
+          <div class="bar-tag tag-retrieval">retrieval</div>
+        </div>
+        <div class="bar-col">
+          <div class="bar-wrap"><div class="bar bar-uniform" id="ub3"></div></div>
+          <div class="bar-label">H3</div>
+          <div class="bar-tag tag-local">local</div>
+        </div>
+        <div class="bar-col">
+          <div class="bar-wrap"><div class="bar bar-uniform" id="ub4"></div></div>
+          <div class="bar-label">H4</div>
+          <div class="bar-tag tag-local">local</div>
+        </div>
+        <div class="bar-col">
+          <div class="bar-wrap"><div class="bar bar-uniform" id="ub5"></div></div>
+          <div class="bar-label">H5</div>
+          <div class="bar-tag tag-retrieval">retrieval</div>
+        </div>
+        <div class="bar-col">
+          <div class="bar-wrap"><div class="bar bar-uniform" id="ub6"></div></div>
+          <div class="bar-label">H6</div>
+          <div class="bar-tag tag-local">local</div>
+        </div>
+        <div class="bar-col">
+          <div class="bar-wrap"><div class="bar bar-uniform" id="ub7"></div></div>
+          <div class="bar-label">H7</div>
+          <div class="bar-tag tag-retrieval">retrieval</div>
+        </div>
+      </div>
     </div>
 
-    <!-- Phase 2 label -->
-    <div class="phase-label phase-2">OPTIMIZED: reallocate budget to sensitive heads</div>
+    <!-- Divider -->
+    <div class="divider" id="divider">
+      <div class="divider-line"></div>
+      <div class="divider-arrow">&#10132;</div>
+    </div>
+
+    <!-- RIGHT: Optimized Budget -->
+    <div class="panel panel-right" id="panel-optimized">
+      <div class="panel-title" style="color:#2EC4B6;">Optimized Budget</div>
+      <div class="bar-area">
+        <div class="bar-col">
+          <div class="bar-wrap"><div class="bar bar-opt bar-opt-local" id="ob0"></div></div>
+          <div class="bar-label">H0</div>
+          <div class="bar-tag tag-local">local</div>
+        </div>
+        <div class="bar-col">
+          <div class="bar-wrap"><div class="bar bar-opt bar-opt-local" id="ob1"></div></div>
+          <div class="bar-label">H1</div>
+          <div class="bar-tag tag-local">local</div>
+        </div>
+        <div class="bar-col">
+          <div class="bar-wrap"><div class="bar bar-opt bar-opt-retrieval" id="ob2"></div></div>
+          <div class="bar-label">H2</div>
+          <div class="bar-tag tag-retrieval">retrieval</div>
+        </div>
+        <div class="bar-col">
+          <div class="bar-wrap"><div class="bar bar-opt bar-opt-local" id="ob3"></div></div>
+          <div class="bar-label">H3</div>
+          <div class="bar-tag tag-local">local</div>
+        </div>
+        <div class="bar-col">
+          <div class="bar-wrap"><div class="bar bar-opt bar-opt-local" id="ob4"></div></div>
+          <div class="bar-label">H4</div>
+          <div class="bar-tag tag-local">local</div>
+        </div>
+        <div class="bar-col">
+          <div class="bar-wrap"><div class="bar bar-opt bar-opt-retrieval" id="ob5"></div></div>
+          <div class="bar-label">H5</div>
+          <div class="bar-tag tag-retrieval">retrieval</div>
+        </div>
+        <div class="bar-col">
+          <div class="bar-wrap"><div class="bar bar-opt bar-opt-local" id="ob6"></div></div>
+          <div class="bar-label">H6</div>
+          <div class="bar-tag tag-local">local</div>
+        </div>
+        <div class="bar-col">
+          <div class="bar-wrap"><div class="bar bar-opt bar-opt-retrieval" id="ob7"></div></div>
+          <div class="bar-label">H7</div>
+          <div class="bar-tag tag-retrieval">retrieval</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom callout -->
+    <div class="callout" id="callout">Same total budget, smarter allocation</div>
 
     <!-- Legend -->
-    <div class="legend">
-      <div class="legend-item"><div class="legend-dot" style="background:#415A77;"></div><span>local head (insensitive)</span></div>
-      <div class="legend-item"><div class="legend-dot" style="background:#2EC4B6;"></div><span>retrieval head (sensitive)</span></div>
+    <div class="legend" id="legend">
+      <div class="legend-item"><div class="legend-dot" style="background:#778DA9;"></div><span>local head (compress aggressively)</span></div>
+      <div class="legend-item"><div class="legend-dot" style="background:#2EC4B6; box-shadow: 0 0 8px rgba(46,196,182,0.6);"></div><span>retrieval head (needs more tokens)</span></div>
     </div>
   </div>
 
   <style>
     [data-composition-id="head-budgets"] {
-      position: relative; overflow: hidden; background: #011627;
-      width: 1920px; height: 540px; font-family: 'Space Mono', monospace; color: #FDFFFC;
+      position: relative; overflow: hidden;
+      background: #011627;
+      width: 1920px; height: 540px;
+      font-family: 'Space Mono', monospace;
+      color: #FDFFFC;
     }
     .scene { position: relative; width: 1920px; height: 540px; }
-    .title { position: absolute; top: 16px; left: 50%; transform: translateX(-50%); font-size: 48px; font-weight: 700; white-space: nowrap; }
-    .subtitle { position: absolute; top: 72px; left: 50%; transform: translateX(-50%); font-size: 28px; color: #778DA9; white-space: nowrap; }
 
-    .phase-label { position: absolute; left: 50%; transform: translateX(-50%); font-size: 30px; font-weight: 700; white-space: nowrap; }
-    .phase-1 { top: 114px; color: #FF9F1C; }
-    .phase-2 { top: 114px; color: #2EC4B6; }
-
-    .head-grid {
-      position: absolute; top: 160px; left: 50%; transform: translateX(-50%);
-      display: flex; gap: 12px; align-items: flex-end; height: 210px;
+    .title {
+      position: absolute; top: 14px; left: 50%; transform: translateX(-50%);
+      font-size: 44px; font-weight: 700; white-space: nowrap;
     }
-    .head-col { display: flex; flex-direction: column; align-items: center; gap: 4px; width: 120px; }
-    .head-bar { width: 90px; border-radius: 4px 4px 0 0; background: #415A77; transition: height 1s, background 1s; }
-    .hlbl { font-size: 20px; color: #778DA9; }
-    .htag { font-size: 16px; font-weight: 700; padding: 3px 10px; border-radius: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
-    .htag.insensitive { background: rgba(65,90,119,0.3); color: #415A77; }
-    .htag.sensitive { background: rgba(46,196,182,0.2); color: #2EC4B6; }
+    .subtitle {
+      position: absolute; top: 66px; left: 50%; transform: translateX(-50%);
+      font-size: 24px; color: #778DA9; white-space: nowrap;
+    }
 
+    /* Panels */
+    .panel {
+      position: absolute; top: 108px;
+      display: flex; flex-direction: column; align-items: center;
+    }
+    .panel-left { left: 60px; width: 840px; }
+    .panel-right { left: 1020px; width: 840px; }
+
+    .panel-title {
+      font-size: 30px; font-weight: 700; margin-bottom: 10px;
+      letter-spacing: 1px;
+    }
+
+    .bar-area {
+      display: flex; align-items: flex-end; gap: 16px; height: 240px;
+      /* 8 bars * 80px + 7 gaps * 16px = 752px -- fits in 840px panel */
+    }
+    .bar-col {
+      display: flex; flex-direction: column; align-items: center;
+      width: 80px;
+    }
+    .bar-wrap {
+      display: flex; align-items: flex-end;
+      height: 180px; width: 100%;
+      justify-content: center;
+    }
+    .bar {
+      width: 60px; border-radius: 5px 5px 0 0;
+    }
+
+    /* Uniform bars */
+    .bar-uniform {
+      height: 110px;
+      background: linear-gradient(to top, #415A77, #5e7a96);
+    }
+
+    /* Optimized bars */
+    .bar-opt-local {
+      height: 45px;
+      background: linear-gradient(to top, #3d5a73, #566f88);
+      opacity: 0.55;
+    }
+    .bar-opt-retrieval {
+      height: 175px;
+      background: linear-gradient(to top, #1a8a80, #2EC4B6);
+      filter: drop-shadow(0 0 10px rgba(46,196,182,0.5));
+    }
+
+    .bar-label {
+      margin-top: 6px; font-size: 18px; color: #778DA9; font-weight: 400;
+    }
+    .bar-tag {
+      margin-top: 4px; font-size: 16px; font-weight: 700;
+      padding: 2px 10px; border-radius: 10px;
+      text-transform: uppercase; letter-spacing: 0.5px;
+      white-space: nowrap;
+    }
+    .tag-local {
+      background: rgba(119,141,169,0.15); color: #778DA9;
+    }
+    .tag-retrieval {
+      background: rgba(46,196,182,0.15); color: #2EC4B6;
+    }
+
+    /* Divider */
+    .divider {
+      position: absolute; top: 130px; left: 935px;
+      display: flex; flex-direction: column; align-items: center;
+      gap: 0;
+    }
+    .divider-line {
+      width: 2px; height: 200px;
+      background: linear-gradient(to bottom, transparent, #415A77 30%, #415A77 70%, transparent);
+    }
+    .divider-arrow {
+      font-size: 36px; color: #778DA9; margin-top: -6px;
+      transform: rotate(0deg);
+    }
+
+    /* Callout */
+    .callout {
+      position: absolute; bottom: 52px; left: 50%; transform: translateX(-50%);
+      font-size: 32px; font-weight: 700; color: #3fb950;
+      white-space: nowrap;
+      text-shadow: 0 0 20px rgba(63,185,80,0.3);
+    }
+
+    /* Legend */
     .legend {
-      position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
-      display: flex; gap: 40px; font-size: 22px; color: #778DA9;
+      position: absolute; bottom: 14px; left: 50%; transform: translateX(-50%);
+      display: flex; gap: 48px; font-size: 18px; color: #778DA9;
     }
     .legend-item { display: flex; align-items: center; gap: 10px; }
-    .legend-dot { width: 16px; height: 16px; border-radius: 50%; }
+    .legend-dot { width: 14px; height: 14px; border-radius: 50%; }
   </style>
 
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
@@ -86,51 +283,114 @@
     var root = document.currentScript.parentElement;
     var tl = gsap.timeline({ paused: true });
 
-    // Fade in title + subtitle
-    tl.from(root.querySelector('.title'), { y: -20, opacity: 0, duration: 0.5, ease: 'power2.out' }, 0);
-    tl.from(root.querySelector('.subtitle'), { opacity: 0, duration: 0.5 }, 0.2);
+    /* ── Phase 0: Title + subtitle ── */
+    tl.from(root.querySelector('.title'), {
+      y: -24, opacity: 0, duration: 0.6, ease: 'power3.out'
+    }, 0);
+    tl.from(root.querySelector('.subtitle'), {
+      opacity: 0, y: 10, duration: 0.5, ease: 'power2.out'
+    }, 0.25);
 
-    // Phase 1 label
-    tl.from(root.querySelector('.phase-1'), { opacity: 0, duration: 0.4 }, 0.5);
+    /* ── Phase 1: Left panel — Uniform Budget ── */
+    tl.from(root.querySelector('#panel-uniform .panel-title'), {
+      opacity: 0, x: -30, duration: 0.5, ease: 'power2.out'
+    }, 0.6);
 
-    // Uniform bars grow in
-    var bars = root.querySelectorAll('.hbar');
-    bars.forEach(function(bar, i) {
-      tl.from(bar, { height: 0, duration: 0.4, ease: 'power2.out' }, 0.7 + i * 0.06);
+    // Uniform bars grow from bottom, staggered
+    var uBars = root.querySelectorAll('.bar-uniform');
+    uBars.forEach(function(bar, i) {
+      tl.from(bar, {
+        height: 0, opacity: 0, duration: 0.5, ease: 'back.out(1.4)'
+      }, 0.9 + i * 0.08);
     });
 
-    // Labels and tags
-    root.querySelectorAll('.hlbl').forEach(function(el, i) {
-      tl.from(el, { opacity: 0, duration: 0.3 }, 1.0 + i * 0.04);
+    // Labels + tags for left panel
+    var leftLabels = root.querySelectorAll('#panel-uniform .bar-label');
+    var leftTags = root.querySelectorAll('#panel-uniform .bar-tag');
+    leftLabels.forEach(function(el, i) {
+      tl.from(el, { opacity: 0, duration: 0.3, ease: 'power2.out' }, 1.2 + i * 0.05);
     });
-    root.querySelectorAll('.htag').forEach(function(el, i) {
-      tl.from(el, { opacity: 0, y: 5, duration: 0.3 }, 1.2 + i * 0.04);
-    });
-
-    // Legend
-    tl.from(root.querySelector('.legend'), { opacity: 0, duration: 0.4 }, 1.8);
-
-    // Hold uniform view
-    tl.to({}, { duration: 1.5 }, 2.2);
-
-    // Phase 2: swap labels
-    tl.to(root.querySelector('.phase-1'), { opacity: 0, duration: 0.3 }, 4.0);
-    tl.from(root.querySelector('.phase-2'), { opacity: 0, duration: 0.3 }, 4.3);
-
-    // Animate bars to nonuniform: sensitive heads grow, insensitive shrink
-    // Insensitive heads: h0,h1,h3,h4,h6,h8,h10,h11 -> shrink to 25px
-    var insensitive = [0,1,3,4,6,8,10,11];
-    var sensitive = [2,5,7,9];
-    insensitive.forEach(function(idx, i) {
-      tl.to(bars[idx], { height: 25, duration: 0.8, ease: 'power2.inOut' }, 4.5 + i * 0.05);
-    });
-    // Sensitive heads: h2,h5,h7,h9 -> grow to 150px and change color
-    sensitive.forEach(function(idx, i) {
-      tl.to(bars[idx], { height: 150, background: '#2EC4B6', duration: 0.8, ease: 'power2.inOut' }, 4.5 + i * 0.08);
+    leftTags.forEach(function(el, i) {
+      tl.from(el, { opacity: 0, y: 6, duration: 0.35, ease: 'power2.out' }, 1.4 + i * 0.05);
     });
 
-    // Hold final view
-    tl.to({}, { duration: 3 });
+    /* ── Hold uniform view ── */
+    tl.to({}, { duration: 0.8 }, 2.2);
+
+    /* ── Phase 2: Divider appears ── */
+    tl.from(root.querySelector('.divider-line'), {
+      scaleY: 0, transformOrigin: 'top center', duration: 0.6, ease: 'power2.inOut'
+    }, 3.2);
+    tl.from(root.querySelector('.divider-arrow'), {
+      opacity: 0, y: -10, duration: 0.4, ease: 'power2.out'
+    }, 3.6);
+
+    /* ── Phase 3: Right panel — Optimized Budget ── */
+    tl.from(root.querySelector('#panel-optimized .panel-title'), {
+      opacity: 0, x: 30, duration: 0.5, ease: 'power2.out'
+    }, 3.8);
+
+    // Optimized bars: start at uniform height, then animate to final
+    var optBars = root.querySelectorAll('.bar-opt');
+    var localTargets = [45, 45, 175, 45, 45, 175, 45, 175]; // L L R L L R L R
+    var isRetrieval = [false, false, true, false, false, true, false, true];
+
+    optBars.forEach(function(bar, i) {
+      // First, set to uniform height (same as left)
+      gsap.set(bar, { height: 110, opacity: 1,
+        background: 'linear-gradient(to top, #415A77, #5e7a96)',
+        filter: 'none'
+      });
+
+      // Grow from 0 like uniform bars first
+      tl.from(bar, {
+        height: 0, opacity: 0, duration: 0.45, ease: 'back.out(1.2)'
+      }, 4.0 + i * 0.07);
+    });
+
+    // Right panel labels + tags
+    var rightLabels = root.querySelectorAll('#panel-optimized .bar-label');
+    var rightTags = root.querySelectorAll('#panel-optimized .bar-tag');
+    rightLabels.forEach(function(el, i) {
+      tl.from(el, { opacity: 0, duration: 0.3 }, 4.3 + i * 0.04);
+    });
+    rightTags.forEach(function(el, i) {
+      tl.from(el, { opacity: 0, y: 6, duration: 0.3 }, 4.5 + i * 0.04);
+    });
+
+    /* ── Phase 4: Redistribution animation ── */
+    // Animate each bar from uniform (110px) to its target height
+    optBars.forEach(function(bar, i) {
+      if (isRetrieval[i]) {
+        // Retrieval heads grow tall + change to teal + glow
+        tl.to(bar, {
+          height: localTargets[i],
+          background: 'linear-gradient(to top, #1a8a80, #2EC4B6)',
+          filter: 'drop-shadow(0 0 12px rgba(46,196,182,0.55))',
+          duration: 1.0, ease: 'elastic.out(1, 0.6)'
+        }, 5.8 + i * 0.06);
+      } else {
+        // Local heads shrink + fade
+        tl.to(bar, {
+          height: localTargets[i],
+          background: 'linear-gradient(to top, #3d5a73, #566f88)',
+          opacity: 0.55,
+          duration: 0.8, ease: 'power3.inOut'
+        }, 5.8 + i * 0.06);
+      }
+    });
+
+    /* ── Phase 5: Callout + Legend ── */
+    tl.from(root.querySelector('#callout'), {
+      opacity: 0, y: 16, scale: 0.92, duration: 0.7, ease: 'power2.out'
+    }, 7.6);
+
+    tl.from(root.querySelector('#legend'), {
+      opacity: 0, duration: 0.5, ease: 'power2.out'
+    }, 8.0);
+
+    /* ── Hold final ── */
+    tl.to({}, { duration: 3.5 }, 8.5);
 
     window.__timelines["head-budgets"] = tl;
   </script>

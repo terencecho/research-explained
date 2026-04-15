@@ -18,16 +18,31 @@
   <div class="scene">
     <div class="title">Graph Memory: Dual Retrieval</div>
 
-    <!-- SVG for connection lines -->
-    <svg class="lines" viewBox="0 0 1920 540">
-      <!-- Alice -> SF -->
-      <line id="line-alice-sf" x1="420" y1="170" x2="620" y2="250" stroke="#415A77" stroke-width="3" stroke-dasharray="8 4"/>
-      <!-- Alice -> Veg -->
-      <line id="line-alice-veg" x1="280" y1="190" x2="180" y2="270" stroke="#415A77" stroke-width="3" stroke-dasharray="8 4"/>
+    <!-- SVG for edges with glow filters -->
+    <svg class="lines" viewBox="0 0 1920 540" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <filter id="glow-teal" x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur in="SourceGraphic" stdDeviation="4" result="blur"/>
+          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+        <filter id="glow-orange" x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur in="SourceGraphic" stdDeviation="4" result="blur"/>
+          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+        <filter id="glow-highlight" x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur in="SourceGraphic" stdDeviation="6" result="blur"/>
+          <feMerge><feMergeNode in="blur"/><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+      </defs>
+
+      <!-- Alice -> San Francisco -->
+      <line id="line-alice-sf" x1="430" y1="195" x2="590" y2="295" stroke="#415A77" stroke-width="3" stroke-dasharray="8 4" opacity="0"/>
+      <!-- Alice -> Vegetarian -->
+      <line id="line-alice-veg" x1="310" y1="220" x2="190" y2="310" stroke="#415A77" stroke-width="3" stroke-dasharray="8 4" opacity="0"/>
       <!-- Alice -> Yoga -->
-      <line id="line-alice-yoga" x1="340" y1="200" x2="340" y2="350" stroke="#415A77" stroke-width="3" stroke-dasharray="8 4"/>
+      <line id="line-alice-yoga" x1="370" y1="240" x2="370" y2="380" stroke="#415A77" stroke-width="3" stroke-dasharray="8 4" opacity="0"/>
       <!-- Alice -> Bob -->
-      <line id="line-alice-bob" x1="420" y1="190" x2="560" y2="370" stroke="#415A77" stroke-width="3" stroke-dasharray="8 4"/>
+      <line id="line-alice-bob" x1="450" y1="220" x2="580" y2="400" stroke="#415A77" stroke-width="3" stroke-dasharray="8 4" opacity="0"/>
     </svg>
 
     <!-- Nodes -->
@@ -37,27 +52,33 @@
     <div class="node n-yoga" id="n-yoga">Yoga</div>
     <div class="node n-bob" id="n-bob">Bob</div>
 
-    <!-- Edge labels on lines -->
-    <div class="edge-label" id="el1" style="left:480px; top:195px;">lives_in</div>
-    <div class="edge-label" id="el2" style="left:160px; top:215px;">prefers</div>
-    <div class="edge-label" id="el3" style="left:355px; top:268px;">practices</div>
-    <div class="edge-label" id="el4" style="left:470px; top:275px;">knows</div>
+    <!-- Edge labels -->
+    <div class="edge-label" id="el-lives" style="left:468px; top:228px;">lives_in</div>
+    <div class="edge-label" id="el-prefers" style="left:155px; top:248px;">prefers</div>
+    <div class="edge-label" id="el-practices" style="left:382px; top:300px;">practices</div>
+    <div class="edge-label" id="el-knows" style="left:494px; top:305px;">knows</div>
 
-    <!-- Query -->
+    <!-- Query box — right side upper -->
     <div class="query-box" id="query-box">
       <div class="ql">QUERY</div>
       <div class="qt">"Where does Alice live?"</div>
     </div>
 
-    <!-- Result -->
+    <!-- Method badges — right side middle -->
+    <div class="method-tag" id="m-entity">
+      <span class="mt-icon">&#9679;</span>
+      <span class="mt-text">Entity-Centric<span class="mt-sub">follow Alice's edges</span></span>
+    </div>
+    <div class="method-tag" id="m-semantic">
+      <span class="mt-icon">&#9679;</span>
+      <span class="mt-text">Semantic Search<span class="mt-sub">embed "where live" vs triplets</span></span>
+    </div>
+
+    <!-- Answer box — right side lower -->
     <div class="result-box" id="result-box">
       <div class="rl">ANSWER</div>
       <div class="rt">San Francisco</div>
     </div>
-
-    <!-- Method labels -->
-    <div class="method-tag" id="m-entity" style="right:100px; top:260px; border-color:#2EC4B6; color:#2EC4B6;">Entity-Centric: follow Alice's edges</div>
-    <div class="method-tag" id="m-semantic" style="right:100px; top:320px; border-color:#FF9F1C; color:#FF9F1C;">Semantic: match "where live" to triplets</div>
   </div>
 
   <style>
@@ -66,97 +87,246 @@
       width: 1920px; height: 540px; font-family: 'Space Mono', monospace; color: #FDFFFC;
     }
     .scene { position: relative; width: 1920px; height: 540px; }
-    .title { position: absolute; top: 16px; left: 50%; transform: translateX(-50%); font-size: 48px; font-weight: 700; white-space: nowrap; }
 
-    .lines { position: absolute; top: 0; left: 0; width: 1920px; height: 540px; pointer-events: none; }
+    .title {
+      position: absolute; top: 18px; left: 50%; transform: translateX(-50%);
+      font-size: 44px; font-weight: 700; white-space: nowrap;
+      background: linear-gradient(90deg, #2EC4B6, #FF9F1C);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
 
+    .lines {
+      position: absolute; top: 0; left: 0; width: 1920px; height: 540px;
+      pointer-events: none; z-index: 1;
+    }
+
+    /* -------- Nodes -------- */
     .node {
-      position: absolute; padding: 10px 28px; border-radius: 28px; font-size: 26px; font-weight: 700;
-      border: 3px solid; text-align: center;
+      position: absolute; padding: 14px 32px; border-radius: 32px;
+      font-size: 26px; font-weight: 700; border: 3px solid;
+      text-align: center; z-index: 2; white-space: nowrap;
     }
-    .n-alice { left: 260px; top: 140px; border-color: #2EC4B6; color: #2EC4B6; background: rgba(46,196,182,0.12); }
-    .n-sf { left: 560px; top: 220px; border-color: #FF9F1C; color: #FF9F1C; background: rgba(255,159,28,0.12); }
-    .n-veg { left: 60px; top: 250px; border-color: #3fb950; color: #3fb950; background: rgba(63,185,80,0.12); }
-    .n-yoga { left: 260px; top: 360px; border-color: #bc8cff; color: #bc8cff; background: rgba(188,140,255,0.12); }
-    .n-bob { left: 520px; top: 360px; border-color: #415A77; color: #778DA9; background: rgba(65,90,119,0.2); }
+    .n-alice {
+      left: 290px; top: 160px;
+      border-color: #2EC4B6; color: #2EC4B6;
+      background: radial-gradient(ellipse at center, rgba(46,196,182,0.18) 0%, rgba(46,196,182,0.06) 100%);
+    }
+    .n-sf {
+      left: 530px; top: 260px;
+      border-color: #FF9F1C; color: #FF9F1C;
+      background: radial-gradient(ellipse at center, rgba(255,159,28,0.18) 0%, rgba(255,159,28,0.06) 100%);
+    }
+    .n-veg {
+      left: 60px; top: 290px;
+      border-color: #3fb950; color: #3fb950;
+      background: radial-gradient(ellipse at center, rgba(63,185,80,0.18) 0%, rgba(63,185,80,0.06) 100%);
+    }
+    .n-yoga {
+      left: 290px; top: 380px;
+      border-color: #bc8cff; color: #bc8cff;
+      background: radial-gradient(ellipse at center, rgba(188,140,255,0.18) 0%, rgba(188,140,255,0.06) 100%);
+    }
+    .n-bob {
+      left: 530px; top: 390px;
+      border-color: #415A77; color: #778DA9;
+      background: radial-gradient(ellipse at center, rgba(65,90,119,0.22) 0%, rgba(65,90,119,0.08) 100%);
+    }
 
-    .edge-label { position: absolute; font-size: 20px; color: #556B8A; font-style: italic; }
+    /* -------- Edge labels -------- */
+    .edge-label {
+      position: absolute; font-size: 18px; color: #556B8A; font-style: italic;
+      z-index: 3; pointer-events: none;
+    }
 
-    .query-box { position: absolute; right: 100px; top: 100px; text-align: center; }
-    .ql { font-size: 22px; color: #778DA9; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 6px; }
-    .qt { font-size: 30px; font-weight: 700; color: #FDFFFC; }
+    /* -------- Query box -------- */
+    .query-box {
+      position: absolute; right: 80px; top: 100px;
+      text-align: left; z-index: 4;
+      padding: 20px 28px; border-radius: 14px;
+      background: rgba(46,196,182,0.06); border: 2px solid rgba(46,196,182,0.25);
+    }
+    .ql {
+      font-size: 18px; color: #778DA9; text-transform: uppercase;
+      letter-spacing: 3px; margin-bottom: 8px; font-weight: 700;
+    }
+    .qt { font-size: 28px; font-weight: 700; color: #FDFFFC; }
 
-    .result-box { position: absolute; right: 100px; top: 400px; text-align: center; }
-    .rl { font-size: 22px; color: #778DA9; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 6px; }
-    .rt { font-size: 36px; font-weight: 700; color: #3fb950; }
-
+    /* -------- Method badges -------- */
     .method-tag {
-      position: absolute; padding: 8px 20px; border-radius: 8px; font-size: 22px; font-weight: 700;
-      border: 2px solid; background: rgba(22,27,34,0.8);
+      position: absolute; right: 80px; padding: 14px 24px; border-radius: 12px;
+      font-size: 20px; font-weight: 700; z-index: 4;
+      background: rgba(22,27,34,0.85); border: 2px solid;
+      display: flex; align-items: center; gap: 14px;
     }
+    #m-entity {
+      top: 250px; border-color: #2EC4B6; color: #2EC4B6;
+      box-shadow: 0 0 0px rgba(46,196,182,0);
+    }
+    #m-semantic {
+      top: 330px; border-color: #FF9F1C; color: #FF9F1C;
+      box-shadow: 0 0 0px rgba(255,159,28,0);
+    }
+    .mt-icon { font-size: 14px; }
+    .mt-text { display: flex; flex-direction: column; gap: 2px; }
+    .mt-sub { font-size: 16px; font-weight: 400; opacity: 0.7; }
+
+    /* -------- Result box -------- */
+    .result-box {
+      position: absolute; right: 80px; top: 420px;
+      text-align: left; z-index: 4;
+      padding: 16px 28px; border-radius: 14px;
+      background: rgba(63,185,80,0.08); border: 2px solid rgba(63,185,80,0.3);
+    }
+    .rl {
+      font-size: 18px; color: #778DA9; text-transform: uppercase;
+      letter-spacing: 3px; margin-bottom: 6px; font-weight: 700;
+    }
+    .rt { font-size: 34px; font-weight: 700; color: #3fb950; }
   </style>
 
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
   <script>
     window.__timelines = window.__timelines || {};
-    var root = document.currentScript.parentElement;
-    var tl = gsap.timeline({ paused: true });
+    (function() {
+      var root = document.currentScript.parentElement;
+      var tl = gsap.timeline({ paused: true });
 
-    // Title
-    tl.from(root.querySelector('.title'), { y: -20, opacity: 0, duration: 0.6, ease: 'power2.out' }, 0);
+      var q = function(sel) { return root.querySelector(sel); };
+      var qa = function(sel) { return root.querySelectorAll(sel); };
 
-    // Nodes appear
-    var nodes = root.querySelectorAll('.node');
-    nodes.forEach(function(el, i) {
-      tl.from(el, { opacity: 0, scale: 0.7, duration: 0.5, ease: 'power2.out' }, 0.4 + i * 0.2);
-    });
+      /* ===== Phase 1: Title (0s) ===== */
+      tl.from(q('.title'), { y: -30, opacity: 0, duration: 0.7, ease: 'power3.out' }, 0);
 
-    // Lines appear
-    var lines = root.querySelectorAll('line');
-    lines.forEach(function(el, i) {
-      tl.from(el, { opacity: 0, duration: 0.4 }, 1.2 + i * 0.15);
-    });
+      /* ===== Phase 2: Nodes build in with scale + stagger (0.5s) ===== */
+      var nodeData = [
+        { sel: '.n-alice', delay: 0.5 },
+        { sel: '.n-sf',    delay: 0.7 },
+        { sel: '.n-veg',   delay: 0.9 },
+        { sel: '.n-yoga',  delay: 1.1 },
+        { sel: '.n-bob',   delay: 1.3 }
+      ];
+      nodeData.forEach(function(n) {
+        tl.from(q(n.sel), {
+          opacity: 0, scale: 0.5, duration: 0.55,
+          ease: 'back.out(1.7)',
+          transformOrigin: 'center center'
+        }, n.delay);
+      });
 
-    // Edge labels
-    root.querySelectorAll('.edge-label').forEach(function(el, i) {
-      tl.from(el, { opacity: 0, duration: 0.3 }, 1.5 + i * 0.15);
-    });
+      /* ===== Phase 3: Edges draw in (1.6s) ===== */
+      var lineEls = qa('line');
+      lineEls.forEach(function(el, i) {
+        var len = Math.sqrt(
+          Math.pow(el.getAttribute('x2') - el.getAttribute('x1'), 2) +
+          Math.pow(el.getAttribute('y2') - el.getAttribute('y1'), 2)
+        );
+        el.setAttribute('stroke-dasharray', len);
+        el.setAttribute('stroke-dashoffset', len);
+        el.style.opacity = 1;
+        tl.to(el, {
+          attr: { 'stroke-dashoffset': 0 },
+          duration: 0.6, ease: 'power2.inOut'
+        }, 1.6 + i * 0.18);
+      });
 
-    // Query appears
-    tl.from(root.querySelector('.query-box'), { opacity: 0, x: 20, duration: 0.5 }, 3.0);
+      /* ===== Phase 4: Edge labels fade in (2.2s) ===== */
+      qa('.edge-label').forEach(function(el, i) {
+        tl.from(el, { opacity: 0, duration: 0.35, ease: 'power1.out' }, 2.2 + i * 0.15);
+      });
 
-    // Highlight Alice node (pulse)
-    tl.to(root.querySelector('.n-alice'), { boxShadow: '0 0 30px rgba(46,196,182,0.8)', borderWidth: '4px', duration: 0.4 }, 4.0);
+      /* Reset line dash to normal after draw-in completes */
+      tl.add(function() {
+        lineEls.forEach(function(el) {
+          el.removeAttribute('stroke-dasharray');
+          el.removeAttribute('stroke-dashoffset');
+          el.setAttribute('stroke-dasharray', '8 4');
+        });
+      }, 3.5);
 
-    // Highlight the Alice->SF line
-    tl.to(root.querySelector('#line-alice-sf'), { stroke: '#2EC4B6', strokeWidth: 5, strokeDasharray: 'none', duration: 0.5 }, 4.5);
+      /* ===== Phase 5: Query appears (3.5s) ===== */
+      tl.from(q('#query-box'), {
+        opacity: 0, x: 40, duration: 0.6, ease: 'power2.out'
+      }, 3.5);
 
-    // Highlight SF node
-    tl.to(root.querySelector('.n-sf'), { boxShadow: '0 0 30px rgba(255,159,28,0.8)', borderWidth: '4px', duration: 0.4 }, 5.0);
+      /* ===== Phase 6: Entity-centric retrieval (4.5s) ===== */
 
-    // Dim other lines and nodes
-    var dimLines = ['#line-alice-veg', '#line-alice-yoga', '#line-alice-bob'];
-    dimLines.forEach(function(sel) {
-      tl.to(root.querySelector(sel), { opacity: 0.2, duration: 0.4 }, 5.0);
-    });
-    ['#n-veg', '#n-yoga', '#n-bob'].forEach(function(sel) {
-      tl.to(root.querySelector(sel), { opacity: 0.3, duration: 0.4 }, 5.0);
-    });
-    ['#el2', '#el3', '#el4'].forEach(function(sel) {
-      tl.to(root.querySelector(sel), { opacity: 0.15, duration: 0.4 }, 5.0);
-    });
+      /* Alice node glows */
+      tl.to(q('.n-alice'), {
+        boxShadow: '0 0 36px rgba(46,196,182,0.85), 0 0 12px rgba(46,196,182,0.4)',
+        borderWidth: '4px', scale: 1.06,
+        duration: 0.5, ease: 'power2.out'
+      }, 4.5);
 
-    // Method tags
-    tl.from(root.querySelector('#m-entity'), { opacity: 0, x: 20, duration: 0.5 }, 5.5);
-    tl.from(root.querySelector('#m-semantic'), { opacity: 0, x: 20, duration: 0.5 }, 6.0);
+      /* Alice->SF line highlights with glow */
+      tl.to(q('#line-alice-sf'), {
+        stroke: '#2EC4B6', strokeWidth: 5,
+        attr: { filter: 'url(#glow-teal)', 'stroke-dasharray': 'none' },
+        duration: 0.5, ease: 'power2.out'
+      }, 5.0);
 
-    // Result
-    tl.from(root.querySelector('.result-box'), { opacity: 0, y: 15, duration: 0.5 }, 6.8);
+      /* lives_in label highlights */
+      tl.to(q('#el-lives'), {
+        color: '#2EC4B6', scale: 1.1,
+        duration: 0.3, ease: 'power2.out'
+      }, 5.0);
 
-    // Hold
-    tl.to({}, { duration: 3 });
+      /* SF node glows */
+      tl.to(q('.n-sf'), {
+        boxShadow: '0 0 36px rgba(255,159,28,0.85), 0 0 12px rgba(255,159,28,0.4)',
+        borderWidth: '4px', scale: 1.06,
+        duration: 0.5, ease: 'power2.out'
+      }, 5.3);
 
-    window.__timelines["graph-retrieval"] = tl;
+      /* Dim non-highlighted edges */
+      ['#line-alice-veg', '#line-alice-yoga', '#line-alice-bob'].forEach(function(sel) {
+        tl.to(q(sel), { opacity: 0.15, duration: 0.5, ease: 'power1.inOut' }, 5.3);
+      });
+
+      /* Dim non-highlighted nodes */
+      ['.n-veg', '.n-yoga', '.n-bob'].forEach(function(sel) {
+        tl.to(q(sel), { opacity: 0.2, duration: 0.5, ease: 'power1.inOut' }, 5.3);
+      });
+
+      /* Dim non-highlighted edge labels */
+      ['#el-prefers', '#el-practices', '#el-knows'].forEach(function(sel) {
+        tl.to(q(sel), { opacity: 0.1, duration: 0.5, ease: 'power1.inOut' }, 5.3);
+      });
+
+      /* ===== Phase 7: Method badges slide in (5.8s) ===== */
+      tl.from(q('#m-entity'), {
+        opacity: 0, x: 30, duration: 0.5, ease: 'power2.out'
+      }, 5.8);
+      tl.to(q('#m-entity'), {
+        boxShadow: '0 0 18px rgba(46,196,182,0.4)',
+        duration: 0.4, ease: 'power1.out'
+      }, 6.0);
+
+      tl.from(q('#m-semantic'), {
+        opacity: 0, x: 30, duration: 0.5, ease: 'power2.out'
+      }, 6.3);
+      tl.to(q('#m-semantic'), {
+        boxShadow: '0 0 18px rgba(255,159,28,0.4)',
+        duration: 0.4, ease: 'power1.out'
+      }, 6.5);
+
+      /* ===== Phase 8: Answer appears (7.4s) ===== */
+      tl.from(q('#result-box'), {
+        opacity: 0, y: 20, scale: 0.95,
+        duration: 0.6, ease: 'back.out(1.4)'
+      }, 7.4);
+
+      /* Answer box green glow pulse */
+      tl.to(q('#result-box'), {
+        boxShadow: '0 0 24px rgba(63,185,80,0.5)',
+        duration: 0.4, ease: 'power1.out'
+      }, 7.8);
+
+      /* ===== Hold to fill 12s ===== */
+      tl.to({}, { duration: 3.0 });
+
+      window.__timelines["graph-retrieval"] = tl;
+    })();
   </script>
 </div>
 </body>

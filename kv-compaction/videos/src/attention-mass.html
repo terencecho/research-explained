@@ -13,65 +13,111 @@
   data-width="1920"
   data-height="540"
   data-start="0"
-  data-duration="10"
+  data-duration="12"
 >
   <div class="scene">
     <!-- Title -->
-    <div class="title">Why Attention Biases Matter</div>
+    <div class="title">Attention Mass Preservation</div>
+    <div class="subtitle">Dropping tokens loses mass &mdash; bias correction restores it</div>
 
-    <!-- Panel 1: Original -->
-    <div class="panel panel-orig">
-      <div class="panel-label" style="color:#2EC4B6;">ORIGINAL (8 keys)</div>
-      <div class="bars" id="orig-bars">
-        <div class="bar-col"><div class="bar" id="ob0" style="height:64px; background:#2EC4B6;"></div><div class="blbl">K1</div></div>
-        <div class="bar-col"><div class="bar" id="ob1" style="height:50px; background:#2EC4B6;"></div><div class="blbl">K2</div></div>
-        <div class="bar-col"><div class="bar" id="ob2" style="height:22px; background:#2EC4B6;"></div><div class="blbl">K3</div></div>
-        <div class="bar-col"><div class="bar" id="ob3" style="height:78px; background:#2EC4B6;"></div><div class="blbl">K4</div></div>
-        <div class="bar-col"><div class="bar" id="ob4" style="height:14px; background:#2EC4B6;"></div><div class="blbl">K5</div></div>
-        <div class="bar-col"><div class="bar" id="ob5" style="height:43px; background:#2EC4B6;"></div><div class="blbl">K6</div></div>
-        <div class="bar-col"><div class="bar" id="ob6" style="height:57px; background:#2EC4B6;"></div><div class="blbl">K7</div></div>
-        <div class="bar-col"><div class="bar" id="ob7" style="height:29px; background:#2EC4B6;"></div><div class="blbl">K8</div></div>
+    <!-- Panel 1: Original 8 keys -->
+    <div class="panel panel-orig" id="panel-orig">
+      <div class="panel-header">
+        <div class="panel-label" style="color:#2EC4B6;">Original</div>
+        <div class="panel-desc" style="color:#778DA9;">8 keys</div>
       </div>
-      <div class="mass-val" style="color:#2EC4B6;">Mass = 100</div>
+      <div class="bar-area" id="orig-bars">
+        <div class="bar-col"><div class="bar ob" id="ob0" data-h="200"></div><div class="blbl">K<sub>1</sub></div></div>
+        <div class="bar-col"><div class="bar ob" id="ob1" data-h="155"></div><div class="blbl">K<sub>2</sub></div></div>
+        <div class="bar-col"><div class="bar ob" id="ob2" data-h="68"></div><div class="blbl">K<sub>3</sub></div></div>
+        <div class="bar-col"><div class="bar ob" id="ob3" data-h="242"></div><div class="blbl">K<sub>4</sub></div></div>
+        <div class="bar-col"><div class="bar ob" id="ob4" data-h="44"></div><div class="blbl">K<sub>5</sub></div></div>
+        <div class="bar-col"><div class="bar ob" id="ob5" data-h="133"></div><div class="blbl">K<sub>6</sub></div></div>
+        <div class="bar-col"><div class="bar ob" id="ob6" data-h="177"></div><div class="blbl">K<sub>7</sub></div></div>
+        <div class="bar-col"><div class="bar ob" id="ob7" data-h="90"></div><div class="blbl">K<sub>8</sub></div></div>
+      </div>
+      <div class="mass-row">
+        <div class="mass-label" style="color:#2EC4B6;">Mass</div>
+        <div class="mass-eq" style="color:#778DA9;">=</div>
+        <div class="mass-val" id="mass-orig" style="color:#2EC4B6;">100</div>
+      </div>
     </div>
 
-    <!-- Panel 2: No Bias -->
-    <div class="panel panel-nobias">
-      <div class="panel-label" style="color:#E71D36;">KEPT 3 KEYS (no bias)</div>
-      <div class="bars" id="nb-bars">
-        <div class="bar-col"><div class="bar" style="height:64px; background:#E71D36;"></div><div class="blbl">K1</div></div>
-        <div class="bar-col"><div class="bar" style="height:78px; background:#E71D36;"></div><div class="blbl">K4</div></div>
-        <div class="bar-col"><div class="bar" style="height:57px; background:#E71D36;"></div><div class="blbl">K7</div></div>
-      </div>
-      <div class="mass-val" style="color:#E71D36;">Mass = 56 <span class="x-mark">&#x2717; underweighted!</span></div>
+    <!-- Arrow 1 -->
+    <div class="arrow-zone arrow-1" id="arrow1">
+      <svg width="60" height="40" viewBox="0 0 60 40">
+        <defs>
+          <marker id="ah1" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto">
+            <path d="M0,0 L10,4 L0,8 Z" fill="#778DA9"/>
+          </marker>
+        </defs>
+        <line x1="2" y1="20" x2="50" y2="20" stroke="#778DA9" stroke-width="3" marker-end="url(#ah1)"/>
+      </svg>
+      <div class="arrow-label" style="color:#E71D36;">drop 5 keys</div>
     </div>
 
-    <!-- Panel 3: With Bias -->
-    <div class="panel panel-bias">
-      <div class="panel-label" style="color:#FF9F1C;">KEPT 3 KEYS + bias beta</div>
-      <div class="bars" id="bi-bars">
-        <div class="bar-col">
-          <div class="bias-tag">+B</div>
-          <div class="bar" style="height:107px; background:#FF9F1C;"></div>
-          <div class="blbl">K1</div>
-        </div>
-        <div class="bar-col">
-          <div class="bias-tag">+B</div>
-          <div class="bar" style="height:121px; background:#FF9F1C;"></div>
-          <div class="blbl">K4</div>
-        </div>
-        <div class="bar-col">
-          <div class="bias-tag">+B</div>
-          <div class="bar" style="height:93px; background:#FF9F1C;"></div>
-          <div class="blbl">K7</div>
-        </div>
+    <!-- Panel 2: Without Bias (3 kept keys) -->
+    <div class="panel panel-nobias" id="panel-nobias">
+      <div class="panel-header">
+        <div class="panel-label" style="color:#E71D36;">Without Bias</div>
+        <div class="panel-desc" style="color:#778DA9;">3 keys kept</div>
       </div>
-      <div class="mass-val" style="color:#FF9F1C;">Mass = 100 <span class="check-mark">&#x2713; matched!</span></div>
+      <div class="bar-area" id="nb-bars">
+        <div class="bar-col"><div class="bar nb"></div><div class="blbl">K<sub>1</sub></div></div>
+        <div class="bar-col"><div class="bar nb"></div><div class="blbl">K<sub>4</sub></div></div>
+        <div class="bar-col"><div class="bar nb"></div><div class="blbl">K<sub>7</sub></div></div>
+      </div>
+      <div class="mass-row">
+        <div class="mass-label" style="color:#E71D36;">Mass</div>
+        <div class="mass-eq" style="color:#778DA9;">=</div>
+        <div class="mass-val" id="mass-nb" style="color:#E71D36;">56</div>
+        <div class="mass-badge bad-badge" id="badge-bad">&#x2717;</div>
+      </div>
     </div>
 
-    <!-- Arrow annotations -->
-    <div class="arrow-1">&#8594;</div>
-    <div class="arrow-2">&#8594;</div>
+    <!-- Arrow 2 -->
+    <div class="arrow-zone arrow-2" id="arrow2">
+      <svg width="60" height="40" viewBox="0 0 60 40">
+        <defs>
+          <marker id="ah2" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto">
+            <path d="M0,0 L10,4 L0,8 Z" fill="#778DA9"/>
+          </marker>
+        </defs>
+        <line x1="2" y1="20" x2="50" y2="20" stroke="#778DA9" stroke-width="3" marker-end="url(#ah2)"/>
+      </svg>
+      <div class="arrow-label" style="color:#FF9F1C;">add bias &beta;</div>
+    </div>
+
+    <!-- Panel 3: With Bias (3 keys, taller bars) -->
+    <div class="panel panel-bias" id="panel-bias">
+      <div class="panel-header">
+        <div class="panel-label" style="color:#FF9F1C;">With Bias</div>
+        <div class="panel-desc" style="color:#778DA9;">3 keys + &beta;</div>
+      </div>
+      <div class="bar-area" id="bi-bars">
+        <div class="bar-col">
+          <div class="bias-tag" id="bt0">+&beta;</div>
+          <div class="bar bi"></div>
+          <div class="blbl">K<sub>1</sub></div>
+        </div>
+        <div class="bar-col">
+          <div class="bias-tag" id="bt1">+&beta;</div>
+          <div class="bar bi"></div>
+          <div class="blbl">K<sub>4</sub></div>
+        </div>
+        <div class="bar-col">
+          <div class="bias-tag" id="bt2">+&beta;</div>
+          <div class="bar bi"></div>
+          <div class="blbl">K<sub>7</sub></div>
+        </div>
+      </div>
+      <div class="mass-row">
+        <div class="mass-label" style="color:#FF9F1C;">Mass</div>
+        <div class="mass-eq" style="color:#778DA9;">=</div>
+        <div class="mass-val" id="mass-bi" style="color:#FF9F1C;">100</div>
+        <div class="mass-badge good-badge" id="badge-good">&#x2713;</div>
+      </div>
+    </div>
   </div>
 
   <style>
@@ -85,74 +131,313 @@
       color: #FDFFFC;
     }
     .scene { position: relative; width: 1920px; height: 540px; }
+
+    /* Title area */
     .title {
-      position: absolute; top: 16px; left: 50%; transform: translateX(-50%);
-      font-size: 48px; font-weight: 700; color: #FDFFFC; white-space: nowrap;
+      position: absolute; top: 14px; left: 50%; transform: translateX(-50%);
+      font-size: 40px; font-weight: 700; color: #FDFFFC; white-space: nowrap;
+      letter-spacing: -0.5px;
     }
-    .panel { position: absolute; top: 80px; display: flex; flex-direction: column; align-items: center; }
-    .panel-orig { left: 40px; width: 560px; }
-    .panel-nobias { left: 700px; width: 320px; }
-    .panel-bias { left: 1160px; width: 320px; }
-    .panel-label { font-size: 28px; font-weight: 700; margin-bottom: 12px; }
-    .bars { display: flex; align-items: flex-end; gap: 12px; height: 200px; }
-    .bar-col { display: flex; flex-direction: column; align-items: center; gap: 4px; }
-    .bar { width: 52px; border-radius: 4px 4px 0 0; }
-    .blbl { font-size: 22px; color: #415A77; }
-    .mass-val { margin-top: 12px; font-size: 30px; font-weight: 700; }
-    .x-mark { color: #E71D36; font-size: 26px; }
-    .check-mark { color: #3fb950; font-size: 26px; }
-    .bias-tag { font-size: 24px; color: #FF9F1C; font-weight: 700; margin-bottom: 2px; }
-    .arrow-1 { position: absolute; top: 210px; left: 620px; font-size: 52px; color: #415A77; }
-    .arrow-2 { position: absolute; top: 210px; left: 1080px; font-size: 52px; color: #415A77; }
+    .subtitle {
+      position: absolute; top: 60px; left: 50%; transform: translateX(-50%);
+      font-size: 22px; color: #778DA9; white-space: nowrap;
+    }
+
+    /* Panels: 3 side-by-side, positioned absolutely */
+    /* Panel 1 (8 bars): left=30, width=610  -> 8 bars * 56px + 7 gaps * 10px = 518px centered in 610 */
+    /* Panel 2 (3 bars): left=730, width=280 -> 3 bars * 56px + 2 gaps * 20px = 208px centered in 280 */
+    /* Panel 3 (3 bars): left=1100, width=280 -> same as panel 2 */
+    /* Arrows at ~680 and ~1050 */
+    .panel {
+      position: absolute; top: 92px;
+      display: flex; flex-direction: column; align-items: center;
+    }
+    .panel-orig  { left: 30px;   width: 610px; }
+    .panel-nobias { left: 730px;  width: 280px; }
+    .panel-bias  { left: 1340px; width: 280px; }
+
+    .panel-header { text-align: center; margin-bottom: 8px; }
+    .panel-label { font-size: 28px; font-weight: 700; line-height: 1.2; }
+    .panel-desc { font-size: 18px; margin-top: 2px; }
+
+    /* Bar containers */
+    .bar-area {
+      display: flex; align-items: flex-end; justify-content: center;
+      height: 280px; /* ~60% of 540 minus header */
+      gap: 10px;
+    }
+    .panel-nobias .bar-area,
+    .panel-bias .bar-area { gap: 20px; }
+
+    .bar-col {
+      display: flex; flex-direction: column; align-items: center;
+      justify-content: flex-end;
+    }
+
+    /* Bars: 56px wide for orig panel, 80px wide for 3-bar panels */
+    .bar {
+      width: 56px; border-radius: 5px 5px 0 0;
+      position: relative;
+    }
+    .panel-nobias .bar,
+    .panel-bias .bar { width: 80px; }
+
+    /* Original bars: teal gradient */
+    .bar.ob {
+      background: linear-gradient(180deg, #3dd6c8 0%, #2EC4B6 40%, #1fa89b 100%);
+      box-shadow: 0 0 10px rgba(46,196,182,0.25);
+    }
+    /* No-bias bars: red */
+    .bar.nb {
+      background: linear-gradient(180deg, #ff4058 0%, #E71D36 40%, #c41428 100%);
+      box-shadow: 0 0 10px rgba(231,29,54,0.25);
+    }
+    /* Bias bars: orange */
+    .bar.bi {
+      background: linear-gradient(180deg, #ffb347 0%, #FF9F1C 40%, #e88a00 100%);
+      box-shadow: 0 0 12px rgba(255,159,28,0.3);
+    }
+
+    .blbl { font-size: 16px; color: #778DA9; margin-top: 4px; font-weight: 400; }
+    .blbl sub { font-size: 12px; }
+
+    /* Mass display row */
+    .mass-row {
+      display: flex; align-items: center; gap: 8px;
+      margin-top: 12px; white-space: nowrap;
+    }
+    .mass-label { font-size: 24px; font-weight: 700; }
+    .mass-eq { font-size: 24px; font-weight: 700; }
+    .mass-val { font-size: 32px; font-weight: 700; }
+
+    .mass-badge {
+      font-size: 28px; font-weight: 700;
+      width: 38px; height: 38px;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 50%;
+      margin-left: 6px;
+    }
+    .bad-badge {
+      color: #E71D36;
+      background: rgba(231,29,54,0.15);
+      border: 2px solid rgba(231,29,54,0.4);
+    }
+    .good-badge {
+      color: #3fb950;
+      background: rgba(63,185,80,0.15);
+      border: 2px solid rgba(63,185,80,0.4);
+    }
+
+    /* Arrows between panels */
+    .arrow-zone {
+      position: absolute;
+      display: flex; flex-direction: column; align-items: center; gap: 6px;
+    }
+    .arrow-1 { left: 652px; top: 240px; }
+    .arrow-2 { left: 1060px; top: 240px; }
+    .arrow-label { font-size: 16px; font-weight: 700; white-space: nowrap; }
+
+    /* Bias tags above bars */
+    .bias-tag {
+      font-size: 18px; font-weight: 700; color: #FF9F1C;
+      background: rgba(255,159,28,0.12);
+      border: 1px solid rgba(255,159,28,0.3);
+      border-radius: 4px;
+      padding: 2px 8px;
+      margin-bottom: 4px;
+      white-space: nowrap;
+    }
   </style>
 
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
   <script>
     window.__timelines = window.__timelines || {};
-    const root = document.currentScript.parentElement;
-    const tl = gsap.timeline({ paused: true });
+    var root = document.currentScript.parentElement;
+    var tl = gsap.timeline({ paused: true });
 
-    // Title fade in
-    tl.from(root.querySelector('.title'), { y: -20, opacity: 0, duration: 0.6, ease: 'power2.out' }, 0);
-
-    // Original panel
-    tl.from(root.querySelector('.panel-orig'), { opacity: 0, x: -40, duration: 0.8, ease: 'power2.out' }, 0.2);
-    root.querySelectorAll('#orig-bars .bar').forEach(function(bar, i) {
-      tl.from(bar, { height: 0, duration: 0.5, ease: 'power2.out' }, 0.4 + i * 0.06);
-    });
-    tl.from(root.querySelector('.panel-orig .mass-val'), { opacity: 0, duration: 0.5 }, 1.2);
-
-    // Arrow 1
-    tl.from(root.querySelector('.arrow-1'), { opacity: 0, x: -20, duration: 0.4 }, 2.0);
-
-    // No-bias panel
-    tl.from(root.querySelector('.panel-nobias'), { opacity: 0, x: -40, duration: 0.8, ease: 'power2.out' }, 2.5);
-    root.querySelectorAll('#nb-bars .bar').forEach(function(bar, i) {
-      tl.from(bar, { height: 0, duration: 0.5, ease: 'power2.out' }, 2.7 + i * 0.1);
-    });
-    tl.from(root.querySelector('.panel-nobias .mass-val'), { opacity: 0, duration: 0.5 }, 3.5);
-
-    // Fade original dropped bars
-    var fadeIdxs = [1,2,4,5,7];
-    fadeIdxs.forEach(function(idx, i) {
-      tl.to(root.querySelector('#ob' + idx), { opacity: 0.15, duration: 0.4 }, 2.5 + i * 0.05);
+    /* ---- Set initial bar heights from data attributes ---- */
+    /* Original bars: heights represent attention weights summing to "100" */
+    /* K1=18, K2=14, K3=6, K4=22, K5=4, K6=12, K7=16, K8=8 => total=100 */
+    /* Scale: 1 unit = ~2.8px to fill 280px bar area. Max bar ~242px. */
+    var origBars = root.querySelectorAll('.bar.ob');
+    origBars.forEach(function(bar) {
+      bar.style.height = bar.getAttribute('data-h') + 'px';
     });
 
-    // Arrow 2
-    tl.from(root.querySelector('.arrow-2'), { opacity: 0, x: -20, duration: 0.4 }, 4.5);
+    /* No-bias bars: same height as the original 3 kept keys (K1=200, K4=242, K7=177) => mass=56 */
+    var nbHeights = [200, 242, 177];
+    var nbBars = root.querySelectorAll('.bar.nb');
+    nbBars.forEach(function(bar, i) { bar.style.height = nbHeights[i] + 'px'; });
 
-    // Bias panel
-    tl.from(root.querySelector('.panel-bias'), { opacity: 0, x: -40, duration: 0.8, ease: 'power2.out' }, 5.0);
+    /* Bias bars: scaled up proportionally so mass = 100. Factor = 100/56 ~= 1.786 */
+    /* But capped so they fit in 280px. K1: 200*1.615=323 -> cap at 270, K4: 242*1.615=391->270, K7: 177*1.615=286->270 */
+    /* Better approach: keep proportions but scale so tallest = 270px */
+    /* K4 is tallest at 242. Scale factor to reach 270: 270/242 = 1.116 */
+    /* Actually the visual story is that they grow taller — let's use factor ~1.4 to be visibly taller but fit */
+    var biFactor = 1.15;
+    var biHeights = [Math.round(200 * biFactor), Math.round(242 * biFactor), Math.round(177 * biFactor)];
+    /* = [230, 278, 204] — these fit in 280px */
+    var biBars = root.querySelectorAll('.bar.bi');
+    biBars.forEach(function(bar, i) { bar.style.height = biHeights[i] + 'px'; });
+
+    /* ========== ANIMATION TIMELINE ========== */
+
+    /* 0.0–0.8s: Title + subtitle fade in */
+    tl.from(root.querySelector('.title'), {
+      y: -20, opacity: 0, duration: 0.6, ease: 'power3.out'
+    }, 0);
+    tl.from(root.querySelector('.subtitle'), {
+      opacity: 0, y: 8, duration: 0.5, ease: 'power2.out'
+    }, 0.3);
+
+    /* 0.6–2.5s: Panel 1 — Original bars grow up staggered */
+    tl.from(root.querySelector('#panel-orig .panel-header'), {
+      opacity: 0, x: -20, duration: 0.5, ease: 'power2.out'
+    }, 0.6);
+
+    origBars.forEach(function(bar, i) {
+      var h = bar.style.height;
+      tl.from(bar, {
+        height: 0, opacity: 0.3, duration: 0.5,
+        ease: 'back.out(1.4)'
+      }, 0.9 + i * 0.08);
+    });
+
+    /* Bar labels stagger in */
+    root.querySelectorAll('#orig-bars .blbl').forEach(function(el, i) {
+      tl.from(el, { opacity: 0, y: 6, duration: 0.3, ease: 'power2.out' }, 1.2 + i * 0.06);
+    });
+
+    /* Mass = 100 counter */
+    tl.from(root.querySelector('#panel-orig .mass-row'), {
+      opacity: 0, scale: 0.9, duration: 0.4, ease: 'power2.out'
+    }, 2.0);
+
+    /* 2.5s: Glow pulse on panel 1 bars to emphasize "full mass" */
+    origBars.forEach(function(bar) {
+      tl.to(bar, {
+        boxShadow: '0 0 20px rgba(46,196,182,0.5)', duration: 0.3, ease: 'power1.in'
+      }, 2.3);
+      tl.to(bar, {
+        boxShadow: '0 0 10px rgba(46,196,182,0.25)', duration: 0.4, ease: 'power1.out'
+      }, 2.6);
+    });
+
+    /* 3.0–3.4s: Arrow 1 slides in */
+    tl.from(root.querySelector('#arrow1'), {
+      opacity: 0, x: -15, duration: 0.4, ease: 'power2.out'
+    }, 3.0);
+
+    /* 3.0–3.5s: Fade out dropped bars in panel 1 */
+    var droppedIdx = [1, 2, 4, 5, 7]; /* K2, K3, K5, K6, K8 */
+    droppedIdx.forEach(function(idx, i) {
+      tl.to(origBars[idx], {
+        opacity: 0.12, duration: 0.5, ease: 'power2.inOut'
+      }, 3.0 + i * 0.06);
+      tl.to(origBars[idx].parentElement.querySelector('.blbl'), {
+        opacity: 0.2, duration: 0.5, ease: 'power2.inOut'
+      }, 3.0 + i * 0.06);
+    });
+
+    /* 3.4–5.0s: Panel 2 — No-bias bars */
+    tl.from(root.querySelector('#panel-nobias .panel-header'), {
+      opacity: 0, x: -20, duration: 0.5, ease: 'power2.out'
+    }, 3.4);
+
+    nbBars.forEach(function(bar, i) {
+      tl.from(bar, {
+        height: 0, opacity: 0.3, duration: 0.6,
+        ease: 'power2.out'
+      }, 3.7 + i * 0.12);
+    });
+
+    root.querySelectorAll('#nb-bars .blbl').forEach(function(el, i) {
+      tl.from(el, { opacity: 0, y: 6, duration: 0.3, ease: 'power2.out' }, 4.0 + i * 0.1);
+    });
+
+    /* Mass = 56 with bad badge */
+    tl.from(root.querySelector('#panel-nobias .mass-row'), {
+      opacity: 0, scale: 0.9, duration: 0.4, ease: 'power2.out'
+    }, 4.5);
+
+    /* Red glow pulse to emphasize "bad" */
+    tl.from(root.querySelector('#badge-bad'), {
+      scale: 0, rotation: -90, duration: 0.4, ease: 'back.out(2)'
+    }, 4.7);
+    nbBars.forEach(function(bar) {
+      tl.to(bar, {
+        boxShadow: '0 0 22px rgba(231,29,54,0.5)', duration: 0.3, ease: 'power1.in'
+      }, 4.8);
+      tl.to(bar, {
+        boxShadow: '0 0 10px rgba(231,29,54,0.25)', duration: 0.4, ease: 'power1.out'
+      }, 5.1);
+    });
+
+    /* 5.5–5.9s: Arrow 2 slides in */
+    tl.from(root.querySelector('#arrow2'), {
+      opacity: 0, x: -15, duration: 0.4, ease: 'power2.out'
+    }, 5.5);
+
+    /* 5.8–8.0s: Panel 3 — Bias-corrected bars */
+    tl.from(root.querySelector('#panel-bias .panel-header'), {
+      opacity: 0, x: -20, duration: 0.5, ease: 'power2.out'
+    }, 5.8);
+
+    biBars.forEach(function(bar, i) {
+      /* First grow to the no-bias height, then expand to the bias height */
+      var nbH = nbHeights[i];
+      var biH = biHeights[i];
+      tl.fromTo(bar, {
+        height: 0, opacity: 0.3
+      }, {
+        height: nbH, opacity: 1, duration: 0.5, ease: 'power2.out'
+      }, 6.0 + i * 0.12);
+      /* Then grow further with elastic ease to show the bias boost */
+      tl.to(bar, {
+        height: biH, duration: 0.7, ease: 'elastic.out(1,0.6)'
+      }, 6.6 + i * 0.1);
+    });
+
+    /* +beta tags pop in */
     root.querySelectorAll('.bias-tag').forEach(function(tag, i) {
-      tl.from(tag, { opacity: 0, y: -10, duration: 0.4 }, 5.4 + i * 0.15);
+      tl.from(tag, {
+        opacity: 0, scale: 0, y: 8, duration: 0.4, ease: 'back.out(2.5)'
+      }, 6.8 + i * 0.15);
     });
-    root.querySelectorAll('#bi-bars .bar').forEach(function(bar, i) {
-      tl.from(bar, { height: 0, duration: 0.6, ease: 'power2.out' }, 5.2 + i * 0.1);
-    });
-    tl.from(root.querySelector('.panel-bias .mass-val'), { opacity: 0, duration: 0.5 }, 6.2);
 
-    // Hold for viewing
-    tl.to({}, { duration: 3 });
+    root.querySelectorAll('#bi-bars .blbl').forEach(function(el, i) {
+      tl.from(el, { opacity: 0, y: 6, duration: 0.3, ease: 'power2.out' }, 6.4 + i * 0.1);
+    });
+
+    /* Mass = 100 with good badge */
+    tl.from(root.querySelector('#panel-bias .mass-row'), {
+      opacity: 0, scale: 0.9, duration: 0.4, ease: 'power2.out'
+    }, 7.5);
+
+    tl.from(root.querySelector('#badge-good'), {
+      scale: 0, rotation: 90, duration: 0.5, ease: 'back.out(2.5)'
+    }, 7.7);
+
+    /* Green glow pulse to emphasize "good" */
+    biBars.forEach(function(bar) {
+      tl.to(bar, {
+        boxShadow: '0 0 24px rgba(255,159,28,0.55)', duration: 0.3, ease: 'power1.in'
+      }, 8.0);
+      tl.to(bar, {
+        boxShadow: '0 0 12px rgba(255,159,28,0.3)', duration: 0.5, ease: 'power1.out'
+      }, 8.3);
+    });
+
+    /* 8.5–9.0s: Final emphasis — subtle pulse on the good badge */
+    tl.to(root.querySelector('#badge-good'), {
+      scale: 1.15, duration: 0.3, ease: 'power2.in'
+    }, 9.0);
+    tl.to(root.querySelector('#badge-good'), {
+      scale: 1.0, duration: 0.4, ease: 'elastic.out(1,0.5)'
+    }, 9.3);
+
+    /* Hold for viewing */
+    tl.to({}, { duration: 2.5 });
 
     window.__timelines["attention-mass"] = tl;
   </script>
