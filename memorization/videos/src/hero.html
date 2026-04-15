@@ -8,82 +8,58 @@
 </style>
 </head>
 <body>
-<div data-composition-id="memorization-hero" data-width="1920" data-height="540" data-start="0" data-duration="12">
+<div data-composition-id="memorization-hero" data-width="1920" data-height="540" data-start="0" data-duration="14">
   <div class="scene">
     <div class="bg-gradient"></div>
 
     <!-- Title -->
-    <div class="title" id="title">How Much Do Language Models <span class="teal">Memorize</span>?</div>
+    <div class="title" id="title">How Much Do Language Models Memorize?</div>
 
-    <!-- LEFT SIDE: Capacity gauge -->
-    <div class="gauge-section" id="gauge-section">
-      <div class="gauge-label-top">Model Capacity</div>
-      <div class="gauge-frame">
-        <div class="gauge-track">
-          <div class="gauge-fill" id="gauge-fill"></div>
-          <div class="gauge-flash" id="gauge-flash"></div>
-        </div>
-        <div class="gauge-ticks">
-          <div class="tick" style="bottom: 0%;"><span>0</span></div>
-          <div class="tick" style="bottom: 27.8%;"><span>1.0</span></div>
-          <div class="tick" style="bottom: 55.6%;"><span>2.0</span></div>
-          <div class="tick" style="bottom: 83.3%;"><span>3.0</span></div>
-          <div class="tick tick-max" style="bottom: 100%;"><span>3.6</span></div>
-        </div>
-        <div class="gauge-counter" id="gauge-counter">
-          <span class="counter-val" id="counter-val">0.0</span>
-          <span class="counter-unit">bits/param</span>
-        </div>
+    <!-- 5 model columns -->
+    <div class="models" id="models">
+      <div class="model-col" id="m0">
+        <div class="model-name">6.8M</div>
+        <div class="bar-wrap"><div class="bar-bg"><div class="bar-fill" id="bf0"></div></div></div>
+        <div class="bpp-val" id="bv0">0.0</div>
       </div>
-      <div class="gauge-formula" id="gauge-formula">3.6 bits &times; params = capacity</div>
-      <div class="capacity-tag" id="capacity-tag">CAPACITY FULL</div>
-    </div>
-
-    <!-- RIGHT SIDE: Two phases -->
-    <div class="phases-section" id="phases-section">
-      <!-- Phase 1: Memorizing -->
-      <div class="phase phase-mem" id="phase-mem">
-        <div class="phase-header">
-          <div class="phase-dot dot-teal"></div>
-          <div class="phase-title" style="color:#2EC4B6;">Phase 1: Memorizing</div>
-        </div>
-        <div class="phase-desc">Storing individual examples</div>
-        <div class="tokens-row" id="tokens-mem">
-          <div class="token tok-mem" id="tm-0"><span class="tok-text">the</span></div>
-          <div class="token tok-mem" id="tm-1"><span class="tok-text">cat</span></div>
-          <div class="token tok-mem" id="tm-2"><span class="tok-text">sat</span></div>
-          <div class="token tok-mem" id="tm-3"><span class="tok-text">on</span></div>
-          <div class="token tok-mem" id="tm-4"><span class="tok-text">mat</span></div>
-          <div class="token tok-mem" id="tm-5"><span class="tok-text">dog</span></div>
-          <div class="token tok-mem" id="tm-6"><span class="tok-text">run</span></div>
-          <div class="token tok-mem" id="tm-7"><span class="tok-text">big</span></div>
-        </div>
-        <div class="mem-detail" id="mem-detail">Each token stored verbatim</div>
+      <div class="model-col" id="m1">
+        <div class="model-name">68M</div>
+        <div class="bar-wrap"><div class="bar-bg"><div class="bar-fill" id="bf1"></div></div></div>
+        <div class="bpp-val" id="bv1">0.0</div>
       </div>
-
-      <!-- Divider -->
-      <div class="phase-divider" id="phase-divider"></div>
-
-      <!-- Phase 2: Generalizing -->
-      <div class="phase phase-gen" id="phase-gen">
-        <div class="phase-header">
-          <div class="phase-dot dot-green"></div>
-          <div class="phase-title" style="color:#3fb950;">Phase 2: Generalizing</div>
-        </div>
-        <div class="phase-desc">Compressing into reusable patterns</div>
-        <div class="tokens-row" id="tokens-gen">
-          <div class="token tok-gen" id="tg-0"><span class="tok-text">[noun]</span></div>
-          <div class="token tok-gen" id="tg-1"><span class="tok-text">[verb]</span></div>
-          <div class="token tok-gen" id="tg-2"><span class="tok-text">[prep]</span></div>
-          <div class="token tok-gen tok-wide" id="tg-3"><span class="tok-text">subj + verb + obj</span></div>
-        </div>
-        <div class="gen-detail" id="gen-detail">Patterns replace memorized data</div>
+      <div class="model-col" id="m2">
+        <div class="model-name">680M</div>
+        <div class="bar-wrap"><div class="bar-bg"><div class="bar-fill" id="bf2"></div></div></div>
+        <div class="bpp-val" id="bv2">0.0</div>
+      </div>
+      <div class="model-col" id="m3">
+        <div class="model-name">1.3B</div>
+        <div class="bar-wrap"><div class="bar-bg"><div class="bar-fill" id="bf3"></div></div></div>
+        <div class="bpp-val" id="bv3">0.0</div>
+      </div>
+      <div class="model-col" id="m4">
+        <div class="model-name">6.8B</div>
+        <div class="bar-wrap"><div class="bar-bg"><div class="bar-fill" id="bf4"></div></div></div>
+        <div class="bpp-val" id="bv4">0.0</div>
       </div>
     </div>
 
-    <!-- Bottom punchline -->
+    <!-- Horizontal constant line -->
+    <div class="constant-line" id="cline">
+      <div class="cline-bar"></div>
+      <div class="cline-label">3.6 bits/param</div>
+    </div>
+
+    <!-- Axis labels -->
+    <div class="axis-label axis-y">bits per parameter</div>
+    <div class="axis-label axis-x">model size (parameters)</div>
+
+    <!-- Reveal text -->
+    <div class="reveal" id="reveal">The same constant — regardless of model size</div>
+
+    <!-- Punchline -->
     <div class="punchline" id="punchline">
-      3.6 bits per parameter &mdash; <span class="hl-green">the fundamental capacity constant</span>
+      <span class="punch-num">3.6</span> bits/param — a universal capacity constant
     </div>
   </div>
 
@@ -97,189 +73,91 @@
     .bg-gradient {
       position: absolute; inset: 0;
       background:
-        radial-gradient(ellipse 40% 60% at 25% 50%, rgba(46,196,182,0.04) 0%, transparent 70%),
-        radial-gradient(ellipse 40% 60% at 75% 40%, rgba(63,185,80,0.03) 0%, transparent 70%),
-        radial-gradient(ellipse 30% 40% at 50% 80%, rgba(255,159,28,0.03) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 70% at 50% 60%, rgba(46,196,182,0.04) 0%, transparent 70%),
         linear-gradient(180deg, #011627 0%, #021e32 100%);
     }
 
-    /* Title */
     .title {
       position: absolute; top: 18px; left: 50%; transform: translateX(-50%);
-      font-size: 36px; font-weight: 700; white-space: nowrap; opacity: 0;
-      z-index: 10; letter-spacing: -0.5px;
-    }
-    .teal { color: #2EC4B6; }
-
-    /* ── LEFT: Gauge section ── */
-    .gauge-section {
-      position: absolute; left: 100px; top: 72px; width: 520px;
-      display: flex; flex-direction: column; align-items: center;
-      opacity: 0;
+      font-size: 36px; font-weight: 700; white-space: nowrap; opacity: 0; z-index: 10;
     }
 
-    .gauge-label-top {
-      font-size: 24px; font-weight: 700; color: #FDFFFC;
-      margin-bottom: 12px; text-transform: uppercase; letter-spacing: 2px;
+    .models {
+      position: absolute; top: 80px; left: 180px; right: 180px;
+      height: 310px; display: flex; gap: 48px;
+      align-items: flex-end; padding-bottom: 40px;
     }
 
-    .gauge-frame {
-      position: relative; width: 380px; height: 280px;
-      display: flex; align-items: center; justify-content: center;
+    .model-col {
+      flex: 1; display: flex; flex-direction: column;
+      align-items: center; justify-content: flex-end; opacity: 0;
     }
 
-    .gauge-track {
-      width: 80px; height: 260px;
-      background: #0d2137;
-      border: 2.5px solid #415A77;
-      border-radius: 12px;
-      position: relative; overflow: hidden;
+    .model-name {
+      font-size: 20px; font-weight: 700; color: #778DA9;
+      margin-bottom: 10px;
     }
 
-    .gauge-fill {
-      position: absolute; bottom: 0; left: 0; right: 0;
-      height: 0%;
-      background: linear-gradient(180deg, #2EC4B6 0%, #1a8a80 100%);
-      border-radius: 0 0 9px 9px;
+    .bar-wrap {
+      width: 100%; max-width: 160px; height: 220px;
+      display: flex; align-items: flex-end;
     }
 
-    .gauge-flash {
-      position: absolute; inset: 0;
-      background: rgba(255,159,28,0.0);
-      border-radius: 9px;
+    .bar-bg {
+      width: 100%; height: 220px; border-radius: 8px;
+      background: rgba(65,90,119,0.12); border: 1px solid rgba(65,90,119,0.2);
+      display: flex; align-items: flex-end; overflow: hidden;
     }
 
-    .gauge-ticks {
-      position: absolute; left: 190px; top: 0; bottom: 0; width: 60px;
+    .bar-fill {
+      width: 100%; height: 0; border-radius: 0 0 6px 6px;
+      background: linear-gradient(180deg, #2EC4B6, #1a8a80);
+      box-shadow: 0 0 16px rgba(46,196,182,0.25);
     }
 
-    .tick {
-      position: absolute; left: 0;
-      display: flex; align-items: center; gap: 6px;
-      transform: translateY(50%);
-    }
-    .tick::before {
-      content: '';
-      width: 12px; height: 2px;
-      background: #415A77;
-    }
-    .tick span {
-      font-size: 16px; color: #778DA9; font-weight: 400;
-    }
-    .tick-max span {
-      color: #FF9F1C; font-weight: 700; font-size: 18px;
+    .bpp-val {
+      font-size: 24px; font-weight: 700; color: #2EC4B6;
+      margin-top: 8px; opacity: 0;
     }
 
-    .gauge-counter {
-      position: absolute; left: 260px; top: 50%;
-      transform: translateY(-50%);
-      display: flex; flex-direction: column; align-items: flex-start;
-    }
-
-    .counter-val {
-      font-size: 56px; font-weight: 700; color: #2EC4B6;
-      line-height: 1;
-    }
-    .counter-unit {
-      font-size: 18px; color: #778DA9; margin-top: 4px;
-    }
-
-    .gauge-formula {
-      font-size: 17px; color: #778DA9; margin-top: 14px;
-      opacity: 0;
-    }
-
-    .capacity-tag {
-      margin-top: 8px;
-      font-size: 22px; font-weight: 700; color: #FF9F1C;
-      background: rgba(255,159,28,0.1);
-      border: 2px solid rgba(255,159,28,0.4);
-      border-radius: 8px; padding: 6px 24px;
-      opacity: 0; white-space: nowrap;
-      text-transform: uppercase; letter-spacing: 2px;
-    }
-
-    /* ── RIGHT: Phases section ── */
-    .phases-section {
-      position: absolute; right: 80px; top: 72px; width: 720px;
-      display: flex; flex-direction: column; gap: 0;
-      opacity: 0;
-    }
-
-    .phase {
-      padding: 16px 24px;
-      border-radius: 12px;
-    }
-
-    .phase-mem {
-      background: linear-gradient(135deg, rgba(46,196,182,0.06), rgba(46,196,182,0.02));
-      border: 2px solid rgba(46,196,182,0.2);
-    }
-
-    .phase-gen {
-      background: linear-gradient(135deg, rgba(63,185,80,0.06), rgba(63,185,80,0.02));
-      border: 2px solid rgba(63,185,80,0.2);
-      opacity: 0;
-    }
-
-    .phase-header {
+    /* Constant line: 3.6/5.0 * 220 = 158px from bar bottom
+       bars bottom at: 80 + 310 - 40 = 350px from scene top
+       line at: 350 - 158 = 192px from scene top */
+    .constant-line {
+      position: absolute; left: 160px; right: 160px;
+      top: 192px;
       display: flex; align-items: center; gap: 12px;
-      margin-bottom: 6px;
+      opacity: 0; z-index: 10;
+    }
+    .cline-bar {
+      flex: 1; height: 3px;
+      background: #FF9F1C;
+      box-shadow: 0 0 10px rgba(255,159,28,0.4);
+    }
+    .cline-label {
+      font-size: 22px; font-weight: 700; color: #FF9F1C;
+      white-space: nowrap;
+      text-shadow: 0 0 12px rgba(255,159,28,0.3);
     }
 
-    .phase-dot {
-      width: 12px; height: 12px; border-radius: 50%;
+    .axis-label {
+      position: absolute; font-size: 16px; font-weight: 400; color: #415A77;
+      letter-spacing: 1px; opacity: 0;
     }
-    .dot-teal { background: #2EC4B6; }
-    .dot-green { background: #3fb950; }
-
-    .phase-title {
-      font-size: 22px; font-weight: 700;
+    .axis-y {
+      left: 60px; top: 200px;
+      writing-mode: vertical-rl; transform: rotate(180deg);
     }
-
-    .phase-desc {
-      font-size: 16px; color: #778DA9; margin-bottom: 12px;
+    .axis-x {
+      bottom: 68px; left: 50%; transform: translateX(-50%);
     }
 
-    .tokens-row {
-      display: flex; gap: 8px; flex-wrap: wrap;
+    .reveal {
+      position: absolute; top: 162px; left: 50%; transform: translateX(-50%);
+      font-size: 22px; font-weight: 700; color: #FF9F1C;
+      white-space: nowrap; opacity: 0; z-index: 10;
     }
 
-    .token {
-      padding: 6px 14px; border-radius: 6px;
-      font-size: 16px; font-weight: 700;
-      opacity: 0;
-    }
-
-    .tok-mem {
-      background: rgba(46,196,182,0.12);
-      border: 1.5px solid rgba(46,196,182,0.4);
-      color: #2EC4B6;
-    }
-
-    .tok-gen {
-      background: rgba(63,185,80,0.12);
-      border: 1.5px solid rgba(63,185,80,0.4);
-      color: #3fb950;
-    }
-
-    .tok-wide {
-      padding: 6px 20px;
-    }
-
-    .mem-detail, .gen-detail {
-      font-size: 16px; color: #778DA9;
-      margin-top: 10px; opacity: 0;
-    }
-
-    .phase-divider {
-      width: 100%; height: 2px;
-      background: linear-gradient(90deg, transparent 0%, #415A77 30%, #415A77 70%, transparent 100%);
-      margin: 14px 0;
-      opacity: 0;
-    }
-
-    /* Bottom punchline */
     .punchline {
       position: absolute; bottom: 18px; left: 50%; transform: translateX(-50%);
       font-size: 24px; font-weight: 700; color: #FDFFFC;
@@ -288,7 +166,7 @@
       border-radius: 10px; padding: 10px 36px;
       white-space: nowrap; opacity: 0; z-index: 10;
     }
-    .hl-green { color: #3fb950; }
+    .punch-num { font-size: 36px; color: #3fb950; }
   </style>
 
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
@@ -297,17 +175,25 @@
     var root = document.currentScript.parentElement;
     var tl = gsap.timeline({ paused: true });
 
-    // ── Element references ──
-    var gaugeFill = root.querySelector('#gauge-fill');
-    var gaugeFlash = root.querySelector('#gauge-flash');
-    var counterVal = root.querySelector('#counter-val');
-    var gaugeFormula = root.querySelector('.gauge-formula');
-    var capacityTag = root.querySelector('#capacity-tag');
-    var memTokens = root.querySelectorAll('.tok-mem');
-    var genTokens = root.querySelectorAll('.tok-gen');
+    /* ============================================================
+       All 5 models converge to ~3.6 bits/param
+       Bar max height: 220px = 5.0 bits/param (scale)
+       3.6 bits = 3.6/5.0 * 220 = 158.4px
+       ============================================================ */
+    var maxBpp = 5.0;
+    var barMaxH = 220;
+    var targetBpp = 3.6;
+    var targetH = (targetBpp / maxBpp) * barMaxH;
+
+    var fills = [];
+    var vals = [];
+    for (var i = 0; i < 5; i++) {
+      fills.push(root.querySelector('#bf' + i));
+      vals.push(root.querySelector('#bv' + i));
+    }
 
     /* ============================================================
-       PHASE 1 (0-2s): Title + gauge appears empty
+       PHASE 1 (0-2s): Title + columns appear
        ============================================================ */
     tl.to(root.querySelector('#title'), {
       opacity: 1, duration: 0.6, ease: 'power3.out'
@@ -316,200 +202,87 @@
       y: -20, duration: 0.6, ease: 'power3.out'
     }, 0.2);
 
-    // Gauge section fades in
-    tl.to(root.querySelector('#gauge-section'), {
-      opacity: 1, duration: 0.5, ease: 'power2.out'
-    }, 1.0);
-    tl.from(root.querySelector('#gauge-section'), {
-      x: -30, duration: 0.6, ease: 'power3.out'
-    }, 1.0);
+    tl.to(root.querySelector('.axis-y'), { opacity: 1, duration: 0.4 }, 0.8);
+    tl.to(root.querySelector('.axis-x'), { opacity: 1, duration: 0.4 }, 0.8);
 
-    // Formula text
-    tl.to(gaugeFormula, {
-      opacity: 1, duration: 0.4, ease: 'power2.out'
-    }, 1.4);
-
-    // Phases section fades in
-    tl.to(root.querySelector('#phases-section'), {
-      opacity: 1, duration: 0.5, ease: 'power2.out'
-    }, 1.5);
-    tl.from(root.querySelector('#phases-section'), {
-      x: 30, duration: 0.6, ease: 'power3.out'
-    }, 1.5);
+    for (var i = 0; i < 5; i++) {
+      (function(idx) {
+        var col = root.querySelector('#m' + idx);
+        tl.to(col, { opacity: 1, duration: 0.3, ease: 'power2.out' }, 1.2 + idx * 0.2);
+        tl.from(col, { y: 20, duration: 0.4, ease: 'power2.out' }, 1.2 + idx * 0.2);
+      })(i);
+    }
 
     /* ============================================================
-       PHASE 2 (2-6s): Gauge fills + memorizing tokens appear
-       Counter: 0.0 -> 1.0 -> 2.0 -> 3.0 -> 3.6
+       PHASE 2 (2.5-7s): Bars fill — all land on 3.6
        ============================================================ */
-    // Gauge fill animates from 0% to 100% (3.6 bits/param)
-    tl.to(gaugeFill, {
-      height: '100%',
-      duration: 4.0,
-      ease: 'power1.inOut',
-      onUpdate: function() {
-        var pct = this.progress();
-        var bpp = pct * 3.6;
-        counterVal.textContent = bpp.toFixed(1);
-      }
-    }, 2.0);
+    var starts = [2.5, 3.0, 3.5, 4.0, 4.5];
 
-    // Gauge border intensifies as it fills
-    tl.to(root.querySelector('.gauge-track'), {
-      borderColor: '#2EC4B6',
-      boxShadow: '0 0 20px rgba(46,196,182,0.2)',
-      duration: 3.0, ease: 'power1.in'
-    }, 2.5);
+    for (var i = 0; i < 5; i++) {
+      (function(idx) {
+        var proxy = { v: 0 };
 
-    // Memorizing tokens appear one by one during fill
-    memTokens.forEach(function(tok, i) {
-      var delay = 2.2 + i * 0.4;
-      tl.to(tok, { opacity: 1, duration: 0.25, ease: 'power2.out' }, delay);
-      tl.from(tok, { y: 12, scale: 0.7, duration: 0.35, ease: 'back.out(2)' }, delay);
-    });
+        tl.to(fills[idx], {
+          height: targetH, duration: 1.5, ease: 'power2.out'
+        }, starts[idx]);
 
-    // Mem detail text
-    tl.to(root.querySelector('#mem-detail'), {
-      opacity: 1, duration: 0.4, ease: 'power2.out'
-    }, 4.6);
+        tl.to(vals[idx], { opacity: 1, duration: 0.2 }, starts[idx]);
+
+        tl.to(proxy, {
+          v: targetBpp, duration: 1.5, ease: 'power2.out',
+          onUpdate: function() {
+            vals[idx].textContent = proxy.v.toFixed(1);
+          }
+        }, starts[idx]);
+      })(i);
+    }
 
     /* ============================================================
-       PHASE 3 (6-7s): Gauge hits 3.6 — flashes orange, CAPACITY FULL
+       PHASE 3 (7-9s): Constant line + reveal
        ============================================================ */
-    // Flash the gauge fill orange
-    tl.to(gaugeFill, {
-      background: 'linear-gradient(180deg, #FF9F1C 0%, #cc7a00 100%)',
-      duration: 0.2, ease: 'power2.in'
-    }, 6.0);
-
-    // Overlay flash
-    tl.to(gaugeFlash, {
-      background: 'rgba(255,159,28,0.35)',
-      duration: 0.15, ease: 'power2.in'
-    }, 6.0);
-    tl.to(gaugeFlash, {
-      background: 'rgba(255,159,28,0.0)',
-      duration: 0.4, ease: 'power2.out'
-    }, 6.2);
-
-    // Gauge track border flashes orange
-    tl.to(root.querySelector('.gauge-track'), {
-      borderColor: '#FF9F1C',
-      boxShadow: '0 0 40px rgba(255,159,28,0.4)',
-      duration: 0.2, ease: 'power2.in'
-    }, 6.0);
-
-    // Counter pulses
-    tl.to(counterVal, {
-      color: '#FF9F1C', scale: 1.1,
-      duration: 0.2, ease: 'power2.out'
-    }, 6.0);
-    tl.to(counterVal, {
-      scale: 1.0,
-      duration: 0.3, ease: 'elastic.out(1, 0.5)'
-    }, 6.3);
-
-    // CAPACITY FULL tag
-    tl.to(capacityTag, {
-      opacity: 1, duration: 0.01
-    }, 6.2);
-    tl.from(capacityTag, {
-      scale: 0.8, duration: 0.4, ease: 'back.out(2)'
-    }, 6.2);
-
-    // Pulse the capacity tag
-    tl.to(capacityTag, {
-      boxShadow: '0 0 20px rgba(255,159,28,0.4)',
-      duration: 0.3, ease: 'power2.out'
-    }, 6.4);
-    tl.to(capacityTag, {
-      boxShadow: '0 0 8px rgba(255,159,28,0.15)',
-      duration: 0.4, ease: 'sine.inOut'
-    }, 6.7);
-
-    /* ============================================================
-       PHASE 4 (7-9s): Transition to generalizing
-       Memorizing phase dims. Generalizing phase lights up.
-       Gauge shifts from orange to green.
-       ============================================================ */
-    // Dim the memorizing phase
-    tl.to(root.querySelector('#phase-mem'), {
-      opacity: 0.35,
-      borderColor: 'rgba(46,196,182,0.08)',
-      duration: 0.6, ease: 'power2.in'
+    tl.to(root.querySelector('#cline'), {
+      opacity: 1, duration: 0.6, ease: 'power2.out'
+    }, 7.0);
+    tl.from(root.querySelector('.cline-bar'), {
+      scaleX: 0, transformOrigin: 'left center', duration: 0.8, ease: 'expo.out'
     }, 7.0);
 
-    // Divider appears
-    tl.to(root.querySelector('#phase-divider'), {
-      opacity: 1, duration: 0.3, ease: 'power2.out'
-    }, 7.0);
-
-    // Generalizing phase appears
-    tl.to(root.querySelector('#phase-gen'), {
+    tl.to(root.querySelector('#reveal'), {
       opacity: 1, duration: 0.5, ease: 'power2.out'
-    }, 7.2);
-    tl.from(root.querySelector('#phase-gen'), {
-      y: 15, duration: 0.5, ease: 'power3.out'
-    }, 7.2);
-
-    // Generalizing phase border glows
-    tl.to(root.querySelector('#phase-gen'), {
-      borderColor: 'rgba(63,185,80,0.45)',
-      boxShadow: '0 0 24px rgba(63,185,80,0.12)',
-      duration: 0.5, ease: 'power2.out'
-    }, 7.4);
-
-    // Generalizing tokens appear
-    genTokens.forEach(function(tok, i) {
-      var delay = 7.5 + i * 0.3;
-      tl.to(tok, { opacity: 1, duration: 0.25, ease: 'power2.out' }, delay);
-      tl.from(tok, { x: -10, scale: 0.8, duration: 0.35, ease: 'back.out(1.8)' }, delay);
-    });
-
-    // Gen detail text
-    tl.to(root.querySelector('#gen-detail'), {
-      opacity: 1, duration: 0.4, ease: 'power2.out'
-    }, 8.4);
-
-    // Gauge transitions to green
-    tl.to(gaugeFill, {
-      background: 'linear-gradient(180deg, #3fb950 0%, #1a6b2a 50%, #2EC4B6 100%)',
-      duration: 1.0, ease: 'power2.inOut'
-    }, 7.2);
-
-    tl.to(root.querySelector('.gauge-track'), {
-      borderColor: '#3fb950',
-      boxShadow: '0 0 28px rgba(63,185,80,0.25)',
-      duration: 0.8, ease: 'power2.out'
-    }, 7.4);
-
-    // Counter goes green
-    tl.to(counterVal, {
-      color: '#3fb950',
-      duration: 0.4, ease: 'power2.out'
     }, 7.5);
 
+    // Flash bars orange then back
+    for (var i = 0; i < 5; i++) {
+      tl.to(vals[i], { color: '#FF9F1C', duration: 0.3 }, 7.2);
+      tl.to(vals[i], { color: '#2EC4B6', duration: 0.5 }, 8.0);
+      tl.to(fills[i], {
+        boxShadow: '0 0 24px rgba(255,159,28,0.4)', duration: 0.3
+      }, 7.2);
+      tl.to(fills[i], {
+        boxShadow: '0 0 16px rgba(46,196,182,0.25)', duration: 0.5
+      }, 8.0);
+    }
+
     /* ============================================================
-       PHASE 5 (9-12s): Punchline + hold
+       PHASE 4 (9.5-14s): Punchline + hold
        ============================================================ */
     tl.to(root.querySelector('#punchline'), {
       opacity: 1, duration: 0.01
-    }, 9.2);
+    }, 9.5);
     tl.from(root.querySelector('#punchline'), {
-      y: 15, scale: 0.92, duration: 0.6, ease: 'back.out(1.6)'
-    }, 9.2);
+      y: 15, scale: 0.93, duration: 0.6, ease: 'back.out(1.5)'
+    }, 9.5);
 
-    // Gentle pulse on punchline
     tl.to(root.querySelector('#punchline'), {
       boxShadow: '0 0 20px rgba(63,185,80,0.25)',
-      duration: 0.7, ease: 'sine.inOut'
-    }, 10.0);
+      duration: 0.8, ease: 'sine.inOut'
+    }, 10.5);
     tl.to(root.querySelector('#punchline'), {
       boxShadow: '0 0 6px rgba(63,185,80,0.1)',
-      duration: 0.7, ease: 'sine.inOut'
-    }, 10.7);
+      duration: 0.8, ease: 'sine.inOut'
+    }, 11.3);
 
-    // Hold
-    tl.to({}, { duration: 0.5 }, 11.5);
+    tl.to({}, { duration: 0.5 }, 13.5);
 
     window.__timelines["memorization-hero"] = tl;
   </script>
