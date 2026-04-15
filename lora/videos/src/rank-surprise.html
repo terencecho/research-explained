@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap');
+* { margin: 0; padding: 0; box-sizing: border-box; }
+</style>
+</head>
+<body>
+<div
+  data-composition-id="rank-surprise"
+  data-width="1920"
+  data-height="540"
+  data-start="0"
+  data-duration="14"
+>
+  <div class="scene">
+    <div class="bg-gradient"></div>
+
+    <!-- Title -->
+    <div class="title" id="title">Does Rank Matter?</div>
+
+    <!-- Narrative phase 1: The expectation -->
+    <div class="expect-text" id="expect">
+      "More parameters should mean better accuracy, right?"
+    </div>
+
+    <!-- The main visual: 5 columns, each showing rank, param bar, accuracy badge -->
+    <div class="columns" id="columns">
+      <div class="col" id="col-1">
+        <div class="rank-label">r = 1</div>
+        <div class="param-bar-wrap">
+          <div class="param-bar" id="bar-1"></div>
+        </div>
+        <div class="param-val" id="pval-1">4.7M params</div>
+        <div class="acc-badge" id="acc-1">
+          <span class="acc-num">73.4%</span>
+        </div>
+      </div>
+      <div class="col" id="col-2">
+        <div class="rank-label">r = 2</div>
+        <div class="param-bar-wrap">
+          <div class="param-bar" id="bar-2"></div>
+        </div>
+        <div class="param-val" id="pval-2">9.4M params</div>
+        <div class="acc-badge" id="acc-2">
+          <span class="acc-num">73.3%</span>
+        </div>
+      </div>
+      <div class="col" id="col-4">
+        <div class="rank-label">r = 4</div>
+        <div class="param-bar-wrap">
+          <div class="param-bar" id="bar-4"></div>
+        </div>
+        <div class="param-val" id="pval-4">18.9M params</div>
+        <div class="acc-badge" id="acc-4">
+          <span class="acc-num">73.7%</span>
+        </div>
+      </div>
+      <div class="col" id="col-8">
+        <div class="rank-label">r = 8</div>
+        <div class="param-bar-wrap">
+          <div class="param-bar" id="bar-8"></div>
+        </div>
+        <div class="param-val" id="pval-8">37.7M params</div>
+        <div class="acc-badge" id="acc-8">
+          <span class="acc-num">73.7%</span>
+        </div>
+      </div>
+      <div class="col" id="col-64">
+        <div class="rank-label">r = 64</div>
+        <div class="param-bar-wrap">
+          <div class="param-bar" id="bar-64"></div>
+        </div>
+        <div class="param-val" id="pval-64">301.9M params</div>
+        <div class="acc-badge" id="acc-64">
+          <span class="acc-num">73.6%</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Accuracy flat line label -->
+    <div class="acc-flat-label" id="acc-flat">
+      Accuracy: essentially identical across all ranks
+    </div>
+
+    <!-- The punchline -->
+    <div class="punchline" id="punchline">
+      <span class="punch-big">64&times;</span> fewer parameters, same accuracy
+    </div>
+  </div>
+
+  <style>
+    [data-composition-id="rank-surprise"] {
+      position: relative; overflow: hidden; background: #011627;
+      width: 1920px; height: 540px; font-family: 'Space Mono', monospace; color: #FDFFFC;
+    }
+    .scene { position: relative; width: 1920px; height: 540px; }
+
+    .bg-gradient {
+      position: absolute; inset: 0;
+      background:
+        radial-gradient(ellipse 70% 80% at 50% 60%, rgba(255,159,28,0.04) 0%, transparent 70%),
+        linear-gradient(180deg, #011627 0%, #021e32 100%);
+    }
+
+    .title {
+      position: absolute; top: 20px; left: 80px;
+      font-size: 40px; font-weight: 700; opacity: 0; z-index: 10;
+    }
+
+    .expect-text {
+      position: absolute; top: 72px; left: 80px;
+      font-size: 20px; font-weight: 400; color: #778DA9;
+      font-style: italic; opacity: 0; z-index: 10;
+    }
+
+    /* 5 columns filling most of the frame */
+    .columns {
+      position: absolute; top: 110px; left: 80px; right: 80px;
+      height: 340px;
+      display: flex; gap: 32px;
+      align-items: flex-end;
+      padding-bottom: 80px;
+    }
+
+    .col {
+      flex: 1; display: flex; flex-direction: column;
+      align-items: center; justify-content: flex-end;
+      position: relative; opacity: 0;
+    }
+
+    .rank-label {
+      font-size: 22px; font-weight: 700; color: #778DA9;
+      margin-bottom: 10px;
+    }
+
+    .param-bar-wrap {
+      width: 100%; max-width: 180px;
+      display: flex; align-items: flex-end; justify-content: center;
+    }
+
+    .param-bar {
+      width: 100%; max-width: 180px; height: 0;
+      border-radius: 8px 8px 0 0;
+      background: linear-gradient(180deg, #FF9F1C, #cc7a00);
+      box-shadow: 0 0 16px rgba(255,159,28,0.25);
+    }
+
+    .param-val {
+      font-size: 18px; font-weight: 700; color: #FF9F1C;
+      margin-top: 8px; opacity: 0;
+    }
+
+    .acc-badge {
+      margin-top: 12px; padding: 8px 24px;
+      border-radius: 8px;
+      background: rgba(46,196,182,0.1);
+      border: 2px solid #2EC4B6;
+      opacity: 0;
+    }
+    .acc-num {
+      font-size: 24px; font-weight: 700; color: #2EC4B6;
+    }
+
+    .acc-flat-label {
+      position: absolute; bottom: 82px; left: 0; right: 0;
+      text-align: center; font-size: 20px; font-weight: 700;
+      color: #2EC4B6; opacity: 0; z-index: 10;
+    }
+
+    .punchline {
+      position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
+      font-size: 28px; font-weight: 700; color: #FDFFFC;
+      background: rgba(63,185,80,0.08);
+      border: 2px solid rgba(63,185,80,0.35);
+      border-radius: 12px; padding: 12px 40px;
+      white-space: nowrap; opacity: 0; z-index: 10;
+    }
+    .punch-big {
+      font-size: 40px; color: #3fb950;
+    }
+  </style>
+
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+  <script>
+    window.__timelines = window.__timelines || {};
+    var root = document.currentScript.parentElement;
+    var tl = gsap.timeline({ paused: true });
+
+    /* ============================================================
+       BAR HEIGHTS — parameters normalized to fill frame
+       4.7M, 9.4M, 18.9M, 37.7M, 301.9M
+       Max bar height = 200px (fills the column area)
+       ============================================================ */
+    var paramValues = [4.7, 9.4, 18.9, 37.7, 301.9];
+    var maxH = 200;
+    var barHeights = paramValues.map(function(v) {
+      return Math.max(12, (v / 301.9) * maxH);
+    });
+    // barHeights ≈ [3→12min, 6→12min, 12.5, 25, 200]
+
+    var barIds = ['bar-1', 'bar-2', 'bar-4', 'bar-8', 'bar-64'];
+    var colIds = ['col-1', 'col-2', 'col-4', 'col-8', 'col-64'];
+    var pvalIds = ['pval-1', 'pval-2', 'pval-4', 'pval-8', 'pval-64'];
+    var accIds = ['acc-1', 'acc-2', 'acc-4', 'acc-8', 'acc-64'];
+
+    /* ============================================================
+       PHASE 1 (0-2.5s): Title + expectation text
+       Build tension: "more params = better, right?"
+       ============================================================ */
+    tl.to(root.querySelector('#title'), {
+      opacity: 1, duration: 0.6, ease: 'power3.out'
+    }, 0.2);
+    tl.from(root.querySelector('#title'), {
+      y: -25, duration: 0.6, ease: 'power3.out'
+    }, 0.2);
+
+    tl.to(root.querySelector('#expect'), {
+      opacity: 1, duration: 0.6, ease: 'power2.out'
+    }, 0.8);
+
+    /* ============================================================
+       PHASE 2 (2-7s): Bars grow left to right
+       Each column: column fades in, bar grows, param label appears
+       r=64 bar is DRAMATICALLY taller — the visual expectation is
+       "this must be way better"
+       ============================================================ */
+    colIds.forEach(function(id, i) {
+      var col = root.querySelector('#' + id);
+      var bar = root.querySelector('#' + barIds[i]);
+      var pval = root.querySelector('#' + pvalIds[i]);
+      var t = 2.0 + i * 0.8;
+      var isLast = i === 4;
+
+      // Column fades in
+      tl.to(col, { opacity: 1, duration: 0.3, ease: 'power2.out' }, t);
+      tl.from(col, { y: 20, duration: 0.4, ease: 'power2.out' }, t);
+
+      // Bar grows — last one is dramatic
+      tl.to(bar, {
+        height: barHeights[i],
+        duration: isLast ? 1.2 : 0.6,
+        ease: isLast ? 'expo.out' : 'back.out(1.4)'
+      }, t + 0.15);
+
+      // Param value appears
+      tl.to(pval, {
+        opacity: 1, duration: 0.3, ease: 'power2.out'
+      }, t + 0.4);
+    });
+
+    // Fade out expectation text as bars build
+    tl.to(root.querySelector('#expect'), {
+      opacity: 0, duration: 0.4, ease: 'power2.in'
+    }, 3.5);
+
+    /* ============================================================
+       PHASE 3 (7-9.5s): THE REVEAL — accuracy badges appear
+       All nearly identical. This is the surprise.
+       They pop in simultaneously (or rapid stagger) to emphasize
+       "wait... they're all the same?!"
+       ============================================================ */
+    accIds.forEach(function(id, i) {
+      var badge = root.querySelector('#' + id);
+      var t = 7.0 + i * 0.15;
+
+      tl.to(badge, { opacity: 1, duration: 0.01 }, t);
+      tl.from(badge, {
+        scale: 0.5, duration: 0.5, ease: 'elastic.out(1, 0.5)'
+      }, t);
+    });
+
+    // Flat accuracy label
+    tl.to(root.querySelector('#acc-flat'), {
+      opacity: 1, duration: 0.5, ease: 'power2.out'
+    }, 8.0);
+
+    /* ============================================================
+       PHASE 4 (9-10.5s): Emphasis
+       Dim everything except r=1 and r=64 to spotlight the contrast
+       r=1: tiny bar, same accuracy — glow green
+       r=64: massive bar, same accuracy — dim
+       ============================================================ */
+    // Dim middle columns
+    ['col-2', 'col-4', 'col-8'].forEach(function(id) {
+      tl.to(root.querySelector('#' + id), {
+        opacity: 0.3, duration: 0.5, ease: 'power2.in'
+      }, 9.2);
+    });
+
+    // Glow r=1
+    tl.to(root.querySelector('#bar-1'), {
+      boxShadow: '0 0 30px rgba(63,185,80,0.6)',
+      borderColor: '#3fb950',
+      duration: 0.5, ease: 'power2.out'
+    }, 9.2);
+    tl.to(root.querySelector('#acc-1'), {
+      borderColor: '#3fb950',
+      boxShadow: '0 0 20px rgba(63,185,80,0.3)',
+      duration: 0.5, ease: 'power2.out'
+    }, 9.2);
+
+    // Dim r=64 bar
+    tl.to(root.querySelector('#bar-64'), {
+      opacity: 0.35, duration: 0.5, ease: 'power2.in'
+    }, 9.2);
+
+    /* ============================================================
+       PHASE 5 (10.5-14s): Punchline + hold
+       ============================================================ */
+    tl.to(root.querySelector('#punchline'), {
+      opacity: 1, duration: 0.01
+    }, 10.5);
+    tl.from(root.querySelector('#punchline'), {
+      y: 20, scale: 0.9, duration: 0.7, ease: 'back.out(1.8)'
+    }, 10.5);
+
+    // Gentle pulse on punchline border
+    tl.to(root.querySelector('#punchline'), {
+      boxShadow: '0 0 24px rgba(63,185,80,0.3)',
+      duration: 0.8, ease: 'sine.inOut'
+    }, 11.2);
+    tl.to(root.querySelector('#punchline'), {
+      boxShadow: '0 0 8px rgba(63,185,80,0.1)',
+      duration: 0.8, ease: 'sine.inOut'
+    }, 12.0);
+
+    // Hold
+    tl.to({}, { duration: 0.5 }, 13.5);
+
+    window.__timelines["rank-surprise"] = tl;
+  </script>
+</div>
+</body>
+</html>
