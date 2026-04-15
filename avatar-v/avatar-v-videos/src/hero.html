@@ -13,60 +13,247 @@
   data-width="1920"
   data-height="540"
   data-start="0"
-  data-duration="10"
+  data-duration="12"
 >
   <div class="scene">
-    <!-- Left: Reference video representation -->
-    <div class="ref-panel">
-      <div class="panel-label">Reference Video</div>
-      <div class="ref-frame">
-        <div class="person-icon">&#x1F464;</div>
-        <div class="trait-tags">
-          <div class="trait">face geometry</div>
-          <div class="trait">talking rhythm</div>
-          <div class="trait">micro-expressions</div>
-          <div class="trait">voice tone</div>
+
+    <!-- Background layers for depth -->
+    <div class="bg-radial"></div>
+    <svg class="bg-grid" width="1920" height="540" viewBox="0 0 1920 540"></svg>
+
+    <!-- Particle stream container (left-to-center data flow) -->
+    <svg class="particle-layer" width="1920" height="540" viewBox="0 0 1920 540">
+      <defs>
+        <radialGradient id="glow-orange">
+          <stop offset="0%" stop-color="#FF9F1C" stop-opacity="0.9"/>
+          <stop offset="100%" stop-color="#FF9F1C" stop-opacity="0"/>
+        </radialGradient>
+        <radialGradient id="glow-purple">
+          <stop offset="0%" stop-color="#bc8cff" stop-opacity="0.9"/>
+          <stop offset="100%" stop-color="#bc8cff" stop-opacity="0"/>
+        </radialGradient>
+        <radialGradient id="glow-teal-r">
+          <stop offset="0%" stop-color="#2EC4B6" stop-opacity="0.9"/>
+          <stop offset="100%" stop-color="#2EC4B6" stop-opacity="0"/>
+        </radialGradient>
+        <filter id="softglow">
+          <feGaussianBlur stdDeviation="4"/>
+        </filter>
+        <filter id="wideglow">
+          <feGaussianBlur stdDeviation="8"/>
+        </filter>
+        <linearGradient id="stream-grad-1" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%" stop-color="#FF9F1C" stop-opacity="0.8"/>
+          <stop offset="100%" stop-color="#bc8cff" stop-opacity="0.6"/>
+        </linearGradient>
+        <linearGradient id="stream-grad-2" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%" stop-color="#FF9F1C" stop-opacity="0.5"/>
+          <stop offset="100%" stop-color="#bc8cff" stop-opacity="0.4"/>
+        </linearGradient>
+        <linearGradient id="stream-grad-3" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%" stop-color="#FF9F1C" stop-opacity="0.3"/>
+          <stop offset="100%" stop-color="#bc8cff" stop-opacity="0.3"/>
+        </linearGradient>
+        <linearGradient id="output-stream-1" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%" stop-color="#bc8cff" stop-opacity="0.6"/>
+          <stop offset="100%" stop-color="#2EC4B6" stop-opacity="0.8"/>
+        </linearGradient>
+        <linearGradient id="output-stream-2" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%" stop-color="#bc8cff" stop-opacity="0.4"/>
+          <stop offset="100%" stop-color="#2EC4B6" stop-opacity="0.5"/>
+        </linearGradient>
+        <linearGradient id="output-stream-3" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%" stop-color="#bc8cff" stop-opacity="0.3"/>
+          <stop offset="100%" stop-color="#2EC4B6" stop-opacity="0.4"/>
+        </linearGradient>
+      </defs>
+
+      <!-- Data stream paths: reference -> core -->
+      <path class="stream-line s1" d="M 420,200 C 520,200 560,220 680,240" fill="none" stroke="url(#stream-grad-1)" stroke-width="2.5" stroke-dasharray="600" stroke-dashoffset="600"/>
+      <path class="stream-line s2" d="M 420,260 C 530,260 580,270 680,270" fill="none" stroke="url(#stream-grad-2)" stroke-width="2" stroke-dasharray="600" stroke-dashoffset="600"/>
+      <path class="stream-line s3" d="M 420,320 C 520,320 560,310 680,300" fill="none" stroke="url(#stream-grad-3)" stroke-width="1.5" stroke-dasharray="600" stroke-dashoffset="600"/>
+
+      <!-- Data stream paths: core -> outputs -->
+      <path class="stream-line o1" d="M 1000,210 C 1100,190 1150,170 1280,155" fill="none" stroke="url(#output-stream-1)" stroke-width="2.5" stroke-dasharray="600" stroke-dashoffset="600"/>
+      <path class="stream-line o2" d="M 1000,270 C 1100,270 1150,270 1280,270" fill="none" stroke="url(#output-stream-2)" stroke-width="2" stroke-dasharray="600" stroke-dashoffset="600"/>
+      <path class="stream-line o3" d="M 1000,330 C 1100,350 1150,370 1280,385" fill="none" stroke="url(#output-stream-3)" stroke-width="1.5" stroke-dasharray="600" stroke-dashoffset="600"/>
+
+      <!-- Stream particles (dots traveling along paths) -->
+      <circle class="sp sp-in" r="4" fill="#FF9F1C" opacity="0"/>
+      <circle class="sp sp-in" r="3.5" fill="#FF9F1C" opacity="0"/>
+      <circle class="sp sp-in" r="3" fill="#FF9F1C" opacity="0"/>
+      <circle class="sp sp-in" r="4" fill="#bc8cff" opacity="0"/>
+      <circle class="sp sp-in" r="3.5" fill="#bc8cff" opacity="0"/>
+      <circle class="sp sp-in" r="3" fill="#bc8cff" opacity="0"/>
+
+      <circle class="sp sp-out" r="4" fill="#2EC4B6" opacity="0"/>
+      <circle class="sp sp-out" r="3.5" fill="#2EC4B6" opacity="0"/>
+      <circle class="sp sp-out" r="3" fill="#2EC4B6" opacity="0"/>
+      <circle class="sp sp-out" r="4" fill="#bc8cff" opacity="0"/>
+      <circle class="sp sp-out" r="3.5" fill="#bc8cff" opacity="0"/>
+      <circle class="sp sp-out" r="3" fill="#bc8cff" opacity="0"/>
+
+      <!-- Core pulse ring -->
+      <circle class="core-ring" cx="840" cy="270" r="80" fill="none" stroke="#bc8cff" stroke-width="2" opacity="0"/>
+      <circle class="core-ring-2" cx="840" cy="270" r="80" fill="none" stroke="#bc8cff" stroke-width="1" opacity="0"/>
+    </svg>
+
+    <!-- LEFT ZONE: Reference frame -->
+    <div class="ref-zone">
+      <div class="ref-frame-outer">
+        <div class="ref-glow"></div>
+        <div class="ref-frame-inner">
+          <svg class="face-silhouette" width="120" height="150" viewBox="0 0 120 150">
+            <!-- Geometric face: head oval + shoulders -->
+            <defs>
+              <linearGradient id="face-grad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#FF9F1C" stop-opacity="0.7"/>
+                <stop offset="100%" stop-color="#FF9F1C" stop-opacity="0.2"/>
+              </linearGradient>
+            </defs>
+            <ellipse cx="60" cy="52" rx="30" ry="38" fill="none" stroke="url(#face-grad)" stroke-width="2.5"/>
+            <!-- Eyes -->
+            <circle cx="48" cy="46" r="3" fill="#FF9F1C" opacity="0.6"/>
+            <circle cx="72" cy="46" r="3" fill="#FF9F1C" opacity="0.6"/>
+            <!-- Nose line -->
+            <line x1="60" y1="52" x2="60" y2="62" stroke="#FF9F1C" stroke-width="1.5" opacity="0.4"/>
+            <!-- Mouth arc -->
+            <path d="M 50,70 Q 60,78 70,70" fill="none" stroke="#FF9F1C" stroke-width="1.5" opacity="0.5"/>
+            <!-- Shoulders -->
+            <path d="M 25,105 Q 60,90 95,105 L 105,150 L 15,150 Z" fill="none" stroke="url(#face-grad)" stroke-width="2"/>
+            <!-- Scan lines for tech feel -->
+            <line x1="10" y1="30" x2="110" y2="30" stroke="#FF9F1C" stroke-width="0.5" opacity="0.15"/>
+            <line x1="10" y1="60" x2="110" y2="60" stroke="#FF9F1C" stroke-width="0.5" opacity="0.15"/>
+            <line x1="10" y1="90" x2="110" y2="90" stroke="#FF9F1C" stroke-width="0.5" opacity="0.15"/>
+            <line x1="10" y1="120" x2="110" y2="120" stroke="#FF9F1C" stroke-width="0.5" opacity="0.15"/>
+          </svg>
+          <!-- Corner brackets -->
+          <div class="bracket tl"></div>
+          <div class="bracket tr"></div>
+          <div class="bracket bl"></div>
+          <div class="bracket br"></div>
         </div>
       </div>
-      <div class="ref-note">10 seconds of video</div>
+      <div class="ref-label">10s Reference</div>
+      <div class="ref-timer">
+        <svg class="timer-ring" width="32" height="32" viewBox="0 0 32 32">
+          <circle cx="16" cy="16" r="12" fill="none" stroke="#415A77" stroke-width="2"/>
+          <circle class="timer-arc" cx="16" cy="16" r="12" fill="none" stroke="#FF9F1C" stroke-width="2.5" stroke-dasharray="75.4" stroke-dashoffset="75.4" transform="rotate(-90 16 16)"/>
+        </svg>
+        <span class="timer-text">10s</span>
+      </div>
     </div>
 
-    <!-- Center: Avatar V processing -->
-    <div class="process-zone">
-      <div class="proc-arrow">&#8594;</div>
-      <div class="proc-box">
-        <div class="proc-name">Avatar V</div>
-        <div class="proc-parts">
-          <div class="proc-part p1">Identity</div>
-          <div class="proc-part p2">Motion</div>
-          <div class="proc-part p3">Voice</div>
+    <!-- CENTER ZONE: Processing core -->
+    <div class="core-zone">
+      <div class="core-hex-wrap">
+        <svg class="core-hex" width="200" height="220" viewBox="0 0 200 220">
+          <defs>
+            <linearGradient id="hex-grad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#bc8cff" stop-opacity="0.15"/>
+              <stop offset="50%" stop-color="#bc8cff" stop-opacity="0.08"/>
+              <stop offset="100%" stop-color="#bc8cff" stop-opacity="0.15"/>
+            </linearGradient>
+          </defs>
+          <!-- Outer hexagon -->
+          <polygon class="hex-outer" points="100,5 185,57.5 185,162.5 100,215 15,162.5 15,57.5" fill="url(#hex-grad)" stroke="#bc8cff" stroke-width="2.5"/>
+          <!-- Inner hexagon -->
+          <polygon class="hex-inner" points="100,35 155,67.5 155,152.5 100,185 45,152.5 45,67.5" fill="none" stroke="#bc8cff" stroke-width="1" opacity="0.3"/>
+          <!-- Center diamond -->
+          <polygon class="hex-diamond" points="100,85 130,110 100,135 70,110" fill="#bc8cff" opacity="0.12" stroke="#bc8cff" stroke-width="1.5"/>
+        </svg>
+        <div class="core-title">Avatar<br>V</div>
+      </div>
+
+      <!-- Sub-systems -->
+      <div class="subsystems">
+        <div class="subsys sub-identity">
+          <svg width="28" height="28" viewBox="0 0 28 28">
+            <circle cx="14" cy="10" r="6" fill="none" stroke="#FF9F1C" stroke-width="1.8"/>
+            <path d="M4,26 Q14,18 24,26" fill="none" stroke="#FF9F1C" stroke-width="1.8"/>
+          </svg>
+          <span class="subsys-text">Identity</span>
+          <div class="subsys-pulse"></div>
+        </div>
+        <div class="subsys sub-motion">
+          <svg width="28" height="28" viewBox="0 0 28 28">
+            <path d="M4,20 L10,8 L16,16 L22,4 L26,12" fill="none" stroke="#2EC4B6" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <span class="subsys-text">Motion</span>
+          <div class="subsys-pulse"></div>
+        </div>
+        <div class="subsys sub-voice">
+          <svg width="28" height="28" viewBox="0 0 28 28">
+            <rect x="3" y="12" width="3" height="8" rx="1" fill="#E71D36"/>
+            <rect x="8" y="8" width="3" height="16" rx="1" fill="#E71D36"/>
+            <rect x="13" y="4" width="3" height="24" rx="1" fill="#E71D36"/>
+            <rect x="18" y="8" width="3" height="16" rx="1" fill="#E71D36"/>
+            <rect x="23" y="12" width="3" height="8" rx="1" fill="#E71D36"/>
+          </svg>
+          <span class="subsys-text">Voice</span>
+          <div class="subsys-pulse"></div>
         </div>
       </div>
-      <div class="proc-arrow">&#8594;</div>
     </div>
 
-    <!-- Right: Multiple outputs -->
-    <div class="output-panel">
-      <div class="panel-label" style="color:#2EC4B6;">Generated Videos</div>
-      <div class="output-grid">
-        <div class="output-card">
-          <div class="out-icon">&#x1F3AC;</div>
-          <div class="out-text">New script</div>
-          <div class="out-sub">Same person</div>
+    <!-- RIGHT ZONE: Output cards -->
+    <div class="output-zone">
+      <div class="out-card card-script">
+        <div class="card-glow"></div>
+        <div class="card-icon-wrap">
+          <svg width="36" height="36" viewBox="0 0 36 36">
+            <rect x="4" y="2" width="22" height="30" rx="2" fill="none" stroke="#2EC4B6" stroke-width="2"/>
+            <line x1="8" y1="10" x2="22" y2="10" stroke="#2EC4B6" stroke-width="1.5" opacity="0.6"/>
+            <line x1="8" y1="15" x2="20" y2="15" stroke="#2EC4B6" stroke-width="1.5" opacity="0.6"/>
+            <line x1="8" y1="20" x2="18" y2="20" stroke="#2EC4B6" stroke-width="1.5" opacity="0.6"/>
+            <line x1="8" y1="25" x2="16" y2="25" stroke="#2EC4B6" stroke-width="1.5" opacity="0.4"/>
+          </svg>
         </div>
-        <div class="output-card">
-          <div class="out-icon">&#x1F30D;</div>
-          <div class="out-text">50+ languages</div>
-          <div class="out-sub">Same voice</div>
-        </div>
-        <div class="output-card">
-          <div class="out-icon">&#x267E;&#xFE0F;</div>
-          <div class="out-text">Unlimited length</div>
-          <div class="out-sub">Same style</div>
+        <div class="card-content">
+          <div class="card-title">New Script</div>
+          <div class="card-sub">Any text, same person</div>
         </div>
       </div>
-      <div class="output-quality">1080p &bull; state-of-the-art fidelity</div>
+      <div class="out-card card-lang">
+        <div class="card-glow"></div>
+        <div class="card-icon-wrap">
+          <svg width="36" height="36" viewBox="0 0 36 36">
+            <circle cx="18" cy="18" r="14" fill="none" stroke="#2EC4B6" stroke-width="2"/>
+            <ellipse cx="18" cy="18" rx="7" ry="14" fill="none" stroke="#2EC4B6" stroke-width="1.2" opacity="0.6"/>
+            <line x1="4" y1="13" x2="32" y2="13" stroke="#2EC4B6" stroke-width="1" opacity="0.5"/>
+            <line x1="4" y1="23" x2="32" y2="23" stroke="#2EC4B6" stroke-width="1" opacity="0.5"/>
+          </svg>
+        </div>
+        <div class="card-content">
+          <div class="card-title">50+ Languages</div>
+          <div class="card-sub">Same voice, native lip sync</div>
+        </div>
+      </div>
+      <div class="out-card card-duration">
+        <div class="card-glow"></div>
+        <div class="card-icon-wrap">
+          <svg width="36" height="36" viewBox="0 0 36 36">
+            <path d="M6,18 L14,18 L18,6 L22,28 L26,14 L30,18 L34,18" fill="none" stroke="#2EC4B6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <!-- Infinity hint -->
+            <path d="M10,30 Q16,24 22,30 Q28,36 34,30" fill="none" stroke="#2EC4B6" stroke-width="1.5" opacity="0.5"/>
+          </svg>
+        </div>
+        <div class="card-content">
+          <div class="card-title">Unlimited Duration</div>
+          <div class="card-sub">Chunk-based generation</div>
+        </div>
+      </div>
     </div>
+
+    <!-- BOTTOM: Quality reveal bar -->
+    <div class="quality-bar">
+      <div class="quality-line"></div>
+      <div class="quality-text">
+        <span class="q-label">State-of-the-Art Realism</span>
+      </div>
+      <div class="quality-line"></div>
+    </div>
+
   </div>
 
   <style>
@@ -76,47 +263,159 @@
     }
     .scene { position: relative; width: 1920px; height: 540px; }
 
-    .ref-panel { position: absolute; left: 80px; top: 60px; width: 440px; }
-    .panel-label { font-size: 28px; font-weight: 700; color: #FF9F1C; margin-bottom: 12px; }
-    .ref-frame {
-      display: flex; align-items: center; gap: 20px; padding: 18px 24px;
-      border: 3px solid #FF9F1C; border-radius: 16px; background: rgba(255,159,28,0.06);
+    /* ── Background layers ── */
+    .bg-radial {
+      position: absolute; inset: 0;
+      background:
+        radial-gradient(ellipse 50% 70% at 44% 50%, rgba(188,140,255,0.06) 0%, transparent 70%),
+        radial-gradient(ellipse 30% 50% at 15% 50%, rgba(255,159,28,0.04) 0%, transparent 60%),
+        radial-gradient(ellipse 30% 50% at 80% 50%, rgba(46,196,182,0.04) 0%, transparent 60%);
     }
-    .person-icon { font-size: 72px; }
-    .trait-tags { display: flex; flex-wrap: wrap; gap: 8px; }
-    .trait {
-      padding: 5px 14px; border-radius: 20px; font-size: 19px; font-weight: 700;
-      background: rgba(255,159,28,0.12); border: 1px solid #FF9F1C; color: #FF9F1C;
-    }
-    .ref-note { font-size: 20px; color: #778DA9; margin-top: 10px; text-align: center; }
-
-    .process-zone {
-      position: absolute; left: 700px; top: 60px; width: 500px; height: 420px;
-      display: flex; align-items: center; justify-content: center; gap: 16px;
-    }
-    .proc-arrow { font-size: 48px; color: #415A77; }
-    .proc-box {
-      padding: 20px 36px; border-radius: 12px; text-align: center;
-      border: 3px solid #bc8cff; background: rgba(188,140,255,0.06);
-    }
-    .proc-name { font-size: 40px; font-weight: 700; color: #bc8cff; margin-bottom: 10px; }
-    .proc-parts { display: flex; gap: 10px; justify-content: center; }
-    .proc-part {
-      padding: 6px 16px; border-radius: 8px; font-size: 20px; font-weight: 700;
-      background: rgba(188,140,255,0.15); color: #bc8cff;
+    .bg-grid {
+      position: absolute; top: 0; left: 0; opacity: 0;
     }
 
-    .output-panel { position: absolute; right: 80px; top: 60px; width: 460px; }
-    .output-grid { display: flex; flex-direction: column; gap: 10px; }
-    .output-card {
-      display: flex; align-items: center; gap: 14px; padding: 12px 20px;
-      border-radius: 12px; border: 2px solid #2EC4B6; background: rgba(46,196,182,0.06);
+    .particle-layer {
+      position: absolute; top: 0; left: 0; pointer-events: none; z-index: 5;
     }
-    .out-icon { font-size: 32px; }
-    .out-text { font-size: 22px; font-weight: 700; color: #2EC4B6; }
-    .out-sub { font-size: 18px; color: #778DA9; margin-left: auto; }
-    .output-quality {
-      font-size: 22px; color: #3fb950; font-weight: 700; text-align: center; margin-top: 14px;
+
+    /* ── LEFT: Reference frame ── */
+    .ref-zone {
+      position: absolute; left: 80px; top: 50%; transform: translateY(-50%);
+      display: flex; flex-direction: column; align-items: center; gap: 14px;
+      opacity: 0; z-index: 10;
+    }
+    .ref-frame-outer {
+      position: relative; width: 180px; height: 210px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .ref-glow {
+      position: absolute; inset: -20px; border-radius: 20px;
+      background: radial-gradient(ellipse at center, rgba(255,159,28,0.15) 0%, transparent 70%);
+      opacity: 0;
+    }
+    .ref-frame-inner {
+      position: relative; width: 160px; height: 190px;
+      border: 2.5px solid #FF9F1C; border-radius: 12px;
+      background: rgba(255,159,28,0.04);
+      display: flex; align-items: center; justify-content: center;
+      overflow: hidden;
+    }
+    .face-silhouette { opacity: 0; }
+
+    /* Corner brackets */
+    .bracket {
+      position: absolute; width: 18px; height: 18px;
+      border-color: #FF9F1C; border-style: solid; border-width: 0;
+    }
+    .bracket.tl { top: -4px; left: -4px; border-top-width: 3px; border-left-width: 3px; border-radius: 4px 0 0 0; }
+    .bracket.tr { top: -4px; right: -4px; border-top-width: 3px; border-right-width: 3px; border-radius: 0 4px 0 0; }
+    .bracket.bl { bottom: -4px; left: -4px; border-bottom-width: 3px; border-left-width: 3px; border-radius: 0 0 0 4px; }
+    .bracket.br { bottom: -4px; right: -4px; border-bottom-width: 3px; border-right-width: 3px; border-radius: 0 0 4px 0; }
+
+    .ref-label {
+      font-size: 26px; font-weight: 700; color: #FF9F1C; opacity: 0;
+      text-shadow: 0 0 20px rgba(255,159,28,0.3);
+    }
+    .ref-timer {
+      display: flex; align-items: center; gap: 8px; opacity: 0;
+    }
+    .timer-ring { display: block; }
+    .timer-text { font-size: 16px; font-weight: 400; color: #778DA9; }
+
+    /* ── CENTER: Core ── */
+    .core-zone {
+      position: absolute; left: 50%; top: 32px; transform: translateX(-50%);
+      display: flex; flex-direction: column; align-items: center; gap: 0;
+      z-index: 10;
+    }
+    .core-hex-wrap {
+      position: relative; width: 200px; height: 220px;
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0;
+    }
+    .core-hex { position: absolute; top: 0; left: 0; }
+    .core-title {
+      position: absolute; z-index: 2;
+      top: 50%; left: 50%; transform: translate(-50%, -50%);
+      font-size: 42px; font-weight: 700; color: #bc8cff;
+      text-shadow: 0 0 30px rgba(188,140,255,0.4), 0 0 60px rgba(188,140,255,0.15);
+      letter-spacing: 2px; text-align: center; line-height: 1.1;
+    }
+
+    .subsystems {
+      display: flex; gap: 16px; margin-top: -10px;
+    }
+    .subsys {
+      position: relative; display: flex; flex-direction: column; align-items: center; gap: 4px;
+      padding: 10px 16px; border-radius: 10px;
+      background: rgba(1,22,39,0.8); border: 1.5px solid transparent;
+      opacity: 0;
+    }
+    .sub-identity { border-color: rgba(255,159,28,0.4); }
+    .sub-motion { border-color: rgba(46,196,182,0.4); }
+    .sub-voice { border-color: rgba(231,29,54,0.4); }
+    .subsys-text { font-size: 16px; font-weight: 700; color: #778DA9; }
+    .sub-identity .subsys-text { color: #FF9F1C; }
+    .sub-motion .subsys-text { color: #2EC4B6; }
+    .sub-voice .subsys-text { color: #E71D36; }
+    .subsys-pulse {
+      position: absolute; inset: -2px; border-radius: 12px; opacity: 0;
+      pointer-events: none;
+    }
+    .sub-identity .subsys-pulse { box-shadow: 0 0 12px rgba(255,159,28,0.5), inset 0 0 8px rgba(255,159,28,0.1); }
+    .sub-motion .subsys-pulse { box-shadow: 0 0 12px rgba(46,196,182,0.5), inset 0 0 8px rgba(46,196,182,0.1); }
+    .sub-voice .subsys-pulse { box-shadow: 0 0 12px rgba(231,29,54,0.5), inset 0 0 8px rgba(231,29,54,0.1); }
+
+    /* ── RIGHT: Output cards ── */
+    .output-zone {
+      position: absolute; right: 60px; top: 50%; transform: translateY(-50%);
+      display: flex; flex-direction: column; gap: 14px; z-index: 10;
+    }
+    .out-card {
+      position: relative; display: flex; align-items: center; gap: 16px;
+      padding: 14px 22px; border-radius: 12px;
+      border: 2px solid rgba(46,196,182,0.5);
+      background: rgba(46,196,182,0.04);
+      opacity: 0; min-width: 340px;
+    }
+    .card-glow {
+      position: absolute; inset: -8px; border-radius: 20px;
+      background: radial-gradient(ellipse at center, rgba(46,196,182,0.08) 0%, transparent 70%);
+      opacity: 0;
+    }
+    .card-icon-wrap {
+      flex-shrink: 0; width: 42px; height: 42px;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 8px; background: rgba(46,196,182,0.08);
+    }
+    .card-title {
+      font-size: 22px; font-weight: 700; color: #2EC4B6;
+      text-shadow: 0 0 12px rgba(46,196,182,0.2);
+    }
+    .card-sub {
+      font-size: 16px; font-weight: 400; color: #778DA9; margin-top: 2px;
+    }
+
+    /* ── BOTTOM: Quality bar ── */
+    .quality-bar {
+      position: absolute; bottom: 28px; left: 50%; transform: translateX(-50%);
+      display: flex; align-items: center; gap: 20px; opacity: 0;
+    }
+    .quality-line {
+      width: 120px; height: 1.5px;
+      background: linear-gradient(90deg, transparent, #3fb950, transparent);
+    }
+    .quality-text {
+      display: flex; align-items: center; gap: 12px; white-space: nowrap;
+    }
+    .q-res {
+      font-size: 28px; font-weight: 700; color: #3fb950;
+      text-shadow: 0 0 16px rgba(63,185,80,0.3);
+    }
+    .q-dot { font-size: 20px; color: #415A77; }
+    .q-label {
+      font-size: 20px; font-weight: 700; color: #3fb950; opacity: 0.85;
     }
   </style>
 
@@ -126,33 +425,376 @@
     var root = document.currentScript.parentElement;
     var tl = gsap.timeline({ paused: true });
 
-    // Reference panel
-    tl.from(root.querySelector('.ref-panel .panel-label'), { opacity: 0, duration: 0.4 }, 0);
-    tl.from(root.querySelector('.ref-frame'), { opacity: 0, x: -20, duration: 0.6, ease: 'power2.out' }, 0.3);
-    // Traits appear one by one
-    root.querySelectorAll('.trait').forEach(function(el, i) {
-      tl.from(el, { opacity: 0, x: -10, duration: 0.3, ease: 'power2.out' }, 0.6 + i * 0.2);
-    });
-    tl.from(root.querySelector('.ref-note'), { opacity: 0, duration: 0.3 }, 1.5);
+    // ─── Build background grid (perspective lines) ───
+    var bgGrid = root.querySelector('.bg-grid');
+    // Vertical lines
+    for (var i = 0; i < 24; i++) {
+      var line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      var xPos = 80 * i;
+      line.setAttribute('x1', xPos);
+      line.setAttribute('y1', '0');
+      line.setAttribute('x2', xPos);
+      line.setAttribute('y2', '540');
+      line.setAttribute('stroke', '#415A77');
+      line.setAttribute('stroke-width', '0.5');
+      line.setAttribute('opacity', '0.12');
+      bgGrid.appendChild(line);
+    }
+    // Horizontal lines
+    for (var j = 0; j < 7; j++) {
+      var line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      var yPos = 80 * j;
+      line.setAttribute('x1', '0');
+      line.setAttribute('y1', yPos);
+      line.setAttribute('x2', '1920');
+      line.setAttribute('y2', yPos);
+      line.setAttribute('stroke', '#415A77');
+      line.setAttribute('stroke-width', '0.5');
+      line.setAttribute('opacity', '0.1');
+      bgGrid.appendChild(line);
+    }
+    // Crosshair at center
+    var chCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    chCircle.setAttribute('cx', '840');
+    chCircle.setAttribute('cy', '270');
+    chCircle.setAttribute('r', '120');
+    chCircle.setAttribute('fill', 'none');
+    chCircle.setAttribute('stroke', '#415A77');
+    chCircle.setAttribute('stroke-width', '0.5');
+    chCircle.setAttribute('opacity', '0.15');
+    bgGrid.appendChild(chCircle);
 
-    // Process zone
-    root.querySelectorAll('.proc-arrow').forEach(function(el, i) {
-      tl.from(el, { opacity: 0, x: i === 0 ? -15 : 15, duration: 0.4 }, 2.0 + i * 0.5);
+    // ─── Precompute stream paths for particle motion ───
+    var inPaths = root.querySelectorAll('.stream-line.s1, .stream-line.s2, .stream-line.s3');
+    var outPaths = root.querySelectorAll('.stream-line.o1, .stream-line.o2, .stream-line.o3');
+
+    // Measure and set correct dasharray per path
+    inPaths.forEach(function(p) {
+      var len = p.getTotalLength();
+      p.style.strokeDasharray = len;
+      p.style.strokeDashoffset = len;
     });
-    tl.from(root.querySelector('.proc-box'), { opacity: 0, scale: 0.9, duration: 0.5, ease: 'power2.out' }, 2.3);
-    root.querySelectorAll('.proc-part').forEach(function(el, i) {
-      tl.from(el, { opacity: 0, y: 8, duration: 0.3 }, 2.6 + i * 0.15);
+    outPaths.forEach(function(p) {
+      var len = p.getTotalLength();
+      p.style.strokeDasharray = len;
+      p.style.strokeDashoffset = len;
     });
 
-    // Output panel
-    tl.from(root.querySelector('.output-panel .panel-label'), { opacity: 0, duration: 0.4 }, 3.5);
-    root.querySelectorAll('.output-card').forEach(function(el, i) {
-      tl.from(el, { opacity: 0, x: 20, duration: 0.5, ease: 'power2.out' }, 3.8 + i * 0.3);
-    });
-    tl.from(root.querySelector('.output-quality'), { opacity: 0, y: 10, duration: 0.4 }, 5.0);
+    // Precompute path points for particles
+    function getPathPoints(path, count) {
+      var len = path.getTotalLength();
+      var pts = [];
+      for (var i = 0; i <= count; i++) {
+        var pt = path.getPointAtLength((i / count) * len);
+        pts.push({ x: pt.x, y: pt.y });
+      }
+      return pts;
+    }
 
-    // Hold
-    tl.to({}, { duration: 3 });
+    var inPathPts = [];
+    inPaths.forEach(function(p) { inPathPts.push(getPathPoints(p, 60)); });
+    var outPathPts = [];
+    outPaths.forEach(function(p) { outPathPts.push(getPathPoints(p, 60)); });
+
+    // Grab stream particles
+    var spIn = root.querySelectorAll('.sp-in');
+    var spOut = root.querySelectorAll('.sp-out');
+
+    // Position helper
+    function posAt(el, x, y) {
+      el.setAttribute('cx', x);
+      el.setAttribute('cy', y);
+    }
+
+    // Initialize particle positions
+    spIn.forEach(function(p, i) { posAt(p, inPathPts[i % 3][0].x, inPathPts[i % 3][0].y); });
+    spOut.forEach(function(p, i) { posAt(p, outPathPts[i % 3][0].x, outPathPts[i % 3][0].y); });
+
+    // ═══════════════════════════════════════════════════════
+    // PHASE 1 — BUILD (0s - 3.6s): Environment + Reference
+    // ═══════════════════════════════════════════════════════
+
+    // 0.1s: Background grid fades in
+    tl.to(root.querySelector('.bg-grid'), {
+      opacity: 1, duration: 1.2, ease: 'power1.in'
+    }, 0.1);
+
+    // 0.2s: Reference zone enters from left
+    tl.to(root.querySelector('.ref-zone'), {
+      opacity: 1, duration: 0.6, ease: 'power3.out'
+    }, 0.2);
+    tl.from(root.querySelector('.ref-zone'), {
+      x: -120, scale: 0.85, duration: 0.8, ease: 'power3.out'
+    }, 0.2);
+
+    // 0.5s: Ref frame glow blooms
+    tl.to(root.querySelector('.ref-glow'), {
+      opacity: 1, duration: 0.8, ease: 'circ.out'
+    }, 0.5);
+
+    // 0.6s: Face silhouette draws in with scale + blur
+    tl.to(root.querySelector('.face-silhouette'), {
+      opacity: 1, duration: 0.7, ease: 'power2.out'
+    }, 0.6);
+    tl.from(root.querySelector('.face-silhouette'), {
+      scale: 0.6, filter: 'blur(6px)', duration: 0.8, ease: 'back.out(1.4)'
+    }, 0.6);
+
+    // 0.9s: Brackets snap in (each corner separately with stagger)
+    var brackets = root.querySelectorAll('.bracket');
+    brackets.forEach(function(br, i) {
+      var dirs = [
+        { x: -10, y: -10 },
+        { x: 10, y: -10 },
+        { x: -10, y: 10 },
+        { x: 10, y: 10 }
+      ];
+      tl.from(br, {
+        opacity: 0, x: dirs[i].x, y: dirs[i].y,
+        duration: 0.35, ease: 'back.out(2.5)'
+      }, 0.9 + i * 0.08);
+    });
+
+    // 1.3s: Label and timer appear
+    tl.to(root.querySelector('.ref-label'), {
+      opacity: 1, duration: 0.5, ease: 'power2.out'
+    }, 1.3);
+    tl.from(root.querySelector('.ref-label'), {
+      y: 15, duration: 0.5, ease: 'power2.out'
+    }, 1.3);
+
+    tl.to(root.querySelector('.ref-timer'), {
+      opacity: 1, duration: 0.4, ease: 'power2.out'
+    }, 1.6);
+
+    // 1.7s: Timer arc fills (10 seconds visualized)
+    tl.to(root.querySelector('.timer-arc'), {
+      attr: { 'stroke-dashoffset': 0 },
+      duration: 1.0, ease: 'power1.inOut'
+    }, 1.7);
+
+    // ═══════════════════════════════════════════════════════
+    // PHASE 2 — BUILD (2.5s - 5.5s): Core + Streams
+    // ═══════════════════════════════════════════════════════
+
+    // 2.5s: Core hex appears with rotation + scale
+    tl.to(root.querySelector('.core-hex-wrap'), {
+      opacity: 1, duration: 0.01
+    }, 2.5);
+    tl.from(root.querySelector('.core-hex-wrap'), {
+      scale: 0.3, rotation: -30, filter: 'blur(8px)',
+      duration: 0.9, ease: 'expo.out'
+    }, 2.5);
+
+    // 2.8s: Hex inner ring spins briefly on entry
+    tl.from(root.querySelector('.hex-inner'), {
+      rotation: 60, transformOrigin: '100px 110px',
+      duration: 1.2, ease: 'power3.out'
+    }, 2.8);
+
+    // 3.0s: Subsystems cascade in
+    var subsystems = root.querySelectorAll('.subsys');
+    var subEases = ['back.out(1.8)', 'elastic.out(1, 0.6)', 'back.out(2.2)'];
+    subsystems.forEach(function(s, i) {
+      tl.to(s, { opacity: 1, duration: 0.5, ease: 'power2.out' }, 3.0 + i * 0.2);
+      tl.from(s, {
+        y: 30, scale: 0.7,
+        duration: 0.6, ease: subEases[i]
+      }, 3.0 + i * 0.2);
+    });
+
+    // 3.2s: Input stream lines draw
+    inPaths.forEach(function(p, i) {
+      var len = p.getTotalLength();
+      tl.to(p, {
+        strokeDashoffset: 0, duration: 0.8, ease: 'power2.inOut'
+      }, 3.2 + i * 0.15);
+    });
+
+    // 3.5s: Animate input stream particles
+    spIn.forEach(function(particle, i) {
+      var pathIdx = i % 3;
+      var pts = inPathPts[pathIdx];
+      var progress = { value: 0 };
+      // Show particle
+      tl.to(particle, { opacity: 0.9, duration: 0.15 }, 3.5 + i * 0.12);
+      // Move along path
+      tl.to(progress, {
+        value: 1, duration: 1.2, ease: 'power2.in',
+        onUpdate: function() {
+          var idx = Math.min(Math.floor(progress.value * 60), 60);
+          posAt(particle, pts[idx].x, pts[idx].y);
+        }
+      }, 3.5 + i * 0.12);
+      // Fade at destination
+      tl.to(particle, { opacity: 0, duration: 0.2 }, 4.5 + i * 0.12);
+    });
+
+    // 3.8s: Core pulse ring expands outward
+    tl.to(root.querySelector('.core-ring'), {
+      opacity: 0.6, duration: 0.1
+    }, 3.8);
+    tl.to(root.querySelector('.core-ring'), {
+      attr: { r: 140 }, opacity: 0, duration: 1.0, ease: 'power2.out'
+    }, 3.9);
+
+    // 4.2s: Subsystem pulses fire sequentially
+    var subPulses = root.querySelectorAll('.subsys-pulse');
+    subPulses.forEach(function(p, i) {
+      tl.to(p, { opacity: 1, duration: 0.25, ease: 'power4.out' }, 4.2 + i * 0.25);
+      tl.to(p, { opacity: 0, duration: 0.5, ease: 'power1.in' }, 4.45 + i * 0.25);
+    });
+
+    // 4.5s: Second core ring (processing complete signal)
+    tl.to(root.querySelector('.core-ring-2'), {
+      opacity: 0.5, duration: 0.1
+    }, 4.5);
+    tl.to(root.querySelector('.core-ring-2'), {
+      attr: { r: 160 }, opacity: 0, duration: 1.2, ease: 'circ.out'
+    }, 4.6);
+
+    // ═══════════════════════════════════════════════════════
+    // PHASE 3 — BUILD (5.0s - 8.0s): Output streams + cards
+    // ═══════════════════════════════════════════════════════
+
+    // 5.0s: Output stream lines draw
+    outPaths.forEach(function(p, i) {
+      tl.to(p, {
+        strokeDashoffset: 0, duration: 0.7, ease: 'power2.out'
+      }, 5.0 + i * 0.15);
+    });
+
+    // 5.2s: Output stream particles
+    spOut.forEach(function(particle, i) {
+      var pathIdx = i % 3;
+      var pts = outPathPts[pathIdx];
+      var progress = { value: 0 };
+      tl.to(particle, { opacity: 0.9, duration: 0.15 }, 5.2 + i * 0.1);
+      tl.to(progress, {
+        value: 1, duration: 1.0, ease: 'power2.out',
+        onUpdate: function() {
+          var idx = Math.min(Math.floor(progress.value * 60), 60);
+          posAt(particle, pts[idx].x, pts[idx].y);
+        }
+      }, 5.2 + i * 0.1);
+      tl.to(particle, { opacity: 0, duration: 0.2 }, 6.0 + i * 0.1);
+    });
+
+    // 5.6s: Output cards cascade in from right
+    var outCards = root.querySelectorAll('.out-card');
+    var cardEases = ['back.out(1.6)', 'power4.out', 'elastic.out(1, 0.7)'];
+    outCards.forEach(function(card, i) {
+      tl.to(card, { opacity: 1, duration: 0.5, ease: 'power2.out' }, 5.6 + i * 0.35);
+      tl.from(card, {
+        x: 160, scale: 0.8, rotation: 3 - i * 1.5,
+        duration: 0.7, ease: cardEases[i]
+      }, 5.6 + i * 0.35);
+    });
+
+    // 6.0s: Card glows bloom after landing
+    root.querySelectorAll('.card-glow').forEach(function(g, i) {
+      tl.to(g, { opacity: 1, duration: 0.6, ease: 'sine.out' }, 6.2 + i * 0.3);
+    });
+
+    // ═══════════════════════════════════════════════════════
+    // PHASE 4 — BREATHE (7.5s - 9.5s): Ambient motion
+    // ═══════════════════════════════════════════════════════
+
+    // Ref frame gentle pulse (glow breathe)
+    tl.to(root.querySelector('.ref-glow'), {
+      opacity: 0.6, duration: 1.0, ease: 'sine.inOut', yoyo: true, repeat: 1
+    }, 7.5);
+
+    // Ref frame border color shift toward white and back
+    tl.to(root.querySelector('.ref-frame-inner'), {
+      borderColor: 'rgba(255,200,100,0.8)', duration: 0.8, ease: 'sine.inOut', yoyo: true, repeat: 1
+    }, 7.5);
+
+    // Core hex slow drift upward and back
+    tl.to(root.querySelector('.core-hex-wrap'), {
+      y: -6, duration: 1.5, ease: 'sine.inOut', yoyo: true, repeat: 1
+    }, 7.5);
+
+    // Hex diamond subtle rotation breathe
+    tl.to(root.querySelector('.hex-diamond'), {
+      rotation: 15, transformOrigin: '100px 110px',
+      duration: 1.2, ease: 'sine.inOut', yoyo: true, repeat: 1
+    }, 7.6);
+
+    // Subsystem glow pulse cycle (continuous ambient)
+    subPulses.forEach(function(p, i) {
+      tl.to(p, { opacity: 0.7, duration: 0.6, ease: 'sine.in' }, 7.8 + i * 0.3);
+      tl.to(p, { opacity: 0.2, duration: 0.6, ease: 'sine.out' }, 8.4 + i * 0.3);
+    });
+
+    // Output card subtle y-drift (breathing)
+    outCards.forEach(function(card, i) {
+      var yOffset = (i === 1) ? 4 : -4;
+      tl.to(card, {
+        y: yOffset, duration: 1.0, ease: 'sine.inOut', yoyo: true, repeat: 1
+      }, 7.6 + i * 0.15);
+    });
+
+    // Stream lines gentle opacity pulse
+    inPaths.forEach(function(p, i) {
+      tl.to(p, { strokeOpacity: 0.9, duration: 0.8, ease: 'sine.inOut', yoyo: true, repeat: 1 }, 7.5 + i * 0.2);
+    });
+    outPaths.forEach(function(p, i) {
+      tl.to(p, { strokeOpacity: 0.9, duration: 0.8, ease: 'sine.inOut', yoyo: true, repeat: 1 }, 7.5 + i * 0.2);
+    });
+
+    // Background grid subtle opacity shift
+    tl.to(root.querySelector('.bg-grid'), {
+      opacity: 0.8, duration: 1.5, ease: 'sine.inOut', yoyo: true, repeat: 1
+    }, 7.5);
+
+    // ═══════════════════════════════════════════════════════
+    // PHASE 5 — RESOLVE (9.5s - 12s): Quality reveal + hold
+    // ═══════════════════════════════════════════════════════
+
+    // 9.5s: Quality bar reveal
+    tl.to(root.querySelector('.quality-bar'), {
+      opacity: 1, duration: 0.01
+    }, 9.5);
+    tl.from(root.querySelector('.quality-bar'), {
+      y: 20, scale: 0.9, filter: 'blur(4px)',
+      duration: 0.6, ease: 'power4.out'
+    }, 9.5);
+
+    // 9.7s: Quality lines extend
+    root.querySelectorAll('.quality-line').forEach(function(line, i) {
+      tl.from(line, {
+        width: 0, duration: 0.5, ease: 'power2.out'
+      }, 9.7 + i * 0.1);
+    });
+
+    // 9.9s: label scale pop
+    tl.from(root.querySelector('.q-label'), {
+      scale: 1.5, opacity: 0, duration: 0.5, ease: 'back.out(1.5)'
+    }, 9.9);
+
+    // 10.1s: Label text reveals
+    tl.from(root.querySelector('.q-label'), {
+      opacity: 0, x: 30, duration: 0.5, ease: 'power3.out'
+    }, 10.1);
+
+    // 10.3s: Final core ring burst (celebration)
+    tl.set(root.querySelector('.core-ring'), { attr: { r: 80 }, opacity: 0 }, 10.3);
+    tl.to(root.querySelector('.core-ring'), {
+      opacity: 0.4, duration: 0.1
+    }, 10.3);
+    tl.to(root.querySelector('.core-ring'), {
+      attr: { r: 200 }, opacity: 0, duration: 1.2, ease: 'expo.out'
+    }, 10.4);
+
+    // 10.5s: Everything settles — subtle final brightness lift
+    tl.to(root.querySelector('.core-title'), {
+      textShadow: '0 0 40px rgba(188,140,255,0.6), 0 0 80px rgba(188,140,255,0.2)',
+      duration: 0.8, ease: 'sine.inOut'
+    }, 10.5);
+
+    // Hold to 12s
+    tl.to({}, { duration: 0.5 }, 11.5);
 
     window.__timelines["avatar-hero"] = tl;
   </script>

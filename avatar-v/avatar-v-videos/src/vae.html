@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap');
+* { margin: 0; padding: 0; box-sizing: border-box; }
+</style>
+</head>
+<body>
+<div
+  data-composition-id="vae-explainer"
+  data-width="1920"
+  data-height="540"
+  data-start="0"
+  data-duration="12"
+>
+  <div class="scene">
+
+    <!-- Phase title -->
+    <div class="title">VAE: The Compression Engine</div>
+
+    <!-- LEFT: Encoder zone -->
+    <div class="encoder-zone">
+      <div class="zone-label encoder-label">Encoder</div>
+      <div class="large-grid-wrap">
+        <div class="large-grid" id="grid-original"></div>
+      </div>
+      <div class="grid-dim-label" id="dim-label-left">1920 x 1080</div>
+      <div class="frame-label" id="frame-label-left">1080p Video Frame</div>
+    </div>
+
+    <!-- CENTER: Bottleneck -->
+    <div class="bottleneck-zone">
+      <div class="hourglass" id="hourglass">
+        <svg width="160" height="200" viewBox="0 0 160 200">
+          <defs>
+            <linearGradient id="hg-grad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#2EC4B6" stop-opacity="0.3"/>
+              <stop offset="50%" stop-color="#bc8cff" stop-opacity="0.6"/>
+              <stop offset="100%" stop-color="#2EC4B6" stop-opacity="0.3"/>
+            </linearGradient>
+          </defs>
+          <path d="M10,10 L150,10 L95,100 L150,190 L10,190 L65,100 Z"
+                fill="url(#hg-grad)" stroke="#bc8cff" stroke-width="2.5" />
+        </svg>
+      </div>
+      <div class="latent-grid-wrap" id="latent-wrap">
+        <div class="latent-grid" id="grid-latent"></div>
+      </div>
+      <div class="latent-label" id="latent-label">Latent Space</div>
+      <div class="compression-stat" id="compression-stat">48x smaller</div>
+    </div>
+
+    <!-- RIGHT: Decoder zone -->
+    <div class="decoder-zone">
+      <div class="zone-label decoder-label">Decoder</div>
+      <div class="large-grid-wrap">
+        <div class="large-grid" id="grid-reconstructed"></div>
+      </div>
+      <div class="grid-dim-label" id="dim-label-right">1920 x 1080</div>
+      <div class="frame-label" id="frame-label-right">Reconstructed Frame</div>
+      <div class="quality-badge" id="quality-badge">&asymp; Original quality</div>
+    </div>
+
+    <!-- Flow arrows -->
+    <div class="flow-arrow arrow-left" id="arrow-left">
+      <svg width="80" height="40" viewBox="0 0 80 40">
+        <defs>
+          <linearGradient id="arrow-grad-l" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="#2EC4B6"/>
+            <stop offset="100%" stop-color="#bc8cff"/>
+          </linearGradient>
+        </defs>
+        <path d="M0,20 L60,20 L50,8 M60,20 L50,32" fill="none" stroke="url(#arrow-grad-l)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    <div class="flow-arrow arrow-right" id="arrow-right">
+      <svg width="80" height="40" viewBox="0 0 80 40">
+        <defs>
+          <linearGradient id="arrow-grad-r" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="#bc8cff"/>
+            <stop offset="100%" stop-color="#2EC4B6"/>
+          </linearGradient>
+        </defs>
+        <path d="M0,20 L60,20 L50,8 M60,20 L50,32" fill="none" stroke="url(#arrow-grad-r)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+
+    <!-- Bottom callout -->
+    <div class="bottom-callout" id="bottom-callout">
+      <div class="callout-arrow-up"></div>
+      <span class="callout-text">Diffusion model works here (in latent space) &mdash; 48x less computation</span>
+    </div>
+
+    <!-- Flying cells for compression animation -->
+    <div id="flying-cells-container"></div>
+
+  </div>
+
+  <style>
+    [data-composition-id="vae-explainer"] {
+      position: relative; overflow: hidden; background: #011627;
+      width: 1920px; height: 540px; font-family: 'Space Mono', monospace; color: #FDFFFC;
+    }
+    .scene { position: relative; width: 1920px; height: 540px; }
+
+    .title {
+      position: absolute; top: 14px; left: 50%; transform: translateX(-50%);
+      font-size: 36px; font-weight: 700; white-space: nowrap; opacity: 0;
+    }
+
+    /* Zone labels */
+    .zone-label {
+      font-size: 24px; font-weight: 700; text-align: center; margin-bottom: 6px; opacity: 0;
+    }
+    .encoder-label { color: #FF9F1C; }
+    .decoder-label { color: #2EC4B6; }
+
+    /* Encoder (left) */
+    .encoder-zone {
+      position: absolute; left: 60px; top: 60px; width: 420px;
+      display: flex; flex-direction: column; align-items: center;
+    }
+
+    .large-grid-wrap { position: relative; }
+
+    .large-grid {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      grid-template-rows: repeat(8, 1fr);
+      width: 336px; height: 224px; gap: 2px;
+    }
+    .cell {
+      border-radius: 2px; opacity: 0;
+      box-shadow: 0 0 4px rgba(0,0,0,0.3);
+    }
+
+    .grid-dim-label {
+      font-size: 16px; color: #778DA9; font-weight: 400; margin-top: 6px; opacity: 0;
+    }
+    .frame-label {
+      font-size: 20px; font-weight: 700; color: #FDFFFC; margin-top: 2px; opacity: 0;
+    }
+
+    /* Center: Bottleneck */
+    .bottleneck-zone {
+      position: absolute; left: 50%; top: 50px; transform: translateX(-50%);
+      display: flex; flex-direction: column; align-items: center;
+      width: 220px;
+    }
+    .hourglass { opacity: 0; }
+
+    .latent-grid-wrap {
+      position: absolute; top: 82px; left: 50%; transform: translateX(-50%);
+      opacity: 0;
+    }
+    .latent-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      grid-template-rows: repeat(2, 1fr);
+      width: 72px; height: 48px; gap: 3px;
+    }
+    .latent-cell {
+      border-radius: 3px;
+      box-shadow: 0 0 8px rgba(188,140,255,0.5), 0 0 16px rgba(188,140,255,0.2);
+    }
+
+    .latent-label {
+      position: absolute; top: 208px; left: 50%; transform: translateX(-50%);
+      font-size: 22px; font-weight: 700; color: #bc8cff; white-space: nowrap; opacity: 0;
+    }
+    .compression-stat {
+      position: absolute; top: 238px; left: 50%; transform: translateX(-50%);
+      font-size: 28px; font-weight: 700; color: #3fb950; white-space: nowrap; opacity: 0;
+    }
+
+    /* Decoder (right) */
+    .decoder-zone {
+      position: absolute; right: 60px; top: 60px; width: 420px;
+      display: flex; flex-direction: column; align-items: center;
+    }
+    .quality-badge {
+      font-size: 18px; font-weight: 700; color: #3fb950; margin-top: 2px; opacity: 0;
+    }
+
+    /* Arrows */
+    .flow-arrow { position: absolute; opacity: 0; }
+    .arrow-left { left: 488px; top: 185px; }
+    .arrow-right { right: 488px; top: 185px; }
+
+    /* Bottom callout */
+    .bottom-callout {
+      position: absolute; bottom: 24px; left: 50%; transform: translateX(-50%);
+      display: flex; flex-direction: column; align-items: center; opacity: 0;
+    }
+    .callout-arrow-up {
+      width: 0; height: 0;
+      border-left: 10px solid transparent;
+      border-right: 10px solid transparent;
+      border-bottom: 10px solid #bc8cff;
+      margin-bottom: 6px;
+    }
+    .callout-text {
+      font-size: 20px; font-weight: 700; color: #bc8cff;
+      background: rgba(188,140,255,0.08);
+      border: 1.5px solid rgba(188,140,255,0.3);
+      border-radius: 8px; padding: 8px 20px;
+      white-space: nowrap;
+    }
+
+    /* Flying cells */
+    #flying-cells-container {
+      position: absolute; top: 0; left: 0; width: 1920px; height: 540px;
+      pointer-events: none;
+    }
+    .flying-cell {
+      position: absolute; border-radius: 2px;
+      box-shadow: 0 0 6px rgba(0,0,0,0.4);
+    }
+
+    /* Ambient pulse keyframes */
+    @keyframes latent-pulse {
+      0%, 100% { box-shadow: 0 0 8px rgba(188,140,255,0.5), 0 0 16px rgba(188,140,255,0.2); }
+      50% { box-shadow: 0 0 14px rgba(188,140,255,0.7), 0 0 28px rgba(188,140,255,0.35); }
+    }
+    .latent-pulse .latent-cell {
+      animation: latent-pulse 1.5s ease-in-out infinite;
+    }
+  </style>
+
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+  <script>
+    window.__timelines = window.__timelines || {};
+    var root = document.currentScript.parentElement;
+    var tl = gsap.timeline({ paused: true });
+
+    // ---- Color palette for cells ----
+    var cellColors = ['#2EC4B6', '#bc8cff', '#FF9F1C', '#2EC4B6', '#bc8cff', '#E71D36'];
+    var latentColors = ['#bc8cff', '#2EC4B6', '#FF9F1C', '#bc8cff', '#2EC4B6', '#FF9F1C'];
+
+    // Deterministic pseudo-random from seed
+    function seededColor(index, palette) {
+      return palette[index % palette.length];
+    }
+
+    // ---- Build original grid (12x8 = 96 cells) ----
+    var gridOrig = root.querySelector('#grid-original');
+    var origCells = [];
+    for (var i = 0; i < 96; i++) {
+      var cell = document.createElement('div');
+      cell.className = 'cell';
+      cell.style.background = seededColor(i, cellColors);
+      gridOrig.appendChild(cell);
+      origCells.push(cell);
+    }
+
+    // ---- Build latent grid (3x2 = 6 cells) ----
+    var gridLatent = root.querySelector('#grid-latent');
+    var latentCells = [];
+    for (var i = 0; i < 6; i++) {
+      var cell = document.createElement('div');
+      cell.className = 'latent-cell';
+      cell.style.background = seededColor(i, latentColors);
+      gridLatent.appendChild(cell);
+      latentCells.push(cell);
+    }
+
+    // ---- Build reconstructed grid (12x8 = 96 cells) ----
+    var gridRecon = root.querySelector('#grid-reconstructed');
+    var reconCells = [];
+    for (var i = 0; i < 96; i++) {
+      var cell = document.createElement('div');
+      cell.className = 'cell';
+      cell.style.background = seededColor(i, cellColors);
+      gridRecon.appendChild(cell);
+      reconCells.push(cell);
+    }
+
+    // ---- Create flying cells for compression effect ----
+    var flyContainer = root.querySelector('#flying-cells-container');
+    var flyingCells = [];
+    // We create 24 representative flying cells (every 4th original cell)
+    for (var i = 0; i < 24; i++) {
+      var fc = document.createElement('div');
+      fc.className = 'flying-cell';
+      fc.style.background = seededColor(i * 4, cellColors);
+      fc.style.width = '26px';
+      fc.style.height = '26px';
+      fc.style.opacity = '0';
+      flyContainer.appendChild(fc);
+      flyingCells.push(fc);
+    }
+
+    // ---- Helper: get cell position relative to scene ----
+    // Pre-calculate grid positions based on known layout
+    // Original grid: left=60 + (420-336)/2 = 102, top=60+30 = 90
+    var origGridLeft = 102;
+    var origGridTop = 92;
+    var cellW = 336 / 12; // 28
+    var cellH = 224 / 8;  // 28
+    var gap = 2;
+
+    // Bottleneck center: 960 (half of 1920), latent at top=82+50=132
+    var bottleneckCenterX = 960;
+    var bottleneckCenterY = 182;
+
+    // Reconstructed grid: right=60, so left = 1920 - 60 - 420 + (420-336)/2 = 1482
+    var reconGridLeft = 1482;
+    var reconGridTop = 92;
+
+    function origCellPos(index) {
+      var col = index % 12;
+      var row = Math.floor(index / 12);
+      return {
+        x: origGridLeft + col * (cellW + gap),
+        y: origGridTop + row * (cellH + gap)
+      };
+    }
+
+    function reconCellPos(index) {
+      var col = index % 12;
+      var row = Math.floor(index / 12);
+      return {
+        x: reconGridLeft + col * (cellW + gap),
+        y: reconGridTop + row * (cellH + gap)
+      };
+    }
+
+    // ===========================================================
+    // PHASE 1 (0-3s): Title + original grid cascade
+    // ===========================================================
+    tl.to(root.querySelector('.title'), {
+      opacity: 1, duration: 0.6, ease: 'power2.out'
+    }, 0);
+
+    tl.to(root.querySelector('.encoder-label'), {
+      opacity: 1, duration: 0.5, ease: 'power2.out'
+    }, 0.3);
+
+    // Staggered cell cascade (top-left to bottom-right diagonal wave)
+    for (var i = 0; i < 96; i++) {
+      var row = Math.floor(i / 12);
+      var col = i % 12;
+      var delay = 0.5 + (row + col) * 0.04;
+      tl.to(origCells[i], {
+        opacity: 1, duration: 0.25, ease: 'power2.out'
+      }, delay);
+      tl.from(origCells[i], {
+        scale: 0.3, duration: 0.35, ease: 'back.out(1.4)'
+      }, delay);
+    }
+
+    tl.to(root.querySelector('#dim-label-left'), {
+      opacity: 1, duration: 0.4, ease: 'power2.out'
+    }, 1.8);
+
+    tl.to(root.querySelector('#frame-label-left'), {
+      opacity: 1, y: 0, duration: 0.5, ease: 'power2.out'
+    }, 2.0);
+    tl.from(root.querySelector('#frame-label-left'), {
+      y: 8
+    }, 2.0);
+
+    // ===========================================================
+    // PHASE 2 (3-6s): Compression through bottleneck
+    // ===========================================================
+
+    // Show hourglass
+    tl.to(root.querySelector('.hourglass'), {
+      opacity: 1, duration: 0.5, ease: 'power2.out'
+    }, 2.8);
+    tl.from(root.querySelector('.hourglass'), {
+      scale: 0.7, duration: 0.6, ease: 'back.out(1.7)'
+    }, 2.8);
+
+    // Show left arrow
+    tl.to(root.querySelector('#arrow-left'), {
+      opacity: 1, duration: 0.4, ease: 'power2.out'
+    }, 3.0);
+    tl.from(root.querySelector('#arrow-left'), {
+      x: -20
+    }, 3.0);
+
+    // Original grid shrinks and fades — the "vacuum seal" compression
+    tl.to(root.querySelector('#grid-original'), {
+      scale: 0.15, x: 280, y: 20, opacity: 0.15,
+      duration: 1.8, ease: 'back.in(1.2)'
+    }, 3.2);
+
+    // Flying cells: spawn from grid positions, fly to center bottleneck
+    for (var fi = 0; fi < 24; fi++) {
+      var srcPos = origCellPos(fi * 4);
+      var fc = flyingCells[fi];
+      // Set start position
+      gsap.set(fc, { x: srcPos.x, y: srcPos.y });
+
+      // Appear
+      tl.to(fc, {
+        opacity: 0.9, duration: 0.15
+      }, 3.2 + fi * 0.03);
+
+      // Fly to bottleneck center, shrinking
+      tl.to(fc, {
+        x: bottleneckCenterX - 13,
+        y: bottleneckCenterY - 13,
+        scale: 0.3,
+        duration: 1.0,
+        ease: 'power3.in'
+      }, 3.3 + fi * 0.03);
+
+      // Fade out at destination
+      tl.to(fc, {
+        opacity: 0, duration: 0.2
+      }, 4.2 + fi * 0.03);
+    }
+
+    // Latent grid appears with dramatic snap
+    tl.to(root.querySelector('#latent-wrap'), {
+      opacity: 1, duration: 0.01
+    }, 4.5);
+    tl.from(root.querySelector('#latent-wrap'), {
+      scale: 3, duration: 0.6, ease: 'back.out(2.5)'
+    }, 4.5);
+
+    // Latent label
+    tl.to(root.querySelector('#latent-label'), {
+      opacity: 1, duration: 0.4, ease: 'power2.out'
+    }, 5.0);
+
+    // Compression stat counter animation
+    tl.to(root.querySelector('#compression-stat'), {
+      opacity: 1, duration: 0.01
+    }, 5.2);
+    tl.from(root.querySelector('#compression-stat'), {
+      scale: 0.5, duration: 0.5, ease: 'back.out(3)'
+    }, 5.2);
+
+    // Dim labels for left side fade
+    tl.to(root.querySelector('#dim-label-left'), {
+      opacity: 0.3, duration: 0.8
+    }, 3.5);
+    tl.to(root.querySelector('#frame-label-left'), {
+      opacity: 0.3, duration: 0.8
+    }, 3.5);
+
+    // ===========================================================
+    // PHASE 3 (6-9s): Expansion / Decoder reconstructs
+    // ===========================================================
+
+    // Show right arrow
+    tl.to(root.querySelector('#arrow-right'), {
+      opacity: 1, duration: 0.4, ease: 'power2.out'
+    }, 6.0);
+    tl.from(root.querySelector('#arrow-right'), {
+      x: 20
+    }, 6.0);
+
+    // Decoder label
+    tl.to(root.querySelector('.decoder-label'), {
+      opacity: 1, duration: 0.5, ease: 'power2.out'
+    }, 6.2);
+
+    // Create expansion flying cells (reuse container)
+    var expandCells = [];
+    for (var i = 0; i < 24; i++) {
+      var ec = document.createElement('div');
+      ec.className = 'flying-cell';
+      ec.style.background = seededColor(i * 4, cellColors);
+      ec.style.width = '8px';
+      ec.style.height = '8px';
+      ec.style.opacity = '0';
+      flyContainer.appendChild(ec);
+      expandCells.push(ec);
+    }
+
+    // Flying cells expand from bottleneck to right grid
+    for (var ei = 0; ei < 24; ei++) {
+      var destPos = reconCellPos(ei * 4);
+      gsap.set(expandCells[ei], {
+        x: bottleneckCenterX - 4,
+        y: bottleneckCenterY - 4
+      });
+
+      tl.to(expandCells[ei], {
+        opacity: 0.9, duration: 0.1
+      }, 6.3 + ei * 0.03);
+
+      tl.to(expandCells[ei], {
+        x: destPos.x,
+        y: destPos.y,
+        scale: 3.2,
+        duration: 1.0,
+        ease: 'power3.out'
+      }, 6.35 + ei * 0.03);
+
+      tl.to(expandCells[ei], {
+        opacity: 0, duration: 0.2
+      }, 7.2 + ei * 0.03);
+    }
+
+    // Reconstructed grid cells cascade in — right-to-left wave with elastic
+    for (var i = 0; i < 96; i++) {
+      var row = Math.floor(i / 12);
+      var col = i % 12;
+      // Reverse direction: bottom-right to top-left
+      var delay = 6.8 + ((11 - col) + (7 - row)) * 0.03;
+      tl.to(reconCells[i], {
+        opacity: 1, duration: 0.25, ease: 'power2.out'
+      }, delay);
+      tl.from(reconCells[i], {
+        scale: 0.2, duration: 0.5, ease: 'elastic.out(1, 0.5)'
+      }, delay);
+    }
+
+    tl.to(root.querySelector('#dim-label-right'), {
+      opacity: 1, duration: 0.4, ease: 'power2.out'
+    }, 7.8);
+
+    tl.to(root.querySelector('#frame-label-right'), {
+      opacity: 1, duration: 0.5, ease: 'power2.out'
+    }, 8.0);
+    tl.from(root.querySelector('#frame-label-right'), {
+      y: 8
+    }, 8.0);
+
+    tl.to(root.querySelector('#quality-badge'), {
+      opacity: 1, duration: 0.5, ease: 'power2.out'
+    }, 8.3);
+    tl.from(root.querySelector('#quality-badge'), {
+      scale: 0.8, duration: 0.5, ease: 'back.out(2)'
+    }, 8.3);
+
+    // ===========================================================
+    // PHASE 4 (9-12s): Full view + callout + ambient pulse
+    // ===========================================================
+
+    // Restore original grid back to visible (small, but visible as reference)
+    tl.to(root.querySelector('#grid-original'), {
+      scale: 1, x: 0, y: 0, opacity: 1,
+      duration: 0.8, ease: 'power2.out'
+    }, 9.0);
+    tl.to(root.querySelector('#dim-label-left'), {
+      opacity: 1, duration: 0.5
+    }, 9.0);
+    tl.to(root.querySelector('#frame-label-left'), {
+      opacity: 1, duration: 0.5
+    }, 9.0);
+
+    // Bottom callout
+    tl.to(root.querySelector('#bottom-callout'), {
+      opacity: 1, duration: 0.6, ease: 'power2.out'
+    }, 9.5);
+    tl.from(root.querySelector('#bottom-callout'), {
+      y: 15
+    }, 9.5);
+
+    // Add ambient pulse class to latent grid
+    tl.call(function() {
+      root.querySelector('#latent-wrap').classList.add('latent-pulse');
+    }, null, 9.8);
+
+    // Subtle scale breath on latent wrap
+    tl.to(root.querySelector('#latent-wrap'), {
+      scale: 1.05, duration: 0.8, ease: 'sine.inOut', yoyo: true, repeat: 1
+    }, 10.0);
+
+    // Hold to fill 12s
+    tl.to({}, { duration: 0.5 }, 11.5);
+
+    window.__timelines["vae-explainer"] = tl;
+  </script>
+</div>
+</body>
+</html>

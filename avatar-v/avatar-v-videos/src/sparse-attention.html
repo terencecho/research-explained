@@ -16,89 +16,322 @@
   data-duration="12"
 >
   <div class="scene">
-    <div class="title">Standard Attention vs <span class="teal">Sparse Reference</span> Attention</div>
+    <div class="bg-gradient"></div>
 
-    <!-- Left: Standard (Quadratic) -->
-    <div class="panel panel-left">
-      <div class="panel-label" style="color:#E71D36;">Standard (Quadratic)</div>
-      <div class="grid-wrap">
-        <div class="axis-label y-axis">Query tokens</div>
-        <div class="grid" id="grid-standard"></div>
-        <div class="axis-label x-axis">Key tokens</div>
+    <!-- ===== TITLE ===== -->
+    <div class="main-title">Standard vs Sparse Reference Attention</div>
+
+    <!-- ===== DIVIDER ===== -->
+    <div class="divider"></div>
+
+    <!-- ===== LEFT HALF: Standard Attention ===== -->
+    <div class="half half-left">
+      <div class="half-label std-label">Standard Attention</div>
+
+      <div class="grid-container std-grid-container">
+        <!-- Row group labels (left side) -->
+        <div class="row-group-label row-group-ref">Ref</div>
+        <div class="row-group-label row-group-gen">Gen</div>
+
+        <!-- Column group labels (top) -->
+        <div class="col-group-label col-group-ref">Reference</div>
+        <div class="col-group-label col-group-gen">Generation</div>
+
+        <!-- Row labels -->
+        <div class="row-label row-label-0">R1</div>
+        <div class="row-label row-label-1">R2</div>
+        <div class="row-label row-label-2">R3</div>
+        <div class="row-label row-label-3">R4</div>
+        <div class="row-label row-label-4">G1</div>
+        <div class="row-label row-label-5">G2</div>
+        <div class="row-label row-label-6">G3</div>
+        <div class="row-label row-label-7">G4</div>
+
+        <!-- Column labels -->
+        <div class="col-label col-label-0">R1</div>
+        <div class="col-label col-label-1">R2</div>
+        <div class="col-label col-label-2">R3</div>
+        <div class="col-label col-label-3">R4</div>
+        <div class="col-label col-label-4">G1</div>
+        <div class="col-label col-label-5">G2</div>
+        <div class="col-label col-label-6">G3</div>
+        <div class="col-label col-label-7">G4</div>
+
+        <!-- 8x8 grid of cells -->
+        <div class="grid std-grid"></div>
       </div>
-      <div class="cost-label" style="color:#E71D36;">O(n&sup2;) &mdash; every token attends to every token</div>
+
+      <div class="stat-box std-stat">
+        <span class="stat-num std-stat-num">0</span>
+        <span class="stat-unit">operations</span>
+      </div>
+
+      <div class="half-desc std-desc">Every token attends to every token</div>
     </div>
 
-    <!-- Right: Sparse Reference (Linear) -->
-    <div class="panel panel-right">
-      <div class="panel-label" style="color:#2EC4B6;">Sparse Reference (Linear)</div>
-      <div class="grid-wrap">
-        <div class="axis-label y-axis">Query tokens</div>
-        <div class="grid" id="grid-sparse"></div>
-        <div class="axis-label x-axis">Reference tokens</div>
+    <!-- ===== RIGHT HALF: Sparse Reference Attention ===== -->
+    <div class="half half-right">
+      <div class="half-label sp-label">Sparse Reference Attention</div>
+
+      <div class="grid-container sp-grid-container">
+        <!-- Row group labels (left side) -->
+        <div class="row-group-label row-group-ref">Ref</div>
+        <div class="row-group-label row-group-gen">Gen</div>
+
+        <!-- Column group labels (top) -->
+        <div class="col-group-label col-group-ref">Reference</div>
+        <div class="col-group-label col-group-gen">Generation</div>
+
+        <!-- Row labels -->
+        <div class="row-label row-label-0">R1</div>
+        <div class="row-label row-label-1">R2</div>
+        <div class="row-label row-label-2">R3</div>
+        <div class="row-label row-label-3">R4</div>
+        <div class="row-label row-label-4">G1</div>
+        <div class="row-label row-label-5">G2</div>
+        <div class="row-label row-label-6">G3</div>
+        <div class="row-label row-label-7">G4</div>
+
+        <!-- Column labels -->
+        <div class="col-label col-label-0">R1</div>
+        <div class="col-label col-label-1">R2</div>
+        <div class="col-label col-label-2">R3</div>
+        <div class="col-label col-label-3">R4</div>
+        <div class="col-label col-label-4">G1</div>
+        <div class="col-label col-label-5">G2</div>
+        <div class="col-label col-label-6">G3</div>
+        <div class="col-label col-label-7">G4</div>
+
+        <!-- 8x8 grid of cells -->
+        <div class="grid sp-grid"></div>
+
+        <!-- Empty quadrant overlay -->
+        <div class="empty-quadrant">
+          <div class="empty-x">&times;</div>
+          <div class="removed-label">Removed!</div>
+        </div>
       </div>
-      <div class="cost-label" style="color:#2EC4B6;">O(n) &mdash; only attends to reference</div>
+
+      <div class="stat-box sp-stat">
+        <span class="stat-num sp-stat-num">0</span>
+        <span class="stat-unit">operations</span>
+        <span class="stat-saved">(25% saved)</span>
+      </div>
+
+      <div class="half-desc sp-desc">Reference doesn&rsquo;t look at generation</div>
     </div>
 
-    <!-- Legend -->
-    <div class="legend">
-      <div class="legend-item"><div class="legend-box" style="background:#E71D36;"></div><span>Full attention</span></div>
-      <div class="legend-item"><div class="legend-box" style="background:#2EC4B6;"></div><span>Sparse (reference only)</span></div>
-      <div class="legend-item"><div class="legend-box" style="background:#415A77;"></div><span>No computation</span></div>
+    <!-- ===== BOTTOM COMPARISON ===== -->
+    <div class="bottom-bar">
+      <div class="bottom-line bottom-line-1">Cost scales <span class="hl-green">linearly</span> with reference length &mdash; double the reference, only 2&times; cost (not 4&times;)</div>
+      <div class="bottom-line bottom-line-2">&ldquo;Students read textbooks, but textbooks don&rsquo;t read student notes&rdquo;</div>
     </div>
   </div>
 
   <style>
     [data-composition-id="sparse-attention"] {
-      position: relative; overflow: hidden; background: #011627;
-      width: 1920px; height: 540px; font-family: 'Space Mono', monospace; color: #FDFFFC;
+      position: relative; overflow: hidden;
+      width: 1920px; height: 540px;
+      font-family: 'Space Mono', monospace; color: #FDFFFC;
+      background: #011627;
     }
     .scene { position: relative; width: 1920px; height: 540px; }
-    .title {
-      position: absolute; top: 16px; left: 50%; transform: translateX(-50%);
-      font-size: 42px; font-weight: 700; white-space: nowrap;
-    }
-    .teal { color: #2EC4B6; }
 
-    .panel { position: absolute; top: 72px; display: flex; flex-direction: column; align-items: center; }
-    .panel-left { left: 80px; width: 800px; }
-    .panel-right { left: 1000px; width: 800px; }
-    .panel-label { font-size: 30px; font-weight: 700; margin-bottom: 10px; }
-
-    .grid-wrap { position: relative; display: flex; align-items: center; gap: 12px; }
-    .y-axis {
-      writing-mode: vertical-rl; transform: rotate(180deg);
-      font-size: 24px; color: #778DA9;
+    .bg-gradient {
+      position: absolute; inset: 0; z-index: 0; pointer-events: none;
+      background:
+        radial-gradient(ellipse 60% 70% at 25% 40%, rgba(231,29,54,0.04) 0%, transparent 70%),
+        radial-gradient(ellipse 60% 70% at 75% 40%, rgba(46,196,182,0.04) 0%, transparent 70%),
+        radial-gradient(ellipse 120% 100% at 50% 100%, rgba(1,22,39,0) 50%, rgba(65,90,119,0.10) 100%);
     }
-    .x-axis {
-      position: absolute; bottom: -34px; left: 50%; transform: translateX(-50%);
-      font-size: 24px; color: #778DA9; white-space: nowrap;
-    }
-    .axis-label { font-weight: 400; }
 
+    /* Title */
+    .main-title {
+      position: absolute; top: 14px; left: 0; right: 0; text-align: center;
+      font-size: 34px; font-weight: 700; color: #FDFFFC; z-index: 10;
+      letter-spacing: -0.5px; opacity: 0;
+    }
+
+    /* Divider */
+    .divider {
+      position: absolute; left: 960px; top: 50px; width: 1px; height: 420px;
+      background: linear-gradient(to bottom, transparent 0%, rgba(119,141,169,0.3) 15%, rgba(119,141,169,0.3) 85%, transparent 100%);
+      z-index: 5; opacity: 0;
+    }
+
+    /* Halves */
+    .half {
+      position: absolute; top: 50px; width: 930px; height: 420px; z-index: 1;
+    }
+    .half-left { left: 15px; }
+    .half-right { left: 975px; }
+
+    .half-label {
+      position: absolute; top: 4px; left: 0; right: 0; text-align: center;
+      font-size: 24px; font-weight: 700; opacity: 0; z-index: 2;
+    }
+    .std-label { color: #E71D36; }
+    .sp-label { color: #2EC4B6; }
+
+    /* Grid container — positions grid + labels */
+    .grid-container {
+      position: absolute; top: 40px; left: 50%; transform: translateX(-50%);
+      width: 380px; height: 330px; opacity: 0;
+    }
+
+    /* Grid: 8x8 cells, each 32px with 2px gap = 8*32 + 7*2 = 270px */
     .grid {
+      position: absolute;
+      top: 42px; left: 60px;
+      width: 206px; height: 206px;
       display: grid;
-      grid-template-columns: repeat(8, 1fr);
-      grid-template-rows: repeat(8, 1fr);
-      width: 280px; height: 280px; gap: 3px;
+      grid-template-columns: repeat(8, 24px);
+      grid-template-rows: repeat(8, 24px);
+      gap: 2px;
     }
+
+    /* Grid cell base */
     .cell {
+      width: 24px; height: 24px;
       border-radius: 3px;
+      opacity: 0;
+      transform: scale(0);
     }
-    .cell-full { background: #E71D36; }
-    .cell-sparse { background: #2EC4B6; }
-    .cell-empty { background: #415A77; opacity: 0.25; }
+    .cell-red {
+      background: #E71D36;
+      box-shadow: 0 0 6px rgba(231,29,54,0.5);
+    }
+    .cell-purple {
+      background: #bc8cff;
+      box-shadow: 0 0 6px rgba(188,140,255,0.5);
+    }
+    .cell-teal {
+      background: #2EC4B6;
+      box-shadow: 0 0 6px rgba(46,196,182,0.5);
+    }
+    .cell-empty {
+      background: rgba(65,90,119,0.08);
+      border: 1px dashed rgba(65,90,119,0.15);
+      opacity: 0;
+      transform: scale(1);
+    }
 
-    .cost-label {
-      font-size: 22px; font-weight: 700; margin-top: 40px; white-space: nowrap;
+    /* Row labels (left of grid) */
+    .row-label {
+      position: absolute;
+      left: 26px;
+      font-size: 16px; font-weight: 400; color: #778DA9;
+      text-align: right; width: 28px;
+    }
+    .row-label-0 { top: 46px; }
+    .row-label-1 { top: 72px; }
+    .row-label-2 { top: 98px; }
+    .row-label-3 { top: 124px; }
+    .row-label-4 { top: 150px; }
+    .row-label-5 { top: 176px; }
+    .row-label-6 { top: 202px; }
+    .row-label-7 { top: 228px; }
+
+    /* Column labels (above grid) */
+    .col-label {
+      position: absolute;
+      top: 22px;
+      font-size: 16px; font-weight: 400; color: #778DA9;
+      text-align: center; width: 32px;
+    }
+    .col-label-0 { left: 60px; }
+    .col-label-1 { left: 86px; }
+    .col-label-2 { left: 112px; }
+    .col-label-3 { left: 138px; }
+    .col-label-4 { left: 164px; }
+    .col-label-5 { left: 190px; }
+    .col-label-6 { left: 216px; }
+    .col-label-7 { left: 242px; }
+
+    /* Row group labels (far left) */
+    .row-group-label {
+      position: absolute;
+      left: 0px;
+      font-size: 16px; font-weight: 700; color: #FDFFFC;
+      writing-mode: vertical-lr;
+      text-orientation: mixed;
+      transform: rotate(180deg);
+      letter-spacing: 1px;
+    }
+    .row-group-ref { top: 52px; height: 90px; }
+    .row-group-gen { top: 155px; height: 90px; }
+
+    /* Column group labels (above col labels) */
+    .col-group-label {
+      position: absolute;
+      top: 2px;
+      font-size: 16px; font-weight: 700; color: #FDFFFC;
+      text-align: center;
+    }
+    .col-group-ref { left: 60px; width: 102px; }
+    .col-group-gen { left: 164px; width: 102px; }
+
+    /* Empty quadrant overlay (top-right of sparse grid) */
+    .empty-quadrant {
+      position: absolute;
+      top: 42px; left: 164px;
+      width: 102px; height: 102px;
+      border: 2px dashed #E71D36;
+      border-radius: 4px;
+      opacity: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: rgba(231,29,54,0.04);
+      z-index: 3;
+    }
+    .empty-x {
+      font-size: 48px;
+      font-weight: 700;
+      color: rgba(231,29,54,0.25);
+      line-height: 1;
+    }
+    .removed-label {
+      font-size: 18px;
+      font-weight: 700;
+      color: #E71D36;
+      margin-top: 2px;
+      opacity: 0;
     }
 
-    .legend {
-      position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
-      display: flex; gap: 40px; font-size: 20px; color: #778DA9;
+    /* Stat box */
+    .stat-box {
+      position: absolute; bottom: 52px; left: 0; right: 0; text-align: center;
+      z-index: 4; opacity: 0;
     }
-    .legend-item { display: flex; align-items: center; gap: 10px; }
-    .legend-box { width: 20px; height: 20px; border-radius: 3px; }
+    .stat-num { font-size: 36px; font-weight: 700; font-variant-numeric: tabular-nums; }
+    .stat-unit { font-size: 18px; font-weight: 400; color: #778DA9; margin-left: 6px; }
+    .stat-saved { font-size: 18px; font-weight: 700; color: #3fb950; margin-left: 8px; }
+    .std-stat .stat-num { color: #E71D36; }
+    .sp-stat .stat-num { color: #2EC4B6; }
+
+    /* Half description */
+    .half-desc {
+      position: absolute; bottom: 16px; left: 0; right: 0; text-align: center;
+      font-size: 18px; font-weight: 400; color: #778DA9; opacity: 0; z-index: 4;
+    }
+
+    /* Bottom bar */
+    .bottom-bar {
+      position: absolute; bottom: 6px; left: 0; right: 0;
+      text-align: center; z-index: 10;
+    }
+    .bottom-line { opacity: 0; line-height: 1.4; }
+    .bottom-line-1 { font-size: 20px; font-weight: 700; color: #FDFFFC; }
+    .bottom-line-2 { font-size: 16px; font-weight: 400; color: #FF9F1C; margin-top: 2px; }
+    .hl-green { color: #3fb950; }
+
+    /* Dim overlay for left side */
+    .dim-overlay {
+      position: absolute; inset: 0; background: rgba(1,22,39,0.40);
+      z-index: 6; pointer-events: none; opacity: 0;
+    }
   </style>
 
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
@@ -107,68 +340,262 @@
     var root = document.currentScript.parentElement;
     var tl = gsap.timeline({ paused: true });
 
-    // Build grids with individual cells
-    var gridStd = root.querySelector('#grid-standard');
-    var gridSparse = root.querySelector('#grid-sparse');
+    /* ==========================================================
+       BUILD GRID CELLS
+       8x8 = 64 cells per grid
+       Standard: all red
+       Sparse: quadrant-based coloring
+       ========================================================== */
+    var GRID_SIZE = 8;
+    var HALF = 4; // first 4 = ref, last 4 = gen
+
+    var stdGrid = root.querySelector('.std-grid');
+    var spGrid = root.querySelector('.sp-grid');
+
     var stdCells = [];
     var spCells = [];
 
-    for (var i = 0; i < 64; i++) {
-      var cell = document.createElement('div');
-      cell.className = 'cell cell-full';
-      gridStd.appendChild(cell);
-      stdCells.push(cell);
-    }
+    for (var r = 0; r < GRID_SIZE; r++) {
+      for (var c = 0; c < GRID_SIZE; c++) {
+        // Standard grid: all red
+        var stdCell = document.createElement('div');
+        stdCell.className = 'cell cell-red';
+        stdGrid.appendChild(stdCell);
+        stdCells.push(stdCell);
 
-    for (var r = 0; r < 8; r++) {
-      for (var c = 0; c < 8; c++) {
-        var cell = document.createElement('div');
-        cell.className = c < 3 ? 'cell cell-sparse' : 'cell cell-empty';
-        gridSparse.appendChild(cell);
-        spCells.push(cell);
+        // Sparse grid: quadrant logic
+        var spCell = document.createElement('div');
+        var isRefRow = r < HALF;
+        var isRefCol = c < HALF;
+
+        if (isRefRow && isRefCol) {
+          // Top-left: Ref->Ref = purple
+          spCell.className = 'cell cell-purple';
+        } else if (isRefRow && !isRefCol) {
+          // Top-right: Ref->Gen = EMPTY (the hero visual)
+          spCell.className = 'cell cell-empty';
+        } else if (!isRefRow && isRefCol) {
+          // Bottom-left: Gen->Ref = teal
+          spCell.className = 'cell cell-teal';
+        } else {
+          // Bottom-right: Gen->Gen = teal
+          spCell.className = 'cell cell-teal';
+        }
+        spGrid.appendChild(spCell);
+        spCells.push(spCell);
       }
     }
 
-    // Animations
-    tl.from(root.querySelector('.title'), { y: -20, opacity: 0, duration: 0.6, ease: 'power2.out' }, 0);
+    /* Add dim overlay to left half */
+    var dimOverlay = document.createElement('div');
+    dimOverlay.className = 'dim-overlay';
+    root.querySelector('.half-left').appendChild(dimOverlay);
 
-    // Left panel
-    tl.from(root.querySelector('.panel-left'), { opacity: 0, x: -30, duration: 0.8 }, 0.3);
-    tl.from(root.querySelector('.panel-left .panel-label'), { opacity: 0, duration: 0.5 }, 0.5);
+    /* ==========================================================
+       ANIMATION TIMELINE — 12s total
+       ========================================================== */
 
-    // Standard grid: per-cell opacity fade, diagonal wave
-    for (var i = 0; i < 64; i++) {
-      var row = Math.floor(i / 8);
-      var col = i % 8;
-      tl.from(stdCells[i], { opacity: 0, duration: 0.35, ease: 'power2.out' }, 0.8 + row * 0.12 + col * 0.12);
+    /* --- 0-2s: Title + grids fade in with labels --- */
+
+    // Title entrance
+    tl.to(root.querySelector('.main-title'), {
+      opacity: 1, duration: 0.01
+    }, 0.1);
+    tl.from(root.querySelector('.main-title'), {
+      y: -25, duration: 0.8, ease: 'power3.out'
+    }, 0.1);
+
+    // Divider
+    tl.to(root.querySelector('.divider'), {
+      opacity: 1, duration: 0.6, ease: 'power2.out'
+    }, 0.3);
+
+    // Half labels
+    tl.to(root.querySelector('.std-label'), { opacity: 1, duration: 0.01 }, 0.5);
+    tl.from(root.querySelector('.std-label'), {
+      y: -15, duration: 0.5, ease: 'power3.out'
+    }, 0.5);
+
+    tl.to(root.querySelector('.sp-label'), { opacity: 1, duration: 0.01 }, 0.5);
+    tl.from(root.querySelector('.sp-label'), {
+      y: -15, duration: 0.5, ease: 'power3.out'
+    }, 0.5);
+
+    // Grid containers (includes grids + all labels)
+    tl.to(root.querySelector('.std-grid-container'), {
+      opacity: 1, duration: 0.8, ease: 'power2.out'
+    }, 0.8);
+    tl.to(root.querySelector('.sp-grid-container'), {
+      opacity: 1, duration: 0.8, ease: 'power2.out'
+    }, 0.8);
+
+    // Show empty cells in sparse grid top-right as subtle placeholders
+    for (var i = 0; i < spCells.length; i++) {
+      var r = Math.floor(i / GRID_SIZE);
+      var c = i % GRID_SIZE;
+      if (r < HALF && c >= HALF) {
+        tl.to(spCells[i], { opacity: 0.4, duration: 0.5 }, 1.2);
+      }
     }
 
-    root.querySelectorAll('.panel-left .axis-label').forEach(function(el) {
-      tl.from(el, { opacity: 0, duration: 0.5 }, 1.2);
-    });
-    tl.from(root.querySelector('.panel-left .cost-label'), { opacity: 0, y: 10, duration: 0.5 }, 2.8);
+    /* --- 2-5s: LEFT grid fills — diagonal wave, all 64 cells red --- */
 
-    // Right panel
-    tl.from(root.querySelector('.panel-right'), { opacity: 0, x: 30, duration: 0.8 }, 3.5);
-    tl.from(root.querySelector('.panel-right .panel-label'), { opacity: 0, duration: 0.5 }, 3.7);
-
-    // Sparse grid: same diagonal wave
-    for (var i = 0; i < 64; i++) {
-      var row = Math.floor(i / 8);
-      var col = i % 8;
-      tl.from(spCells[i], { opacity: 0, duration: 0.35, ease: 'power2.out' }, 4.0 + row * 0.12 + col * 0.12);
+    // Diagonal wave: cells at diagonal d = r + c appear together
+    // d ranges from 0 to 14
+    for (var d = 0; d < 15; d++) {
+      for (var r = 0; r < GRID_SIZE; r++) {
+        var c = d - r;
+        if (c >= 0 && c < GRID_SIZE) {
+          var idx = r * GRID_SIZE + c;
+          var t = 2.0 + d * 0.12;
+          tl.to(stdCells[idx], {
+            opacity: 0.85, scale: 1, duration: 0.25, ease: 'back.out(2.5)'
+          }, t);
+        }
+      }
     }
 
-    root.querySelectorAll('.panel-right .axis-label').forEach(function(el) {
-      tl.from(el, { opacity: 0, duration: 0.5 }, 4.4);
-    });
-    tl.from(root.querySelector('.panel-right .cost-label'), { opacity: 0, y: 10, duration: 0.5 }, 6.0);
+    // Stat counter — left
+    tl.to(root.querySelector('.std-stat'), { opacity: 1, duration: 0.01 }, 2.5);
+    tl.from(root.querySelector('.std-stat'), {
+      y: 12, duration: 0.4, ease: 'power3.out'
+    }, 2.5);
 
-    // Legend
-    tl.from(root.querySelector('.legend'), { opacity: 0, y: 10, duration: 0.5 }, 6.5);
+    var stdStatEl = root.querySelector('.std-stat-num');
+    var stdCountObj = { v: 0 };
+    tl.to(stdCountObj, {
+      v: 64, duration: 1.5, ease: 'power2.out',
+      onUpdate: function() {
+        stdStatEl.textContent = Math.round(stdCountObj.v);
+      }
+    }, 2.5);
 
-    // Hold
-    tl.to({}, { duration: 3 });
+    // Label
+    tl.to(root.querySelector('.std-desc'), { opacity: 1, duration: 0.01 }, 4.0);
+    tl.from(root.querySelector('.std-desc'), {
+      y: 8, duration: 0.4, ease: 'power2.out'
+    }, 4.0);
+
+    /* --- 5-8s: RIGHT grid fills by quadrant --- */
+
+    // 5.0-5.5s: Top-left (Ref->Ref) purple
+    for (var r = 0; r < HALF; r++) {
+      for (var c = 0; c < HALF; c++) {
+        var idx = r * GRID_SIZE + c;
+        var t = 5.0 + (r * HALF + c) * 0.025;
+        tl.to(spCells[idx], {
+          opacity: 0.85, scale: 1, duration: 0.2, ease: 'back.out(2.0)'
+        }, t);
+      }
+    }
+
+    // 5.6-6.1s: Bottom-left (Gen->Ref) teal
+    for (var r = HALF; r < GRID_SIZE; r++) {
+      for (var c = 0; c < HALF; c++) {
+        var idx = r * GRID_SIZE + c;
+        var t = 5.6 + ((r - HALF) * HALF + c) * 0.025;
+        tl.to(spCells[idx], {
+          opacity: 0.85, scale: 1, duration: 0.2, ease: 'back.out(2.0)'
+        }, t);
+      }
+    }
+
+    // 6.2-6.7s: Bottom-right (Gen->Gen) teal
+    for (var r = HALF; r < GRID_SIZE; r++) {
+      for (var c = HALF; c < GRID_SIZE; c++) {
+        var idx = r * GRID_SIZE + c;
+        var t = 6.2 + ((r - HALF) * HALF + (c - HALF)) * 0.025;
+        tl.to(spCells[idx], {
+          opacity: 0.85, scale: 1, duration: 0.2, ease: 'back.out(2.0)'
+        }, t);
+      }
+    }
+
+    // 6.8-7.2s: Top-right stays DARK — dashed border + X + "Removed!" label appear
+    tl.to(root.querySelector('.empty-quadrant'), {
+      opacity: 1, duration: 0.4, ease: 'power2.out'
+    }, 6.8);
+
+    // Fade out the subtle placeholder cells in the empty quadrant
+    for (var r = 0; r < HALF; r++) {
+      for (var c = HALF; c < GRID_SIZE; c++) {
+        var idx = r * GRID_SIZE + c;
+        tl.to(spCells[idx], { opacity: 0, duration: 0.3 }, 6.8);
+      }
+    }
+
+    tl.to(root.querySelector('.removed-label'), {
+      opacity: 1, duration: 0.3, ease: 'power2.out'
+    }, 7.0);
+
+    // Stat counter — right
+    tl.to(root.querySelector('.sp-stat'), { opacity: 1, duration: 0.01 }, 6.5);
+    tl.from(root.querySelector('.sp-stat'), {
+      y: 12, duration: 0.4, ease: 'power3.out'
+    }, 6.5);
+
+    var spStatEl = root.querySelector('.sp-stat-num');
+    var spCountObj = { v: 0 };
+    tl.to(spCountObj, {
+      v: 48, duration: 1.2, ease: 'power2.out',
+      onUpdate: function() {
+        spStatEl.textContent = Math.round(spCountObj.v);
+      }
+    }, 6.5);
+
+    // Right side description
+    tl.to(root.querySelector('.sp-desc'), { opacity: 1, duration: 0.01 }, 7.5);
+    tl.from(root.querySelector('.sp-desc'), {
+      y: 8, duration: 0.4, ease: 'power2.out'
+    }, 7.5);
+
+    /* --- 8-10s: Left dims, empty quadrant pulses --- */
+
+    // Dim left side
+    tl.to(dimOverlay, {
+      opacity: 1, duration: 0.8, ease: 'power2.inOut'
+    }, 8.0);
+
+    // Pulse the empty quadrant border
+    tl.to(root.querySelector('.empty-quadrant'), {
+      boxShadow: '0 0 20px rgba(231,29,54,0.4), inset 0 0 20px rgba(231,29,54,0.08)',
+      duration: 0.6, ease: 'power1.inOut'
+    }, 8.2);
+    tl.to(root.querySelector('.empty-quadrant'), {
+      boxShadow: '0 0 8px rgba(231,29,54,0.2), inset 0 0 8px rgba(231,29,54,0.04)',
+      duration: 0.6, ease: 'power1.inOut'
+    }, 8.8);
+    tl.to(root.querySelector('.empty-quadrant'), {
+      boxShadow: '0 0 24px rgba(231,29,54,0.5), inset 0 0 24px rgba(231,29,54,0.10)',
+      duration: 0.5, ease: 'power1.inOut'
+    }, 9.4);
+
+    // Brighten the active sparse cells slightly
+    for (var i = 0; i < spCells.length; i++) {
+      var r = Math.floor(i / GRID_SIZE);
+      var c = i % GRID_SIZE;
+      var isEmptyQuadrant = (r < HALF && c >= HALF);
+      if (!isEmptyQuadrant) {
+        tl.to(spCells[i], {
+          opacity: 1, duration: 0.6, ease: 'power2.inOut'
+        }, 8.5);
+      }
+    }
+
+    /* --- 10-12s: Bottom comparison text, hold --- */
+
+    tl.to(root.querySelector('.bottom-line-1'), { opacity: 1, duration: 0.01 }, 10.0);
+    tl.from(root.querySelector('.bottom-line-1'), {
+      y: 15, duration: 0.6, ease: 'elastic.out(1, 0.6)'
+    }, 10.0);
+
+    tl.to(root.querySelector('.bottom-line-2'), { opacity: 1, duration: 0.01 }, 10.4);
+    tl.from(root.querySelector('.bottom-line-2'), {
+      y: 10, duration: 0.5, ease: 'power2.out'
+    }, 10.4);
+
+    // Hold to 12s
+    tl.to({}, { duration: 1.0 }, 11.0);
 
     window.__timelines["sparse-attention"] = tl;
   </script>

@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap');
+* { margin: 0; padding: 0; box-sizing: border-box; }
+</style>
+</head>
+<body>
+<div
+  data-composition-id="architecture-pipeline"
+  data-width="1920"
+  data-height="540"
+  data-start="0"
+  data-duration="14"
+>
+  <div class="scene">
+    <!-- Background layers -->
+    <div class="bg-gradient"></div>
+    <svg class="pipeline-svg" viewBox="0 0 1920 540" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <filter id="glow-orange" x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur stdDeviation="6" result="blur"/>
+          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+        <filter id="glow-purple" x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur stdDeviation="8" result="blur"/>
+          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+        <filter id="glow-teal" x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur stdDeviation="6" result="blur"/>
+          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+        <filter id="glow-green" x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur stdDeviation="6" result="blur"/>
+          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+        <filter id="glow-output" x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur stdDeviation="10" result="blur"/>
+          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+        <linearGradient id="grad-orange" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="rgba(255,159,28,0.15)"/>
+          <stop offset="100%" stop-color="rgba(255,159,28,0.03)"/>
+        </linearGradient>
+        <linearGradient id="grad-purple" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="rgba(188,140,255,0.18)"/>
+          <stop offset="100%" stop-color="rgba(188,140,255,0.04)"/>
+        </linearGradient>
+        <linearGradient id="grad-teal" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="rgba(46,196,182,0.15)"/>
+          <stop offset="100%" stop-color="rgba(46,196,182,0.03)"/>
+        </linearGradient>
+        <linearGradient id="grad-green" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="rgba(63,185,80,0.15)"/>
+          <stop offset="100%" stop-color="rgba(63,185,80,0.03)"/>
+        </linearGradient>
+      </defs>
+
+      <!-- Connection lines between stages -->
+      <!-- Inputs converge to Stage 1 -->
+      <line class="conn conn-input-1" x1="285" y1="80" x2="370" y2="220" stroke="#415A77" stroke-width="2" stroke-dasharray="6,4" opacity="0"/>
+      <line class="conn conn-input-2" x1="285" y1="190" x2="370" y2="250" stroke="#415A77" stroke-width="2" stroke-dasharray="6,4" opacity="0"/>
+      <line class="conn conn-input-3" x1="285" y1="300" x2="370" y2="280" stroke="#415A77" stroke-width="2" stroke-dasharray="6,4" opacity="0"/>
+
+      <!-- Stage 1 -> Stage 2 -->
+      <line class="conn conn-1-2" x1="580" y1="260" x2="680" y2="260" stroke="#415A77" stroke-width="2.5" opacity="0"/>
+      <!-- Stage 2 -> Stage 3 -->
+      <line class="conn conn-2-3" x1="1030" y1="260" x2="1115" y2="260" stroke="#415A77" stroke-width="2.5" opacity="0"/>
+      <!-- Stage 3 -> Stage 4 -->
+      <line class="conn conn-3-4" x1="1340" y1="260" x2="1420" y2="260" stroke="#415A77" stroke-width="2.5" opacity="0"/>
+      <!-- Stage 4 -> Output -->
+      <line class="conn conn-4-out" x1="1640" y1="260" x2="1720" y2="260" stroke="#415A77" stroke-width="2.5" opacity="0"/>
+
+      <!-- Stage boxes (SVG rects with gradient fills) -->
+      <!-- Stage 1: Image Engine -->
+      <rect class="stage-box stage-1-box" x="370" y="175" width="210" height="170" rx="16" fill="url(#grad-orange)" stroke="#FF9F1C" stroke-width="2.5" opacity="0"/>
+      <!-- Stage 2: VideoRef DiT (1.5x larger) -->
+      <rect class="stage-box stage-2-box" x="680" y="130" width="350" height="260" rx="20" fill="url(#grad-purple)" stroke="#bc8cff" stroke-width="3" opacity="0"/>
+      <!-- Stage 2 glow ring -->
+      <rect class="stage-2-glow" x="675" y="125" width="360" height="270" rx="22" fill="none" stroke="rgba(188,140,255,0.25)" stroke-width="6" opacity="0"/>
+      <!-- Stage 3: Super-Res -->
+      <rect class="stage-box stage-3-box" x="1115" y="175" width="225" height="170" rx="16" fill="url(#grad-teal)" stroke="#2EC4B6" stroke-width="2.5" opacity="0"/>
+      <!-- Stage 4: Streaming VAE -->
+      <rect class="stage-box stage-4-box" x="1420" y="175" width="220" height="170" rx="16" fill="url(#grad-green)" stroke="#3fb950" stroke-width="2.5" opacity="0"/>
+
+      <!-- Data particles: input->stage1 -->
+      <circle class="particle p-in1a" cx="285" cy="80" r="4" fill="#2EC4B6" opacity="0"/>
+      <circle class="particle p-in1b" cx="285" cy="80" r="3" fill="#2EC4B6" opacity="0"/>
+      <circle class="particle p-in2a" cx="285" cy="190" r="4" fill="#FF9F1C" opacity="0"/>
+      <circle class="particle p-in2b" cx="285" cy="190" r="3" fill="#FF9F1C" opacity="0"/>
+      <circle class="particle p-in3a" cx="285" cy="300" r="4" fill="#778DA9" opacity="0"/>
+
+      <!-- Data particles: stage1->stage2 -->
+      <circle class="particle p-12a" cx="580" cy="260" r="5" fill="#FF9F1C" opacity="0"/>
+      <circle class="particle p-12b" cx="580" cy="250" r="3.5" fill="#FF9F1C" opacity="0"/>
+      <circle class="particle p-12c" cx="580" cy="270" r="3" fill="#FF9F1C" opacity="0"/>
+
+      <!-- Data particles: stage2->stage3 -->
+      <circle class="particle p-23a" cx="1030" cy="260" r="5" fill="#bc8cff" opacity="0"/>
+      <circle class="particle p-23b" cx="1030" cy="250" r="3.5" fill="#bc8cff" opacity="0"/>
+      <circle class="particle p-23c" cx="1030" cy="270" r="3" fill="#bc8cff" opacity="0"/>
+
+      <!-- Data particles: stage3->stage4 -->
+      <circle class="particle p-34a" cx="1340" cy="260" r="5" fill="#2EC4B6" opacity="0"/>
+      <circle class="particle p-34b" cx="1340" cy="250" r="3.5" fill="#2EC4B6" opacity="0"/>
+
+      <!-- Data particles: stage4->output -->
+      <circle class="particle p-4oa" cx="1640" cy="260" r="5" fill="#3fb950" opacity="0"/>
+      <circle class="particle p-4ob" cx="1640" cy="260" r="3.5" fill="#3fb950" opacity="0"/>
+      <circle class="particle p-4oc" cx="1640" cy="260" r="3" fill="#FDFFFC" opacity="0"/>
+    </svg>
+
+    <!-- Input tags (top-left) -->
+    <div class="input-tag tag-ref">Reference Video</div>
+    <div class="input-tag tag-audio">Audio Track</div>
+    <div class="input-tag tag-prompt">Text Prompt</div>
+
+    <!-- Stage 1 labels -->
+    <div class="stage-label stage-1-label">Image Engine</div>
+    <div class="stage-sublabel stage-1-sub">Scene image + your face</div>
+
+    <!-- Stage 2 labels -->
+    <div class="stage-label stage-2-label">VideoRef DiT</div>
+    <div class="stage-sublabel stage-2-sub">Sparse Reference Attention</div>
+    <div class="stage-badge"><span>CORE</span></div>
+
+    <!-- Stage 3 labels -->
+    <div class="stage-label stage-3-label">Super-Res Refiner</div>
+    <div class="stage-sublabel stage-3-sub">&rarr; 1080p</div>
+
+    <!-- Stage 4 labels -->
+    <div class="stage-label stage-4-label">VAE Decode</div>
+    <div class="stage-sublabel stage-4-sub">Latent &rarr; Pixels</div>
+
+    <!-- Output -->
+    <div class="output-tag">Your Avatar Video</div>
+    <div class="output-glow"></div>
+  </div>
+
+  <style>
+    [data-composition-id="architecture-pipeline"] {
+      position: relative; overflow: hidden;
+      width: 1920px; height: 540px;
+      font-family: 'Space Mono', monospace; color: #FDFFFC;
+      background: #011627;
+    }
+    .scene { position: relative; width: 1920px; height: 540px; }
+
+    .bg-gradient {
+      position: absolute; inset: 0;
+      background: radial-gradient(ellipse 140% 120% at 55% 50%, rgba(1,22,39,0) 30%, rgba(65,90,119,0.12) 100%);
+      pointer-events: none; z-index: 0;
+    }
+
+    .pipeline-svg {
+      position: absolute; inset: 0; width: 1920px; height: 540px; z-index: 2;
+      pointer-events: none;
+    }
+
+    /* --- Input tags --- */
+    .input-tag {
+      position: absolute; left: 60px; z-index: 3;
+      padding: 10px 22px; border-radius: 10px; font-size: 18px; font-weight: 700;
+      background: rgba(1,22,39,0.9); opacity: 0;
+    }
+    .tag-ref {
+      top: 56px; border: 2px solid #2EC4B6; color: #2EC4B6;
+      box-shadow: 0 0 14px rgba(46,196,182,0.15);
+    }
+    .tag-audio {
+      top: 166px; border: 2px solid #FF9F1C; color: #FF9F1C;
+      box-shadow: 0 0 14px rgba(255,159,28,0.15);
+    }
+    .tag-prompt {
+      top: 276px; border: 2px solid #778DA9; color: #778DA9;
+      box-shadow: 0 0 14px rgba(119,141,169,0.15);
+    }
+
+    /* --- Stage labels --- */
+    .stage-label {
+      position: absolute; z-index: 4; font-weight: 700; text-align: center; opacity: 0;
+      white-space: nowrap;
+    }
+    .stage-sublabel {
+      position: absolute; z-index: 4; font-weight: 400; text-align: center; opacity: 0;
+      white-space: nowrap;
+    }
+
+    .stage-1-label {
+      left: 370px; top: 220px; width: 210px;
+      font-size: 20px; color: #FF9F1C;
+    }
+    .stage-1-sub {
+      left: 370px; top: 258px; width: 210px;
+      font-size: 16px; color: #778DA9;
+    }
+
+    .stage-2-label {
+      left: 680px; top: 195px; width: 350px;
+      font-size: 26px; color: #bc8cff;
+    }
+    .stage-2-sub {
+      left: 680px; top: 240px; width: 350px;
+      font-size: 16px; color: #bc8cff;
+    }
+    .stage-badge {
+      position: absolute; z-index: 5;
+      left: 680px; top: 278px; width: 350px; text-align: center;
+      font-size: 16px; font-weight: 700; letter-spacing: 3px;
+      color: #011627; opacity: 0;
+    }
+    .stage-badge span {
+      display: inline-block; padding: 4px 16px;
+      background: #bc8cff; border-radius: 6px;
+    }
+
+    .stage-3-label {
+      left: 1115px; top: 220px; width: 225px;
+      font-size: 18px; color: #2EC4B6;
+    }
+    .stage-3-sub {
+      left: 1115px; top: 256px; width: 225px;
+      font-size: 16px; color: #778DA9;
+    }
+
+    .stage-4-label {
+      left: 1420px; top: 220px; width: 220px;
+      font-size: 16px; color: #3fb950;
+    }
+    .stage-4-sub {
+      left: 1420px; top: 254px; width: 220px;
+      font-size: 16px; color: #778DA9;
+    }
+
+    /* --- Output --- */
+    .output-tag {
+      position: absolute; right: 40px; top: 230px; z-index: 4;
+      padding: 14px 28px; border-radius: 14px; font-size: 22px; font-weight: 700;
+      color: #FDFFFC; border: 3px solid #FDFFFC;
+      background: rgba(253,255,252,0.06); opacity: 0;
+    }
+    .output-glow {
+      position: absolute; right: 30px; top: 220px; z-index: 3;
+      width: 230px; height: 70px; border-radius: 18px;
+      background: radial-gradient(ellipse at center, rgba(253,255,252,0.12) 0%, transparent 70%);
+      opacity: 0;
+    }
+  </style>
+
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+  <script>
+    window.__timelines = window.__timelines || {};
+    var root = document.currentScript.parentElement;
+    var tl = gsap.timeline({ paused: true });
+
+    /* ============================================================
+       HELPERS
+       ============================================================ */
+
+    function animateParticle(tl, sel, toX, toY, startTime, dur, color) {
+      var el = root.querySelector(sel);
+      tl.to(el, { opacity: 0.9, duration: 0.01 }, startTime);
+      tl.to(el, {
+        attr: { cx: toX, cy: toY },
+        duration: dur, ease: 'power1.inOut'
+      }, startTime);
+      tl.to(el, { opacity: 0, duration: dur * 0.3, ease: 'power2.in' }, startTime + dur * 0.7);
+    }
+
+    function showConn(tl, sel, startTime) {
+      tl.to(root.querySelector(sel), { opacity: 0.5, duration: 0.4, ease: 'power2.out' }, startTime);
+    }
+
+    function pulseConn(tl, sel, startTime) {
+      var el = root.querySelector(sel);
+      tl.to(el, { opacity: 0.9, duration: 0.3, ease: 'power1.in' }, startTime);
+      tl.to(el, { opacity: 0.5, duration: 0.5, ease: 'power1.out' }, startTime + 0.3);
+    }
+
+    /* ============================================================
+       0-2s: INPUTS APPEAR
+       ============================================================ */
+
+    // Staggered entrance for input tags
+    tl.to(root.querySelector('.tag-ref'), {
+      opacity: 1, duration: 0.5, ease: 'power3.out'
+    }, 0.2);
+    tl.from(root.querySelector('.tag-ref'), {
+      x: -40, duration: 0.6, ease: 'power3.out'
+    }, 0.2);
+
+    tl.to(root.querySelector('.tag-audio'), {
+      opacity: 1, duration: 0.5, ease: 'power3.out'
+    }, 0.6);
+    tl.from(root.querySelector('.tag-audio'), {
+      x: -40, duration: 0.6, ease: 'expo.out'
+    }, 0.6);
+
+    tl.to(root.querySelector('.tag-prompt'), {
+      opacity: 1, duration: 0.5, ease: 'power3.out'
+    }, 1.0);
+    tl.from(root.querySelector('.tag-prompt'), {
+      x: -40, duration: 0.6, ease: 'back.out(1.4)'
+    }, 1.0);
+
+    /* ============================================================
+       2-4s: STAGE 1 - IMAGE ENGINE
+       ============================================================ */
+
+    // Connection lines from inputs
+    showConn(tl, '.conn-input-1', 2.0);
+    showConn(tl, '.conn-input-2', 2.1);
+    showConn(tl, '.conn-input-3', 2.2);
+
+    // Stage 1 box materializes
+    tl.to(root.querySelector('.stage-1-box'), {
+      opacity: 1, duration: 0.6, ease: 'power2.out'
+    }, 2.3);
+    tl.from(root.querySelector('.stage-1-box'), {
+      attr: { width: 0 }, duration: 0.7, ease: 'expo.out'
+    }, 2.3);
+
+    // Stage 1 labels
+    tl.to(root.querySelector('.stage-1-label'), {
+      opacity: 1, duration: 0.4, ease: 'power2.out'
+    }, 2.7);
+    tl.from(root.querySelector('.stage-1-label'), {
+      y: 10, duration: 0.4, ease: 'power2.out'
+    }, 2.7);
+    tl.to(root.querySelector('.stage-1-sub'), {
+      opacity: 1, duration: 0.3, ease: 'power2.out'
+    }, 2.9);
+
+    // Particles flow from inputs to stage 1
+    animateParticle(tl, '.p-in1a', 420, 220, 2.2, 0.7, '#2EC4B6');
+    animateParticle(tl, '.p-in1b', 450, 230, 2.4, 0.65, '#2EC4B6');
+    animateParticle(tl, '.p-in2a', 460, 250, 2.3, 0.6, '#FF9F1C');
+    animateParticle(tl, '.p-in2b', 430, 260, 2.5, 0.55, '#FF9F1C');
+    animateParticle(tl, '.p-in3a', 475, 270, 2.4, 0.65, '#778DA9');
+
+    // Active glow on stage 1
+    tl.to(root.querySelector('.stage-1-box'), {
+      attr: { 'stroke-width': 4 }, duration: 0.3, ease: 'power1.in'
+    }, 3.0);
+    tl.to(root.querySelector('.stage-1-box'), {
+      attr: { 'stroke-width': 2.5 }, duration: 0.5, ease: 'power1.out'
+    }, 3.3);
+
+    /* ============================================================
+       4-6s: STAGE 2 - VIDEOREF DiT (CORE, EMPHASIZED)
+       ============================================================ */
+
+    // Connection line stage 1->2
+    showConn(tl, '.conn-1-2', 4.0);
+
+    // Particles from stage 1 to stage 2
+    animateParticle(tl, '.p-12a', 720, 260, 4.0, 0.6, '#FF9F1C');
+    animateParticle(tl, '.p-12b', 740, 250, 4.15, 0.55, '#FF9F1C');
+    animateParticle(tl, '.p-12c', 710, 270, 4.3, 0.5, '#FF9F1C');
+
+    // Stage 2 box -- scale up entrance for emphasis
+    tl.to(root.querySelector('.stage-2-box'), {
+      opacity: 1, duration: 0.01
+    }, 4.3);
+    tl.from(root.querySelector('.stage-2-box'), {
+      attr: { width: 0, height: 0, x: 855, y: 260 },
+      duration: 0.9, ease: 'elastic.out(1, 0.6)'
+    }, 4.3);
+
+    // Glow ring
+    tl.to(root.querySelector('.stage-2-glow'), {
+      opacity: 1, duration: 0.6, ease: 'power2.out'
+    }, 4.6);
+    // Pulsing glow
+    tl.to(root.querySelector('.stage-2-glow'), {
+      attr: { 'stroke-width': 10 }, opacity: 0.6, duration: 0.8, ease: 'sine.inOut'
+    }, 5.0);
+    tl.to(root.querySelector('.stage-2-glow'), {
+      attr: { 'stroke-width': 6 }, opacity: 0.35, duration: 0.8, ease: 'sine.inOut'
+    }, 5.8);
+
+    // Stage 2 labels
+    tl.to(root.querySelector('.stage-2-label'), {
+      opacity: 1, duration: 0.5, ease: 'power3.out'
+    }, 4.8);
+    tl.from(root.querySelector('.stage-2-label'), {
+      scale: 0.7, transformOrigin: '50% 50%', duration: 0.6, ease: 'back.out(1.8)'
+    }, 4.8);
+    tl.to(root.querySelector('.stage-2-sub'), {
+      opacity: 0.85, duration: 0.4, ease: 'power2.out'
+    }, 5.1);
+    tl.from(root.querySelector('.stage-2-sub'), {
+      y: 8, duration: 0.4, ease: 'power2.out'
+    }, 5.1);
+
+    // CORE badge
+    tl.to(root.querySelector('.stage-badge'), {
+      opacity: 1, duration: 0.3, ease: 'power2.out'
+    }, 5.3);
+    tl.from(root.querySelector('.stage-badge'), {
+      scale: 0, transformOrigin: '50% 50%', duration: 0.4, ease: 'back.out(2.5)'
+    }, 5.3);
+
+    /* ============================================================
+       6-8s: STAGE 3 - SUPER-RES REFINER
+       ============================================================ */
+
+    // Connection line stage 2->3
+    showConn(tl, '.conn-2-3', 6.0);
+
+    // Particles from stage 2 to stage 3
+    animateParticle(tl, '.p-23a', 1160, 260, 6.0, 0.55, '#bc8cff');
+    animateParticle(tl, '.p-23b', 1180, 250, 6.2, 0.5, '#bc8cff');
+    animateParticle(tl, '.p-23c', 1150, 270, 6.35, 0.45, '#bc8cff');
+
+    // Stage 3 box
+    tl.to(root.querySelector('.stage-3-box'), {
+      opacity: 1, duration: 0.6, ease: 'power2.out'
+    }, 6.3);
+    tl.from(root.querySelector('.stage-3-box'), {
+      attr: { width: 0 }, duration: 0.7, ease: 'expo.out'
+    }, 6.3);
+
+    // Stage 3 labels
+    tl.to(root.querySelector('.stage-3-label'), {
+      opacity: 1, duration: 0.4, ease: 'power2.out'
+    }, 6.8);
+    tl.from(root.querySelector('.stage-3-label'), {
+      y: 10, duration: 0.4, ease: 'power2.out'
+    }, 6.8);
+    tl.to(root.querySelector('.stage-3-sub'), {
+      opacity: 1, duration: 0.3, ease: 'power2.out'
+    }, 7.0);
+
+    // Active glow on stage 3
+    tl.to(root.querySelector('.stage-3-box'), {
+      attr: { 'stroke-width': 4 }, duration: 0.3, ease: 'power1.in'
+    }, 7.0);
+    tl.to(root.querySelector('.stage-3-box'), {
+      attr: { 'stroke-width': 2.5 }, duration: 0.5, ease: 'power1.out'
+    }, 7.3);
+
+    /* ============================================================
+       8-10s: STAGE 4 - STREAMING VAE DECODE
+       ============================================================ */
+
+    // Connection line stage 3->4
+    showConn(tl, '.conn-3-4', 8.0);
+
+    // Particles from stage 3 to stage 4
+    animateParticle(tl, '.p-34a', 1470, 260, 8.0, 0.55, '#2EC4B6');
+    animateParticle(tl, '.p-34b', 1490, 250, 8.2, 0.5, '#2EC4B6');
+
+    // Stage 4 box
+    tl.to(root.querySelector('.stage-4-box'), {
+      opacity: 1, duration: 0.6, ease: 'power2.out'
+    }, 8.3);
+    tl.from(root.querySelector('.stage-4-box'), {
+      attr: { width: 0 }, duration: 0.7, ease: 'expo.out'
+    }, 8.3);
+
+    // Stage 4 labels
+    tl.to(root.querySelector('.stage-4-label'), {
+      opacity: 1, duration: 0.4, ease: 'power2.out'
+    }, 8.8);
+    tl.from(root.querySelector('.stage-4-label'), {
+      y: 10, duration: 0.4, ease: 'power2.out'
+    }, 8.8);
+    tl.to(root.querySelector('.stage-4-sub'), {
+      opacity: 1, duration: 0.3, ease: 'power2.out'
+    }, 9.0);
+
+    // Active glow on stage 4
+    tl.to(root.querySelector('.stage-4-box'), {
+      attr: { 'stroke-width': 4 }, duration: 0.3, ease: 'power1.in'
+    }, 9.0);
+    tl.to(root.querySelector('.stage-4-box'), {
+      attr: { 'stroke-width': 2.5 }, duration: 0.5, ease: 'power1.out'
+    }, 9.3);
+
+    // Particles flow out of stage 4
+    showConn(tl, '.conn-4-out', 9.4);
+    animateParticle(tl, '.p-4oa', 1750, 260, 9.4, 0.5, '#3fb950');
+    animateParticle(tl, '.p-4ob', 1760, 250, 9.55, 0.45, '#3fb950');
+    animateParticle(tl, '.p-4oc', 1740, 270, 9.7, 0.4, '#FDFFFC');
+
+    /* ============================================================
+       10-12s: OUTPUT REVEAL
+       ============================================================ */
+
+    // Output glow pre-fade
+    tl.to(root.querySelector('.output-glow'), {
+      opacity: 0.6, duration: 0.6, ease: 'power2.out'
+    }, 10.0);
+
+    // Output tag entrance
+    tl.to(root.querySelector('.output-tag'), {
+      opacity: 1, duration: 0.01
+    }, 10.2);
+    tl.from(root.querySelector('.output-tag'), {
+      scale: 0.6, transformOrigin: '50% 50%', duration: 0.8, ease: 'elastic.out(1, 0.5)'
+    }, 10.2);
+
+    // Output glow pulse
+    tl.to(root.querySelector('.output-glow'), {
+      opacity: 1, duration: 0.4, ease: 'power1.in'
+    }, 10.5);
+    tl.to(root.querySelector('.output-glow'), {
+      opacity: 0.4, duration: 0.8, ease: 'sine.out'
+    }, 10.9);
+
+    // Output tag border glow
+    tl.to(root.querySelector('.output-tag'), {
+      boxShadow: '0 0 30px rgba(253,255,252,0.3), inset 0 0 20px rgba(253,255,252,0.05)',
+      duration: 0.5, ease: 'power2.in'
+    }, 10.5);
+    tl.to(root.querySelector('.output-tag'), {
+      boxShadow: '0 0 14px rgba(253,255,252,0.12), inset 0 0 8px rgba(253,255,252,0.02)',
+      duration: 0.8, ease: 'power2.out'
+    }, 11.0);
+
+    /* ============================================================
+       12-14s: FULL PIPELINE PULSE + HOLD
+       ============================================================ */
+
+    // All connection lines pulse simultaneously
+    var allConns = [
+      '.conn-input-1', '.conn-input-2', '.conn-input-3',
+      '.conn-1-2', '.conn-2-3', '.conn-3-4', '.conn-4-out'
+    ];
+
+    allConns.forEach(function(sel, i) {
+      // Pulse up
+      tl.to(root.querySelector(sel), {
+        opacity: 0.95, attr: { 'stroke-width': 4 },
+        duration: 0.4, ease: 'power2.in'
+      }, 12.0 + i * 0.05);
+      // Settle
+      tl.to(root.querySelector(sel), {
+        opacity: 0.6, attr: { 'stroke-width': 2.5 },
+        duration: 0.6, ease: 'power2.out'
+      }, 12.4 + i * 0.05);
+    });
+
+    // All stage boxes get a gentle glow pulse
+    var stageBoxes = ['.stage-1-box', '.stage-2-box', '.stage-3-box', '.stage-4-box'];
+    stageBoxes.forEach(function(sel, i) {
+      var sw = (i === 1) ? 5 : 4;
+      var swBase = (i === 1) ? 3 : 2.5;
+      tl.to(root.querySelector(sel), {
+        attr: { 'stroke-width': sw }, duration: 0.35, ease: 'power1.in'
+      }, 12.1 + i * 0.08);
+      tl.to(root.querySelector(sel), {
+        attr: { 'stroke-width': swBase }, duration: 0.55, ease: 'power1.out'
+      }, 12.45 + i * 0.08);
+    });
+
+    // Stage 2 glow ring final emphasis
+    tl.to(root.querySelector('.stage-2-glow'), {
+      opacity: 0.5, attr: { 'stroke-width': 9 }, duration: 0.4, ease: 'sine.in'
+    }, 12.2);
+    tl.to(root.querySelector('.stage-2-glow'), {
+      opacity: 0.3, attr: { 'stroke-width': 6 }, duration: 0.6, ease: 'sine.out'
+    }, 12.6);
+
+    // Output final subtle pulse
+    tl.to(root.querySelector('.output-glow'), {
+      opacity: 0.7, duration: 0.35, ease: 'power1.in'
+    }, 12.3);
+    tl.to(root.querySelector('.output-glow'), {
+      opacity: 0.35, duration: 0.6, ease: 'power1.out'
+    }, 12.65);
+
+    // Hold until 14s
+    tl.to({}, { duration: 0.7 }, 13.3);
+
+    window.__timelines["architecture-pipeline"] = tl;
+  </script>
+</div>
+</body>
+</html>

@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap');
+* { margin: 0; padding: 0; box-sizing: border-box; }
+</style>
+</head>
+<body>
+<div
+  data-composition-id="flow-matching"
+  data-width="1920"
+  data-height="540"
+  data-start="0"
+  data-duration="12"
+>
+  <div class="scene">
+    <!-- Background gradient overlay for depth -->
+    <div class="bg-gradient"></div>
+
+    <!-- Title -->
+    <div class="title">DDPM vs <span class="teal">Flow Matching</span></div>
+
+    <!-- Left endpoint: Noise cluster -->
+    <div class="endpoint endpoint-noise">
+      <svg class="noise-cluster" width="160" height="160" viewBox="0 0 160 160"></svg>
+      <div class="endpoint-label">Pure Noise</div>
+    </div>
+
+    <!-- Right endpoint: Clean data -->
+    <div class="endpoint endpoint-data">
+      <svg class="data-grid" width="160" height="160" viewBox="0 0 160 160"></svg>
+      <div class="endpoint-label" style="color:#2EC4B6;">Clean Data</div>
+    </div>
+
+    <!-- SVG layer for paths and particles -->
+    <svg class="path-layer" width="1920" height="540" viewBox="0 0 1920 540">
+      <defs>
+        <radialGradient id="glow-red">
+          <stop offset="0%" stop-color="#E71D36" stop-opacity="1"/>
+          <stop offset="100%" stop-color="#E71D36" stop-opacity="0"/>
+        </radialGradient>
+        <radialGradient id="glow-teal">
+          <stop offset="0%" stop-color="#2EC4B6" stop-opacity="1"/>
+          <stop offset="100%" stop-color="#2EC4B6" stop-opacity="0"/>
+        </radialGradient>
+        <filter id="blur-red">
+          <feGaussianBlur stdDeviation="6"/>
+        </filter>
+        <filter id="blur-teal">
+          <feGaussianBlur stdDeviation="6"/>
+        </filter>
+      </defs>
+
+      <!-- DDPM winding path -->
+      <path class="ddpm-path" d="M 300,270 C 420,100 480,440 560,200 C 640,-40 720,500 820,300 C 920,100 960,450 1060,220 C 1160,-10 1260,480 1360,270 L 1420,320 C 1480,370 1520,290 1580,270" fill="none" stroke="#E71D36" stroke-width="2.5" stroke-opacity="0.6" stroke-dasharray="2200" stroke-dashoffset="2200"/>
+
+      <!-- Flow matching straight path -->
+      <path class="flow-path" d="M 300,270 L 1580,270" fill="none" stroke="#2EC4B6" stroke-width="3" stroke-opacity="0.7" stroke-dasharray="1280" stroke-dashoffset="1280"/>
+
+      <!-- DDPM trail dots (8 copies for motion trail) -->
+      <circle class="ddpm-trail" r="6" fill="#E71D36" opacity="0" data-target-opacity="0.07"/>
+      <circle class="ddpm-trail" r="6" fill="#E71D36" opacity="0" data-target-opacity="0.10"/>
+      <circle class="ddpm-trail" r="6" fill="#E71D36" opacity="0" data-target-opacity="0.14"/>
+      <circle class="ddpm-trail" r="6" fill="#E71D36" opacity="0" data-target-opacity="0.19"/>
+      <circle class="ddpm-trail" r="6" fill="#E71D36" opacity="0" data-target-opacity="0.25"/>
+      <circle class="ddpm-trail" r="5" fill="#E71D36" opacity="0" data-target-opacity="0.35"/>
+      <circle class="ddpm-trail" r="5" fill="#E71D36" opacity="0" data-target-opacity="0.50"/>
+      <circle class="ddpm-trail" r="4" fill="#E71D36" opacity="0" data-target-opacity="0.70"/>
+
+      <!-- DDPM main particle -->
+      <circle class="ddpm-glow" r="20" fill="url(#glow-red)" filter="url(#blur-red)" opacity="0"/>
+      <circle class="ddpm-particle" r="7" fill="#E71D36" opacity="0"/>
+
+      <!-- Flow matching trail dots -->
+      <circle class="flow-trail" r="7" fill="#2EC4B6" opacity="0" data-target-opacity="0.07"/>
+      <circle class="flow-trail" r="7" fill="#2EC4B6" opacity="0" data-target-opacity="0.10"/>
+      <circle class="flow-trail" r="7" fill="#2EC4B6" opacity="0" data-target-opacity="0.14"/>
+      <circle class="flow-trail" r="7" fill="#2EC4B6" opacity="0" data-target-opacity="0.19"/>
+      <circle class="flow-trail" r="6" fill="#2EC4B6" opacity="0" data-target-opacity="0.25"/>
+      <circle class="flow-trail" r="6" fill="#2EC4B6" opacity="0" data-target-opacity="0.35"/>
+      <circle class="flow-trail" r="5" fill="#2EC4B6" opacity="0" data-target-opacity="0.50"/>
+      <circle class="flow-trail" r="5" fill="#2EC4B6" opacity="0" data-target-opacity="0.70"/>
+
+      <!-- Flow matching main particle -->
+      <circle class="flow-glow" r="24" fill="url(#glow-teal)" filter="url(#blur-teal)" opacity="0"/>
+      <circle class="flow-particle" r="8" fill="#2EC4B6" opacity="0"/>
+
+      <!-- Arrival burst -->
+      <circle class="arrival-burst" cx="1580" cy="270" r="8" fill="none" stroke="#2EC4B6" stroke-width="3" opacity="0"/>
+    </svg>
+
+    <!-- Step markers for DDPM -->
+    <div class="step-markers ddpm-steps">
+      <div class="step-mark" style="left:300px;top:230px;color:#E71D36;">step 1</div>
+      <div class="step-mark" style="left:560px;top:160px;color:#E71D36;">step 250</div>
+      <div class="step-mark" style="left:820px;top:260px;color:#E71D36;">step 500</div>
+      <div class="step-mark" style="left:1060px;top:180px;color:#E71D36;">step 750</div>
+      <div class="step-mark" style="left:1400px;top:230px;color:#E71D36;">step 1000</div>
+    </div>
+
+    <!-- Step markers for Flow Matching -->
+    <div class="step-markers flow-steps">
+      <div class="step-mark" style="left:300px;top:302px;color:#2EC4B6;">step 1</div>
+      <div class="step-mark" style="left:620px;top:302px;color:#2EC4B6;">step 8</div>
+      <div class="step-mark" style="left:940px;top:302px;color:#2EC4B6;">step 16</div>
+      <div class="step-mark" style="left:1400px;top:302px;color:#2EC4B6;">step 24</div>
+    </div>
+
+    <!-- Labels -->
+    <div class="method-label ddpm-label">DDPM: 1000 steps, curvy path</div>
+    <div class="method-label flow-label">Flow Matching: 24 steps, straight line</div>
+
+    <!-- Speed callout -->
+    <div class="speed-callout">42x fewer steps</div>
+
+    <!-- Bottom callout -->
+    <div class="bottom-callout">Rectified flow matching &mdash; the model learns a velocity field pointing directly at clean data.</div>
+  </div>
+
+  <style>
+    [data-composition-id="flow-matching"] {
+      position: relative; overflow: hidden; background: #011627;
+      width: 1920px; height: 540px; font-family: 'Space Mono', monospace; color: #FDFFFC;
+    }
+    .scene { position: relative; width: 1920px; height: 540px; }
+
+    .bg-gradient {
+      position: absolute; inset: 0;
+      background: radial-gradient(ellipse 60% 80% at 50% 50%, rgba(46,196,182,0.04) 0%, transparent 70%),
+                  radial-gradient(ellipse 40% 60% at 20% 60%, rgba(231,29,54,0.03) 0%, transparent 60%),
+                  radial-gradient(ellipse 40% 60% at 80% 40%, rgba(46,196,182,0.03) 0%, transparent 60%);
+    }
+
+    .title {
+      position: absolute; top: 20px; left: 50%; transform: translateX(-50%);
+      font-size: 40px; font-weight: 700; white-space: nowrap; opacity: 0;
+      text-shadow: 0 0 30px rgba(253,255,252,0.1);
+    }
+    .teal { color: #2EC4B6; }
+
+    .endpoint {
+      position: absolute; top: 50%; transform: translateY(-50%);
+      display: flex; flex-direction: column; align-items: center; gap: 12px; opacity: 0;
+    }
+    .endpoint-noise { left: 120px; }
+    .endpoint-data { right: 120px; }
+    .endpoint-label {
+      font-size: 22px; font-weight: 700; color: #778DA9;
+      text-shadow: 0 0 10px rgba(119,141,169,0.3);
+    }
+
+    .path-layer {
+      position: absolute; top: 0; left: 0; pointer-events: none;
+    }
+
+    .step-markers { position: absolute; top: 0; left: 0; width: 1920px; height: 540px; pointer-events: none; }
+    .step-mark {
+      position: absolute; font-size: 16px; font-weight: 700; opacity: 0;
+      text-shadow: 0 0 8px rgba(1,22,39,0.8);
+    }
+
+    .method-label {
+      position: absolute; font-size: 20px; font-weight: 700; opacity: 0; white-space: nowrap;
+      text-shadow: 0 0 12px rgba(1,22,39,0.9);
+    }
+    .ddpm-label { left: 340px; top: 120px; color: #E71D36; }
+    .flow-label { left: 340px; top: 340px; color: #2EC4B6; }
+
+    .speed-callout {
+      position: absolute; right: 200px; top: 170px;
+      font-size: 44px; font-weight: 700; color: #3fb950; opacity: 0;
+      text-shadow: 0 0 20px rgba(63,185,80,0.3);
+    }
+
+    .bottom-callout {
+      position: absolute; bottom: 24px; left: 50%; transform: translateX(-50%);
+      font-size: 20px; font-weight: 400; color: #778DA9; opacity: 0;
+      text-align: center; max-width: 1200px; line-height: 1.4;
+    }
+  </style>
+
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+  <script>
+    window.__timelines = window.__timelines || {};
+    var root = document.currentScript.parentElement;
+    var tl = gsap.timeline({ paused: true });
+
+    // ─── Build noise cluster (deterministic sin-based positions) ───
+    var noiseSvg = root.querySelector('.noise-cluster');
+    for (var i = 0; i < 36; i++) {
+      var rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+      var px = 80 + 55 * Math.sin(i * 2.7 + 1.3) + 20 * Math.sin(i * 5.1);
+      var py = 80 + 55 * Math.cos(i * 3.1 + 0.7) + 20 * Math.cos(i * 4.3);
+      var sz = 6 + 4 * Math.abs(Math.sin(i * 1.9));
+      rect.setAttribute('x', px - sz / 2);
+      rect.setAttribute('y', py - sz / 2);
+      rect.setAttribute('width', sz);
+      rect.setAttribute('height', sz);
+      rect.setAttribute('fill', '#778DA9');
+      rect.setAttribute('opacity', 0.3 + 0.5 * Math.abs(Math.sin(i * 2.3)));
+      rect.setAttribute('transform', 'rotate(' + (i * 17 % 360) + ' ' + px + ' ' + py + ')');
+      noiseSvg.appendChild(rect);
+    }
+
+    // ─── Build clean data grid (organized colored cells) ───
+    var dataSvg = root.querySelector('.data-grid');
+    var dataColors = ['#2EC4B6', '#FF9F1C', '#bc8cff', '#3fb950', '#E71D36', '#FDFFFC'];
+    for (var r = 0; r < 6; r++) {
+      for (var c = 0; c < 6; c++) {
+        var rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+        var cx = 26 + c * 22;
+        var cy = 26 + r * 22;
+        rect.setAttribute('x', cx);
+        rect.setAttribute('y', cy);
+        rect.setAttribute('width', 18);
+        rect.setAttribute('height', 18);
+        rect.setAttribute('rx', 2);
+        var ci = (r * 6 + c + r * 3) % dataColors.length;
+        rect.setAttribute('fill', dataColors[ci]);
+        rect.setAttribute('opacity', '0.85');
+        dataSvg.appendChild(rect);
+      }
+    }
+
+    // ─── Precompute DDPM path points ───
+    var ddpmPath = root.querySelector('.ddpm-path');
+    var ddpmLen = ddpmPath.getTotalLength();
+    var ddpmPts = [];
+    var numDdpmPts = 200;
+    for (var i = 0; i <= numDdpmPts; i++) {
+      var pt = ddpmPath.getPointAtLength((i / numDdpmPts) * ddpmLen);
+      ddpmPts.push({ x: pt.x, y: pt.y });
+    }
+
+    // ─── Precompute Flow path points ───
+    var flowPath = root.querySelector('.flow-path');
+    var flowLen = flowPath.getTotalLength();
+    var flowPts = [];
+    var numFlowPts = 100;
+    for (var i = 0; i <= numFlowPts; i++) {
+      var pt = flowPath.getPointAtLength((i / numFlowPts) * flowLen);
+      flowPts.push({ x: pt.x, y: pt.y });
+    }
+
+    // ─── Set path dasharray lengths ───
+    ddpmPath.style.strokeDasharray = ddpmLen;
+    ddpmPath.style.strokeDashoffset = ddpmLen;
+    flowPath.style.strokeDasharray = flowLen;
+    flowPath.style.strokeDashoffset = flowLen;
+
+    // ─── Grab particle elements ───
+    var ddpmParticle = root.querySelector('.ddpm-particle');
+    var ddpmGlow = root.querySelector('.ddpm-glow');
+    var ddpmTrails = root.querySelectorAll('.ddpm-trail');
+    var flowParticle = root.querySelector('.flow-particle');
+    var flowGlow = root.querySelector('.flow-glow');
+    var flowTrails = root.querySelectorAll('.flow-trail');
+    var arrivalBurst = root.querySelector('.arrival-burst');
+
+    // Helper: position element at SVG point
+    function posAt(el, x, y) {
+      el.setAttribute('cx', x);
+      el.setAttribute('cy', y);
+    }
+
+    // Initialize particles at start
+    posAt(ddpmParticle, 300, 270);
+    posAt(ddpmGlow, 300, 270);
+    posAt(flowParticle, 300, 270);
+    posAt(flowGlow, 300, 270);
+    ddpmTrails.forEach(function(t) { posAt(t, 300, 270); });
+    flowTrails.forEach(function(t) { posAt(t, 300, 270); });
+
+    // ─── PHASE 1 (0-2s): Endpoints + Title appear ───
+    tl.to(root.querySelector('.title'), {
+      opacity: 1, duration: 0.8, ease: 'power2.out'
+    }, 0.2);
+
+    tl.to(root.querySelector('.endpoint-noise'), {
+      opacity: 1, duration: 0.7, ease: 'power2.out'
+    }, 0.4);
+
+    tl.to(root.querySelector('.endpoint-data'), {
+      opacity: 1, duration: 0.7, ease: 'power2.out'
+    }, 0.6);
+
+    // Subtle noise cluster jitter (breathing)
+    noiseSvg.querySelectorAll('rect').forEach(function(rect, i) {
+      var delay = 1.0 + i * 0.02;
+      tl.fromTo(rect,
+        { opacity: parseFloat(rect.getAttribute('opacity')) },
+        { opacity: parseFloat(rect.getAttribute('opacity')) * 0.5, duration: 0.6, yoyo: true, repeat: 1, ease: 'sine.inOut' },
+        delay
+      );
+    });
+
+    // ─── PHASE 2 (2-6s): DDPM path draws + particle races ───
+
+    // Draw DDPM path
+    tl.to(ddpmPath, {
+      strokeDashoffset: 0, duration: 2.0, ease: 'power1.inOut'
+    }, 2.0);
+
+    // Show DDPM label
+    tl.to(root.querySelector('.ddpm-label'), {
+      opacity: 1, duration: 0.5, ease: 'power2.out'
+    }, 2.2);
+
+    // Show DDPM step markers
+    root.querySelectorAll('.ddpm-steps .step-mark').forEach(function(el, i) {
+      tl.to(el, { opacity: 0.8, duration: 0.3, ease: 'power2.out' }, 2.5 + i * 0.4);
+    });
+
+    // DDPM particle appears
+    tl.to(ddpmParticle, { opacity: 1, duration: 0.3 }, 2.5);
+    tl.to(ddpmGlow, { opacity: 0.6, duration: 0.3 }, 2.5);
+
+    // Animate DDPM particle along path (slow -- takes from 2.5s to 11s)
+    var ddpmProgress = { value: 0 };
+    tl.to(ddpmProgress, {
+      value: 1, duration: 8.5, ease: 'power1.in',
+      onUpdate: function() {
+        var idx = Math.min(Math.floor(ddpmProgress.value * numDdpmPts), numDdpmPts);
+        var pt = ddpmPts[idx];
+        posAt(ddpmParticle, pt.x, pt.y);
+        posAt(ddpmGlow, pt.x, pt.y);
+        // Trail: each dot lags behind
+        for (var t = 0; t < ddpmTrails.length; t++) {
+          var lagIdx = Math.max(0, idx - (t + 1) * 3);
+          var lagPt = ddpmPts[lagIdx];
+          posAt(ddpmTrails[t], lagPt.x, lagPt.y);
+        }
+      }
+    }, 2.5);
+
+    // DDPM trails visibility
+    ddpmTrails.forEach(function(t) {
+      tl.to(t, { opacity: parseFloat(t.getAttribute('data-target-opacity')), duration: 0.2 }, 2.5);
+    });
+
+    // ─── PHASE 3 (4-8s): Flow Matching path + fast particle ───
+
+    // Draw flow path
+    tl.to(flowPath, {
+      strokeDashoffset: 0, duration: 0.8, ease: 'power2.out'
+    }, 4.0);
+
+    // Show Flow Matching label
+    tl.to(root.querySelector('.flow-label'), {
+      opacity: 1, duration: 0.5, ease: 'power2.out'
+    }, 4.2);
+
+    // Show flow step markers
+    root.querySelectorAll('.flow-steps .step-mark').forEach(function(el, i) {
+      tl.to(el, { opacity: 0.8, duration: 0.25, ease: 'power2.out' }, 4.4 + i * 0.25);
+    });
+
+    // Flow particle appears
+    tl.to(flowParticle, { opacity: 1, duration: 0.2 }, 4.5);
+    tl.to(flowGlow, { opacity: 0.7, duration: 0.2 }, 4.5);
+
+    // Animate flow particle along path (fast -- 4.5s to 7.5s)
+    var flowProgress = { value: 0 };
+    tl.to(flowProgress, {
+      value: 1, duration: 3.0, ease: 'power2.inOut',
+      onUpdate: function() {
+        var idx = Math.min(Math.floor(flowProgress.value * numFlowPts), numFlowPts);
+        var pt = flowPts[idx];
+        posAt(flowParticle, pt.x, pt.y);
+        posAt(flowGlow, pt.x, pt.y);
+        // Trail
+        for (var t = 0; t < flowTrails.length; t++) {
+          var lagIdx = Math.max(0, idx - (t + 1) * 2);
+          var lagPt = flowPts[lagIdx];
+          posAt(flowTrails[t], lagPt.x, lagPt.y);
+        }
+      }
+    }, 4.5);
+
+    // Flow trails visibility
+    flowTrails.forEach(function(t) {
+      tl.to(t, { opacity: parseFloat(t.getAttribute('data-target-opacity')), duration: 0.2 }, 4.5);
+    });
+
+    // ─── PHASE 4 (7.5-10s): Flow arrives, DDPM still going ───
+
+    // Arrival burst animation
+    tl.to(arrivalBurst, {
+      opacity: 1, duration: 0.1
+    }, 7.5);
+    tl.to(arrivalBurst, {
+      attr: { r: 40 }, opacity: 0, duration: 0.8, ease: 'power2.out'
+    }, 7.6);
+
+    // Second burst ring
+    tl.set(arrivalBurst, { attr: { r: 8 }, opacity: 0 }, 7.9);
+    tl.to(arrivalBurst, { opacity: 0.8, duration: 0.1 }, 7.9);
+    tl.to(arrivalBurst, {
+      attr: { r: 55 }, opacity: 0, duration: 1.0, ease: 'power2.out'
+    }, 8.0);
+
+    // Flow particle glow pulse on arrival
+    tl.to(flowGlow, {
+      attr: { r: 40 }, duration: 0.4, ease: 'power2.out'
+    }, 7.5);
+    tl.to(flowGlow, {
+      attr: { r: 24 }, duration: 0.6, ease: 'sine.inOut'
+    }, 7.9);
+
+    // Flow particle breathing after arrival
+    tl.to(flowParticle, {
+      attr: { r: 10 }, duration: 0.5, ease: 'sine.inOut', yoyo: true, repeat: 3
+    }, 7.5);
+
+    // Speed callout appears
+    tl.to(root.querySelector('.speed-callout'), {
+      opacity: 1, duration: 0.6, ease: 'back.out(1.7)'
+    }, 8.2);
+    tl.fromTo(root.querySelector('.speed-callout'),
+      { scale: 0.7, transformOrigin: 'center center' },
+      { scale: 1, duration: 0.6, ease: 'back.out(1.7)' },
+      8.2
+    );
+
+    // ─── PHASE 5 (10-12s): Bottom callout, hold ───
+    tl.to(root.querySelector('.bottom-callout'), {
+      opacity: 1, duration: 0.7, ease: 'power2.out'
+    }, 10.0);
+
+    // Hold until 12s
+    tl.to({}, { duration: 0.3 }, 11.7);
+
+    window.__timelines["flow-matching"] = tl;
+  </script>
+</div>
+</body>
+</html>

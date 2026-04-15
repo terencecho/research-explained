@@ -979,6 +979,11 @@
 <!-- VAE -->
 <h3 id="vae">VAE (Variational Autoencoder)</h3>
 
+<div class="video-embed">
+  <video src="avatar-v-videos/vae.mp4" autoplay muted loop playsinline></video>
+  <div class="video-caption"><a href="https://github.com/heygen-com/hyperframes" target="_blank" class="badge" title="Made with HyperFrames — HeyGen's HTML-to-video composition framework"><span class="badge-label">made with</span><span class="badge-name">HyperFrames</span></a> The VAE compresses video frames into a tiny latent space — where the diffusion model actually works</div>
+</div>
+
 <p>A <span class="term">VAE<span class="tooltip">Variational Autoencoder. Compresses high-resolution images/video into a smaller "latent" representation and can decompress back. Like JPEG compression but learned by AI, and much more powerful.</span></span> compresses data into a smaller representation and decompresses it back.</p>
 
 <div class="analogy">Think of JPEG compression: a 10MB photo becomes a 500KB file, then gets decompressed back to an image that looks almost identical. A VAE does this but with AI - it learns the most efficient way to compress visual data. The compressed version is called the <span class="term">latent space<span class="tooltip">The compressed, lower-dimensional space where the VAE stores its compact representation of images/video. The diffusion model works in this space for efficiency, then the VAE decoder converts results back to pixels.</span></span>.</div>
@@ -987,6 +992,11 @@
 
 <!-- FLOW MATCHING -->
 <h3 id="flow-matching">Flow Matching</h3>
+
+<div class="video-embed">
+  <video src="avatar-v-videos/flow-matching.mp4" autoplay muted loop playsinline></video>
+  <div class="video-caption"><a href="https://github.com/heygen-com/hyperframes" target="_blank" class="badge" title="Made with HyperFrames — HeyGen's HTML-to-video composition framework"><span class="badge-label">made with</span><span class="badge-name">HyperFrames</span></a> DDPM takes 1000 curvy steps; flow matching takes 24 straight ones</div>
+</div>
 
 <p><span class="term">Flow matching<span class="tooltip">A training method for diffusion models where instead of learning to predict noise, the model learns to predict a "velocity" - the direction and speed to move from noise toward clean data along a straight line. More stable and efficient than older methods.</span></span> is a modern alternative to the original diffusion training method (<span class="term">DDPM<span class="tooltip">Denoising Diffusion Probabilistic Models. The original (2020) method for training diffusion models. Uses a specific noise schedule and learns to predict the noise added at each step. Flow matching is a newer, often more efficient alternative.</span></span>).</p>
 
@@ -1012,6 +1022,11 @@
 
 <!-- ============================================================ -->
 <h2 id="architecture">How Avatar V Works</h2>
+
+<div class="video-embed">
+  <video src="avatar-v-videos/architecture-pipeline.mp4" autoplay muted loop playsinline></video>
+  <div class="video-caption"><a href="https://github.com/heygen-com/hyperframes" target="_blank" class="badge" title="Made with HyperFrames — HeyGen's HTML-to-video composition framework"><span class="badge-label">made with</span><span class="badge-name">HyperFrames</span></a> Data flows through four stages: Image Engine → VideoRef DiT → Super-Res → VAE Decode</div>
+</div>
 
 <p>Avatar V has four major components working together:</p>
 
@@ -1117,6 +1132,11 @@
 
 <h3 id="super-res">Super-Resolution Refiner</h3>
 
+<div class="video-embed">
+  <video src="avatar-v-videos/super-resolution.mp4" autoplay muted loop playsinline></video>
+  <div class="video-caption"><a href="https://github.com/heygen-com/hyperframes" target="_blank" class="badge" title="Made with HyperFrames — HeyGen's HTML-to-video composition framework"><span class="badge-label">made with</span><span class="badge-name">HyperFrames</span></a> Generic upscaling just makes bigger pixels — Avatar V's refiner uses the reference to reconstruct real detail</div>
+</div>
+
 <p>The core model generates video at low resolution (for speed). The <span class="term">super-resolution<span class="tooltip">The process of taking a low-resolution image/video and generating a higher-resolution version with added detail. Like "enhance" in movies, except it actually works because the AI has learned what realistic detail looks like.</span></span> refiner upscales it to 1080p.</p>
 
 <p><strong>What makes it special:</strong> Unlike generic upscaling (which just makes pixels bigger), Avatar V's refiner has access to the same identity reference video. So when it's enhancing the face region, it can look at the reference to know exactly what your teeth, skin pores, and eye details should look like.</p>
@@ -1129,6 +1149,11 @@
 
 <!-- ============================================================ -->
 <h2 id="training">How It Learns (Training Pipeline)</h2>
+
+<div class="video-embed">
+  <video src="avatar-v-videos/training-pipeline.mp4" autoplay muted loop playsinline></video>
+  <div class="video-caption"><a href="https://github.com/heygen-com/hyperframes" target="_blank" class="badge" title="Made with HyperFrames — HeyGen's HTML-to-video composition framework"><span class="badge-label">made with</span><span class="badge-name">HyperFrames</span></a> Five training stages, each building on the last — from general video understanding to human-preferred quality</div>
+</div>
 
 <p>Avatar V doesn't learn everything at once. It follows a 5-stage curriculum, like going from elementary school through grad school:</p>
 
