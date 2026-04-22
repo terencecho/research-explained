@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ReasoningBank: The Paper, Explained</title>
+<style>
+:root {
+  --bg: #0d1117; --surface: #161b22; --border: #30363d; --text: #e6edf3; --text-muted: #8b949e;
+  --accent: #58a6ff; --accent-subtle: #1f6feb22; --green: #3fb950; --yellow: #d29922; --red: #f85149; --purple: #bc8cff;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; background: var(--bg); color: var(--text); line-height: 1.7; max-width: 1200px; margin: 0 auto; padding: 2rem 1.5rem; display: flex; gap: 0; }
+.progress-bar { position: fixed; top: 0; left: 0; height: 3px; background: var(--accent); z-index: 1000; transition: width 0.1s; }
+.sidebar { position: sticky; top: 1rem; align-self: flex-start; width: 240px; flex-shrink: 0; max-height: calc(100vh - 2rem); overflow-y: auto; padding-right: 1.25rem; border-right: 1px solid var(--border); margin-right: 2rem; scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
+.sidebar::-webkit-scrollbar { width: 4px; } .sidebar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; } .sidebar::-webkit-scrollbar-track { background: transparent; }
+.sidebar .toc-title { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); margin-bottom: 0.75rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border); }
+.sidebar a { display: block; color: var(--text-muted); text-decoration: none; font-size: 0.8rem; padding: 0.2rem 0; line-height: 1.4; transition: color 0.15s, border-color 0.15s; border-left: 2px solid transparent; padding-left: 0.6rem; }
+.sidebar a:hover { color: var(--text); } .sidebar a.active { color: var(--accent); border-left-color: var(--accent); font-weight: 600; }
+.sidebar a.section-gap { margin-top: 0.4rem; }
+.sidebar-home { display: block; font-size: 0.8rem; color: var(--text-muted); text-decoration: none; padding: 0.3rem 0.6rem; margin-bottom: 0.75rem; border-left: none !important; transition: color 0.15s; }
+.sidebar-home:hover { color: var(--accent); }
+.main-content { flex: 1; min-width: 0; max-width: 860px; }
+@media (max-width: 900px) {
+  body { display: block; max-width: 860px; overflow-x: hidden; }
+  .sidebar { position: fixed; top: 0; left: -280px; width: 260px; height: 100vh; max-height: 100vh; background: var(--surface); border-right: 1px solid var(--border); padding: 1rem; margin-right: 0; z-index: 1001; transition: left 0.25s ease; }
+  .sidebar.mobile-open { left: 0; } .main-content { max-width: 100%; } .mobile-toc-btn { display: flex !important; }
+  .mobile-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; } .mobile-overlay.active { display: block; }
+  .compare-row { grid-template-columns: 1fr; } .glossary-panel { width: calc(100vw - 3rem); right: 1.5rem; }
+  .term .tooltip { width: calc(100vw - 4rem); max-width: 320px; left: 0; transform: none; }
+  .metrics-table { display: block; overflow-x: auto; }
+  .pipeline { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .arch-card { max-width: 100%; }
+  .three-grid { grid-template-columns: 1fr; }
+}
+.mobile-toc-btn { display: none; position: fixed; bottom: 1.5rem; left: 1.5rem; width: 44px; height: 44px; background: var(--accent); color: var(--bg); border: none; border-radius: 50%; font-size: 1.1rem; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.4); z-index: 999; align-items: center; justify-content: center; }
+h1 { font-size: 2rem; margin-bottom: 0.5rem; } .subtitle { color: var(--text-muted); margin-bottom: 2rem; font-size: 1.05rem; }
+.meta { color: var(--text-muted); font-size: 0.8rem; margin-top: -1rem; margin-bottom: 1.5rem; }
+h2 { font-size: 1.5rem; margin: 2.5rem 0 1rem; color: var(--accent); border-bottom: 1px solid var(--border); padding-bottom: 0.5rem; }
+h3 { font-size: 1.2rem; margin: 1.5rem 0 0.75rem; color: var(--purple); } p { margin-bottom: 1rem; } a { color: var(--accent); }
+ul, ol { margin-bottom: 1rem; padding-left: 1.5rem; } li { margin-bottom: 0.35rem; }
+.research-banner { background: linear-gradient(135deg, #011627 0%, #0d2137 50%, #1a1a3a 100%); border: 1px solid #2EC4B6; border-radius: 12px; padding: 1.25rem 1.5rem; margin-bottom: 2rem; display: flex; align-items: center; gap: 1.25rem; }
+.research-banner .banner-icon { font-size: 2.2rem; flex-shrink: 0; } .research-banner .banner-text { flex: 1; }
+.research-banner .banner-text p { margin: 0; font-size: 0.95rem; color: var(--text-muted); line-height: 1.5; }
+.research-banner .banner-text p:first-child { font-size: 1.05rem; font-weight: 600; color: var(--text); margin-bottom: 0.25rem; }
+.research-banner a { color: #2EC4B6; text-decoration: none; font-weight: 600; } .research-banner a:hover { text-decoration: underline; }
+.banner-links { display: flex; gap: 0.75rem; margin-top: 0.5rem; flex-wrap: wrap; }
+.banner-link { display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.85rem; padding: 0.35rem 0.75rem; border-radius: 6px; border: 1px solid; text-decoration: none !important; transition: background 0.2s; }
+.banner-link.primary { border-color: #2EC4B6; color: #2EC4B6; } .banner-link.primary:hover { background: rgba(46,196,182,0.1); }
+.banner-link.secondary { border-color: var(--border); color: var(--text-muted); } .banner-link.secondary:hover { background: var(--accent-subtle); }
+.term { color: var(--yellow); cursor: help; border-bottom: 1px dashed var(--yellow); position: relative; } .term:hover { color: #e3b341; }
+.term .tooltip { display: none; position: absolute; bottom: 130%; left: 50%; transform: translateX(-50%); background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 0.75rem 1rem; width: 320px; font-size: 0.85rem; color: var(--text); z-index: 100; box-shadow: 0 4px 20px rgba(0,0,0,0.5); line-height: 1.5; }
+.term:hover .tooltip { display: block; }
+.analogy { background: #1a2332; border-left: 4px solid var(--accent); padding: 1rem 1.25rem; border-radius: 0 8px 8px 0; margin: 1rem 0; }
+.analogy::before { content: "Real-world analogy: "; font-weight: 700; color: var(--accent); }
+.insight { background: #1a2a1a; border-left: 4px solid var(--green); padding: 1rem 1.25rem; border-radius: 0 8px 8px 0; margin: 1rem 0; }
+.insight::before { content: "Key Insight: "; font-weight: 700; color: var(--green); }
+details { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; margin: 1rem 0; padding: 0; overflow: visible; }
+details summary { padding: 0.75rem 1.5rem; cursor: pointer; font-weight: 600; user-select: none; list-style: none; display: flex; align-items: center; gap: 0.5rem; }
+details summary::before { content: '+ '; color: var(--accent); font-family: monospace; font-size: 1.2rem; }
+details[open] summary::before { content: '- '; } details summary:hover { background: var(--accent-subtle); }
+details .content { padding: 0 1.5rem 1.25rem; }
+details .content ul, details .content ol { padding-left: 2.5rem; }
+
+.arch-flow { display: flex; flex-direction: column; align-items: center; gap: 0; margin: 1.5rem 0; }
+.arch-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 1rem 1.5rem; width: 100%; max-width: 560px; text-align: center; }
+.arch-card.highlight { border-color: #2EC4B6; background: linear-gradient(135deg, var(--surface) 0%, rgba(46,196,182,0.05) 100%); }
+.arch-card .name { font-weight: 700; font-size: 1em; } .arch-card .desc { color: var(--text-muted); font-size: 0.85em; margin-top: 0.25rem; }
+.arrow-down { width: 2px; height: 20px; background: var(--border); position: relative; }
+.arrow-down::after { content: ''; position: absolute; bottom: -4px; left: -4px; border: 5px solid transparent; border-top: 6px solid var(--border); }
+
+.tag-row { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-bottom: 8px; }
+.tag { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 0.8em; font-weight: 600; }
+.tag-teal { background: rgba(46,196,182,0.15); color: #2EC4B6; } .tag-orange { background: rgba(255,159,28,0.15); color: #FF9F1C; }
+.tag-purple { background: rgba(188,140,255,0.15); color: #bc8cff; } .tag-green { background: rgba(63,185,80,0.15); color: var(--green); }
+.tag-red { background: rgba(231,29,54,0.15); color: #f85149; }
+
+.compare-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 1rem 0; }
+.three-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; margin: 1.25rem 0; }
+.compare-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 1.25rem; }
+.compare-card h4 { margin-bottom: 0.5rem; } .compare-card.good { border-color: var(--green); } .compare-card.good h4 { color: var(--green); }
+.compare-card.bad { border-color: var(--red); } .compare-card.bad h4 { color: var(--red); }
+.compare-card.mid { border-color: var(--yellow); } .compare-card.mid h4 { color: var(--yellow); }
+.compare-card ul { padding-left: 1.25rem; font-size: 0.9rem; }
+.compare-card .mem-sample { font-family: 'SFMono-Regular', Menlo, monospace; font-size: 0.78rem; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 0.6rem 0.75rem; margin-top: 0.5rem; color: var(--text-muted); line-height: 1.5; }
+
+.metrics-table { width: 100%; border-collapse: collapse; margin: 1.25rem 0; font-size: 0.9rem; }
+.metrics-table th { text-transform: uppercase; font-size: 0.7rem; letter-spacing: 1px; color: var(--text-muted); padding: 0.6rem 0.75rem; text-align: left; border-bottom: 2px solid var(--border); }
+.metrics-table td { padding: 0.6rem 0.75rem; border-bottom: 1px solid var(--border); }
+.metrics-table tr:hover td { background: rgba(88,166,255,0.04); } .val-best { color: var(--green); font-weight: 700; }
+.metrics-table .row-label { font-weight: 600; }
+
+.quiz { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 1.25rem; margin: 1.5rem 0; }
+.quiz-q { font-weight: 600; margin-bottom: 0.75rem; color: var(--purple); }
+.quiz label { display: block; padding: 0.5rem 0.75rem; margin: 0.25rem 0; border-radius: 6px; cursor: pointer; transition: background 0.2s; }
+.quiz label:hover { background: var(--accent-subtle); } .quiz input[type="radio"] { margin-right: 0.5rem; }
+.quiz-btn { margin-top: 0.75rem; padding: 0.5rem 1.25rem; background: var(--accent); color: var(--bg); border: none; border-radius: 6px; font-weight: 600; cursor: pointer; }
+.quiz-btn:hover { opacity: 0.9; } .quiz-feedback { display: none; margin-top: 0.75rem; padding: 0.75rem; border-radius: 6px; }
+.quiz-correct { background: #1a2a1a; color: var(--green); } .quiz-wrong { background: #2a1a1a; color: var(--red); }
+
+.glossary-toggle { position: fixed; bottom: 1.5rem; right: 1.5rem; width: 50px; height: 50px; background: var(--accent); color: var(--bg); border: none; border-radius: 50%; font-size: 1.3rem; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.4); z-index: 999; display: flex; align-items: center; justify-content: center; }
+.glossary-panel { display: none; position: fixed; bottom: 5rem; right: 1.5rem; width: 380px; max-height: 70vh; overflow-y: auto; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 1.25rem; z-index: 998; box-shadow: 0 8px 30px rgba(0,0,0,0.5); }
+.glossary-panel.open { display: block; } .glossary-panel h3 { margin-top: 0; }
+.glossary-panel input { width: 100%; padding: 0.5rem 0.75rem; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; color: var(--text); margin-bottom: 0.75rem; font-size: 0.9rem; }
+.glossary-entry { padding: 0.5rem 0; border-bottom: 1px solid var(--border); } .glossary-entry:last-child { border-bottom: none; }
+.glossary-entry strong { color: var(--yellow); } .glossary-entry p { font-size: 0.85rem; color: var(--text-muted); margin: 0.25rem 0 0; }
+
+.video-embed { margin: 1.5rem 0; border-radius: 12px; overflow: hidden; border: 1px solid var(--border); background: #011627; }
+.video-embed video { display: block; width: 100%; height: auto; }
+.video-caption { padding: 0.5rem 0.75rem; font-size: 0.8rem; color: var(--text-muted); background: var(--surface); display: flex; align-items: center; gap: 0.5rem; }
+.video-caption .badge { display: inline-flex; flex-direction: column; align-items: center; padding: 0.2rem 0.6rem; border-radius: 4px; background: rgba(46,196,182,0.15); color: #2EC4B6; text-decoration: none; white-space: nowrap; line-height: 1.2; transition: background 0.15s; }
+.video-caption .badge .badge-label { font-size: 0.55rem; font-weight: 400; color: #778DA9; text-transform: uppercase; letter-spacing: 0.04em; }
+.video-caption .badge .badge-name { font-size: 0.75rem; font-weight: 700; } .video-caption .badge:hover { background: rgba(46,196,182,0.3); text-decoration: none; }
+
+ol.big { counter-reset: biglist; list-style: none; padding: 0; }
+ol.big li { counter-increment: biglist; padding: 8px 0 8px 48px; position: relative; margin-bottom: 8px; }
+ol.big li::before { content: counter(biglist); position: absolute; left: 0; top: 6px; width: 32px; height: 32px; border-radius: 50%; background: rgba(88,166,255,0.12); color: var(--accent); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.9em; }
+
+.stepper { margin: 1.5rem 0; padding-left: 20px; }
+.step { position: relative; padding: 0 0 1.25rem 28px; border-left: 2px solid var(--accent); }
+.step:last-child { border-left: 2px solid transparent; }
+.step::before { content: ""; position: absolute; left: -7px; top: 4px; width: 12px; height: 12px; border-radius: 50%; background: var(--accent); }
+.step strong { display: block; margin-bottom: 4px; } .step .step-desc { color: var(--text-muted); font-size: 0.95em; }
+
+.pipeline { display: flex; gap: 0; align-items: stretch; margin: 1.5rem 0; flex-wrap: nowrap; }
+.pipe-stage { flex: 1; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 1rem; position: relative; min-width: 0; }
+.pipe-stage .num { width: 28px; height: 28px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.85em; color: var(--bg); margin-bottom: 0.5rem; }
+.pipe-stage.s1 .num { background: #2EC4B6; } .pipe-stage.s1 { border-color: #2EC4B6; }
+.pipe-stage.s2 .num { background: #FF9F1C; } .pipe-stage.s2 { border-color: #FF9F1C; }
+.pipe-stage.s3 .num { background: #bc8cff; } .pipe-stage.s3 { border-color: #bc8cff; }
+.pipe-stage .stage-name { font-weight: 700; display: block; }
+.pipe-stage .stage-desc { color: var(--text-muted); font-size: 0.85em; font-style: italic; line-height: 1.5; margin-top: 0.25rem; }
+.pipe-arrow { display: flex; align-items: center; justify-content: center; padding: 0 0.5rem; color: var(--text-muted); font-size: 1.5rem; flex-shrink: 0; }
+
+.callout-number { display: inline-block; padding: 0.15rem 0.55rem; border-radius: 12px; background: rgba(63,185,80,0.12); color: var(--green); font-weight: 700; font-size: 0.85em; margin-right: 0.35rem; }
+</style>
+</head>
+<body>
+
+<div class="progress-bar" id="progress-bar"></div>
+<button class="mobile-toc-btn" onclick="document.querySelector('.sidebar').classList.toggle('mobile-open'); document.querySelector('.mobile-overlay').classList.toggle('active');">&#9776;</button>
+<div class="mobile-overlay" onclick="document.querySelector('.sidebar').classList.remove('mobile-open'); this.classList.remove('active');"></div>
+
+<nav class="sidebar">
+  <a href="../" class="sidebar-home">&larr; All Papers</a>
+  <div class="toc-title">Contents</div>
+  <a href="#big-picture">The Big Picture</a>
+  <a href="#background" class="section-gap">Background Concepts</a>
+  <a href="#how-it-works" class="section-gap">How ReasoningBank Works</a>
+  <a href="#matts" class="section-gap">MaTTS: Memory-Aware Scaling</a>
+  <a href="#emergent" class="section-gap">Emergent Behaviors</a>
+  <a href="#experiments" class="section-gap">Experiments</a>
+  <a href="#results" class="section-gap">Results</a>
+  <a href="#quiz" class="section-gap">Final Quiz</a>
+  <a href="#why-it-matters" class="section-gap">Why It Matters</a>
+</nav>
+
+<div class="main-content">
+
+<h1>ReasoningBank: The Paper, Explained</h1>
+<p class="subtitle">A beginner-friendly guide to how AI agents can learn strategies from their own successes and failures, and use them to keep getting better. Every AI term is defined. Every concept is grounded in analogy.</p>
+<p class="meta">Paper by Siru Ouyang, Jun Yan, I-Hung Hsu, Yanfei Chen, Ke Jiang, Zifeng Wang, Rujun Han, Long T. Le, Samira Daruki, Xiangru Tang, Vishy Tirumalashetty, George Lee, Mahsan Rofouei, Hangfei Lin, Jiawei Han, Chen-Yu Lee, Tomas Pfister (Google Cloud AI Research + UIUC + Yale, 2025) &bull; Accepted to ICLR 2026 &bull; Explainer published April 2026</p>
+
+<div class="research-banner">
+  <div class="banner-icon">&#x1F9E0;</div>
+  <div class="banner-text">
+    <p>This is a companion explainer for the ReasoningBank paper</p>
+    <p>ReasoningBank is a memory system for AI agents that distills reusable reasoning strategies from both successful and failed attempts, so the agent gets smarter and more efficient the more tasks it sees &mdash; without any extra training.</p>
+    <div class="banner-links">
+      <a href="https://arxiv.org/abs/2509.25140" target="_blank" class="banner-link primary">&#x1F4C4; Read the Paper (arXiv)</a>
+      <a href="https://github.com/google-research/reasoning-bank" target="_blank" class="banner-link secondary">&#x1F4BB; Code (GitHub)</a>
+    </div>
+  </div>
+</div>
+
+<div class="video-embed">
+  <video src="videos/hero.mp4" autoplay muted loop playsinline></video>
+  <div class="video-caption"><a href="https://github.com/heygen-com/hyperframes" target="_blank" class="badge" title="Made with HyperFrames — HeyGen's HTML-to-video composition framework"><span class="badge-label">made with</span><span class="badge-name">HyperFrames</span></a> The closed-loop process: retrieve strategies from memory, act, self-judge, then extract and consolidate new strategies back into the bank.</div>
+</div>
+
+<h2 id="big-picture">The Big Picture</h2>
+
+<p>When you put an <span class="term">LLM agent<span class="tooltip">An AI system built on top of a large language model that can take actions in an environment (clicking links, running code, calling APIs) over multiple steps to achieve a goal.</span></span> to work on a long stream of real tasks &mdash; answering customer questions, filing bugs, shopping online &mdash; something strange happens:</p>
+
+<p><strong>It never gets better.</strong> Task 100 is approached exactly like task 1. Every mistake the agent made yesterday is fair game to repeat today. Every clever trick it discovered last week is forgotten by next Monday.</p>
+
+<p>This paper asks: what if we gave the agent a proper notebook? Not a transcript of everything it ever did, but a curated set of <em>lessons learned</em> &mdash; short, reusable reasoning strategies &mdash; pulled from both its wins and its failures. The authors call this notebook <strong>ReasoningBank</strong>.</p>
+
+<p>The paper tackles three problems at once:</p>
+<ol class="big">
+  <li><strong>Agents don't learn from their own history.</strong> Existing memory systems either dump raw click-by-click recordings (too long and noisy to reuse) or save only <em>successful</em> workflows (throwing away the hard-won lessons from failures).</li>
+  <li><strong>Test-time scaling doesn't know about memory.</strong> When people throw more compute at a task at inference time &mdash; running the agent five times instead of once &mdash; each run is independent. The signal from <em>comparing</em> those runs goes unused.</li>
+  <li><strong>The two together should be more than the sum of their parts.</strong> Good memory should make scaled exploration smarter; scaled exploration should produce better raw material for memory.</li>
+</ol>
+
+<div class="insight">ReasoningBank stores <strong>strategies, not recordings</strong>. Each memory item has a title, a one-sentence description, and a short content body &mdash; like an index card of advice. Crucially, these cards are written by the agent itself, distilled from both its successes and its failures. The same agent, with no extra training, solves up to 20% more tasks and uses up to 16% fewer steps on hard benchmarks once it starts keeping this notebook.</div>
+
+<h2 id="background">Background Concepts</h2>
+
+<p>The paper assumes you already understand how modern agents work and what "test-time scaling" means. Let's unpack both.</p>
+
+<h3>What is an LLM agent?</h3>
+
+<p>An <span class="term">LLM agent<span class="tooltip">An AI system that wraps a language model inside a loop: observe the environment → think → take an action → observe the result → think again. Each step is one LLM call. A "trajectory" is the whole sequence of thoughts and actions it takes to finish a task.</span></span> is a language model put inside a loop. At each step the model sees the current state of the world (a webpage, a code file, a terminal), writes out its reasoning, and chooses an action (click, type, run a shell command). The action changes the world, the new state comes back, and the loop continues until the task is done.</p>
+
+<p>The complete log of thoughts and actions for one task is called a <span class="term">trajectory<span class="tooltip">The full step-by-step record of an agent solving one task: every thought it wrote, every action it took, every response it got back. A single trajectory can easily run 20+ steps and thousands of tokens for a real web task.</span></span>. A trajectory can be dozens of steps long.</p>
+
+<div class="analogy">A new employee on their first day. They read the ticket, think out loud about what to try, click a button, see what happens, then try again. The trajectory is their entire work log, including every dead end.</div>
+
+<h3>What are existing agent memory systems?</h3>
+
+<p>People have tried to give agents memory before. The two dominant flavors:</p>
+
+<div class="compare-row">
+  <div class="compare-card mid">
+    <h4>Trajectory memory</h4>
+    <p>Store entire past trajectories verbatim. When a new task comes in, retrieve the most similar past one and include it in the prompt as a demonstration.</p>
+    <div class="mem-sample">&lt;action&gt; click('188')<br/>&lt;think&gt; Account page loaded. User wants first purchase date. Scroll down...<br/>&lt;action&gt; click('1530')<br/>&lt;think&gt; Orders sorted newest first. Need oldest...<br/>&lt;action&gt; click('1614')</div>
+    <p style="margin-top:0.5rem;"><strong>Problem:</strong> trajectories are long, noisy, and tied to specific page IDs that won't match the next task.</p>
+  </div>
+  <div class="compare-card mid">
+    <h4>Workflow memory</h4>
+    <p>Abstract past trajectories into reusable "workflows" &mdash; short procedural recipes. But only from tasks that succeeded.</p>
+    <div class="mem-sample">Workflow: Retrieve information from specific page section<br/>1. click(section_or_tab_id)<br/>2. send_msg_to_user(extracted_info)</div>
+    <p style="margin-top:0.5rem;"><strong>Problem:</strong> throws away failures. Never learns "don't do X" &mdash; only "do Y."</p>
+  </div>
+</div>
+
+<p>ReasoningBank keeps the workflow idea (abstract, not verbatim) but adds two crucial things: memory items are <em>strategies/reasoning hints</em>, not step-by-step procedures, and failures are a first-class source of memory.</p>
+
+<h3>What is test-time scaling?</h3>
+
+<p><span class="term">Test-time scaling<span class="tooltip">Spending more compute at inference time (when the model is being used, not when it's being trained) to improve quality. Common flavors: run the model multiple times and pick the best answer (best-of-N), let it think longer, let it revise its own answer.</span></span> means throwing more compute at a problem <em>when you're using the model</em>, not when you're training it. Instead of training a bigger model, you ask the existing model to try the same problem five times, or to think for longer, or to critique and revise its own answer.</p>
+
+<p>It's been a hot area since 2024 &mdash; it's how reasoning models like o1 and Gemini Thinking get extra performance. But most work on test-time scaling focuses on single-shot problems (math, coding). This paper asks: what's the right way to do it for <em>agents</em>, where each "attempt" is a long multi-step trajectory?</p>
+
+<details>
+<summary>Two common test-time scaling flavors</summary>
+<div class="content">
+<p><strong>Parallel scaling (best-of-N):</strong> run the model N times independently on the same input. Pick the best output, or vote.</p>
+<p><strong>Sequential scaling (self-refinement):</strong> run the model once, then feed its output back in and ask it to improve. Repeat.</p>
+<p>Both are "spend more compute per query." Neither, on its own, shares anything across queries. That's where memory comes in.</p>
+</div>
+</details>
+
+<h3>LLM-as-a-Judge</h3>
+
+<p>A core ingredient of ReasoningBank is <span class="term">LLM-as-a-Judge<span class="tooltip">Asking a language model to evaluate an output. For example, "Given this task and this trajectory, did the agent succeed? Answer yes or no." The judge doesn't know the ground-truth answer &mdash; it just reads the transcript and makes its best call.</span></span>: after the agent finishes a task, another LLM reads the trajectory and labels it success or failure &mdash; without access to any ground-truth answer. This is how the system gets supervision signal in the wild, where no answer key exists.</p>
+
+<div class="analogy">A senior developer reviewing a pull request without the test suite. They can't run the tests, but they've seen enough good and bad PRs to make a reasonable call from the code alone.</div>
+
+<h3>Embedding-based retrieval</h3>
+
+<p>To find "memories relevant to the current task," ReasoningBank converts each memory item's title and description into an <span class="term">embedding<span class="tooltip">A vector of numbers that captures the meaning of a piece of text, such that similar texts have similar vectors. Produced by an embedding model. Used for semantic search: to find "things like X," embed X and find stored embeddings close to it.</span></span> &mdash; a numerical fingerprint of its meaning. It then embeds the new task query and grabs the top-<em>k</em> memories whose fingerprints are most similar. This is the same trick that powers semantic search.</p>
+
+<h3>The benchmarks</h3>
+
+<p>The paper evaluates on three environments that simulate real agent work:</p>
+
+<div class="three-grid">
+  <div class="compare-card">
+    <h4 style="color: var(--accent);">WebArena</h4>
+    <p style="font-size: 0.9em;">A suite of real websites (Shopping, Admin, Gitlab, Reddit) wired up for agents to use. Tasks like "find my first order" or "close issue #42." Measures task success rate.</p>
+  </div>
+  <div class="compare-card">
+    <h4 style="color: var(--accent);">Mind2Web</h4>
+    <p style="font-size: 0.9em;">A broader web benchmark testing generalization across websites and domains the agent has never seen during memory building.</p>
+  </div>
+  <div class="compare-card">
+    <h4 style="color: var(--accent);">SWE-Bench-Verified</h4>
+    <p style="font-size: 0.9em;">Real GitHub issues in real Python repos. The agent has to read the codebase, find the bug, and write a patch that passes the project's test suite.</p>
+  </div>
+</div>
+
+<h2 id="how-it-works">How ReasoningBank Works</h2>
+
+<p>The whole system is a closed loop with four parts: the memory bank itself, and three operations that move information in and out of it.</p>
+
+<div class="arch-flow">
+  <div class="tag-row">
+    <span class="tag tag-red">New task query</span>
+  </div>
+  <div class="arrow-down"></div>
+  <div class="arch-card">
+    <div class="name">Memory Retrieval</div>
+    <div class="desc">embed the query, pull the top-<em>k</em> most similar memory items, inject them into the agent's system prompt</div>
+  </div>
+  <div class="arrow-down"></div>
+  <div class="arch-card highlight">
+    <div class="name">ReasoningBank</div>
+    <div class="desc">a growing collection of structured memory items &mdash; each one is a title + description + content body capturing a reusable strategy</div>
+  </div>
+  <div class="arrow-down"></div>
+  <div class="arch-card">
+    <div class="name">Agent + Environment</div>
+    <div class="desc">guided by retrieved memories, the agent interacts with the environment and produces a trajectory</div>
+  </div>
+  <div class="arrow-down"></div>
+  <div class="arch-card">
+    <div class="name">Memory Extraction</div>
+    <div class="desc">LLM-as-a-Judge labels trajectory success/failure &rarr; prompt-based extractor distills new memory items (different prompts for success vs failure)</div>
+  </div>
+  <div class="arrow-down"></div>
+  <div class="arch-card">
+    <div class="name">Memory Consolidation</div>
+    <div class="desc">new items are added back to the bank. Next task gets an even better pool to retrieve from.</div>
+  </div>
+  <div class="arrow-down"></div>
+  <div class="tag-row">
+    <span class="tag tag-green">Bank grows &bull; agent sees next task</span>
+  </div>
+</div>
+
+<h3>The memory schema</h3>
+
+<p>Every memory item has three fields:</p>
+
+<div class="compare-card" style="margin: 1rem 0;">
+  <ul style="list-style: none; padding-left: 0;">
+    <li><strong style="color: var(--yellow);">Title</strong> &mdash; a short handle like "Prioritize user account sections for personal data." One line. Used for retrieval.</li>
+    <li><strong style="color: var(--yellow);">Description</strong> &mdash; a single sentence summarizing when this strategy applies. Also used for retrieval.</li>
+    <li><strong style="color: var(--yellow);">Content</strong> &mdash; the actual advice: a short chunk of reasoning or decision rules the agent should apply. Injected into the prompt when retrieved.</li>
+  </ul>
+</div>
+
+<p>The items are meant to be read by both humans and the agent. A human reviewing them should be able to say "yes, that's a reasonable heuristic." A model reading them should be able to act on them.</p>
+
+<h3>Retrieval: match by meaning, not keywords</h3>
+
+<p>When a new task arrives, the system embeds the task query and compares it against the stored embeddings of every memory item's title + description. The top-<em>k</em> closest items (typically k = 3-5) are prepended to the agent's system instruction.</p>
+
+<div class="analogy">Searching your own notes before a client call. You don't want every note you've ever written &mdash; you want the three that are actually relevant to today's meeting.</div>
+
+<h3>Extraction: different prompts for wins and losses</h3>
+
+<p>After the agent finishes, <span class="term">LLM-as-a-Judge<span class="tooltip">An LLM asked to read the trajectory and output "success" or "failure" without ground-truth supervision. The paper shows this judge is about 73% accurate on WebArena-Shopping &mdash; and that ReasoningBank stays robust even when the judge's accuracy drops as low as 70%.</span></span> labels the trajectory. Then:</p>
+
+<ul>
+  <li><strong>Successful trajectories</strong> are fed to a "distill what worked" prompt that extracts the reasoning patterns that led to success.</li>
+  <li><strong>Failed trajectories</strong> are fed to a different prompt that extracts preventative lessons &mdash; "when you see pattern X, don't do Y."</li>
+</ul>
+
+<p>Each trajectory can produce multiple memory items. A 20-step web task that solved a shopping query might yield three separate lessons: one about navigation, one about filtering, one about cross-referencing results.</p>
+
+<h3>Consolidation: just add it to the pile</h3>
+
+<p>The paper deliberately keeps this simple &mdash; new items are appended to the bank with no clever deduplication or rewriting. Part of the argument is that even this naive setup works well; fancier consolidation is future work.</p>
+
+<details>
+<summary>Why doesn't the bank explode in size?</summary>
+<div class="content">
+<p>After running all 684 WebArena tasks, the bank typically holds a few thousand memory items &mdash; each one short. The bottleneck is retrieval quality, not storage: you only ever inject the top few items into the prompt, so even a large bank costs little at inference time.</p>
+<p>The authors note that smarter consolidation (merging duplicates, pruning stale items) is an obvious extension but was kept out of this paper to keep the contribution focused.</p>
+</div>
+</details>
+
+<h3>Robust to a noisy judge</h3>
+
+<p>A natural worry: if the LLM-as-a-Judge mislabels trajectories, bad lessons could get written into memory. The authors simulate judges of varying accuracy and find that ReasoningBank's performance stays nearly flat from 100% down to about 70% judge accuracy. In the actual experiments, the judge is about 72.7% accurate &mdash; noisy but workable.</p>
+
+<h2 id="matts">MaTTS: Memory-Aware Test-Time Scaling</h2>
+
+<p>ReasoningBank is already a win on its own. But the authors push further: what if, instead of tackling each task in one shot, the agent tackles it multiple times and uses the <em>contrast</em> between those attempts to write better memory?</p>
+
+<p>They call this <strong>Memory-aware Test-Time Scaling (MaTTS)</strong>, and it comes in two flavors.</p>
+
+<div class="video-embed">
+  <video src="videos/matts.mp4" autoplay muted loop playsinline></video>
+  <div class="video-caption"><a href="https://github.com/heygen-com/hyperframes" target="_blank" class="badge" title="Made with HyperFrames — HeyGen's HTML-to-video composition framework"><span class="badge-label">made with</span><span class="badge-name">HyperFrames</span></a> Parallel scaling runs many trajectories at once and uses self-contrast. Sequential scaling refines one trajectory iteratively and uses self-refinement.</div>
+</div>
+
+<h3>Parallel scaling: run k trajectories, then self-contrast</h3>
+
+<p>Take the task, run the agent <em>k</em> independent times (each guided by retrieved memory). You'll typically get a mix of successes and failures. Now ask an LLM to look at all <em>k</em> trajectories together and extract the strategies that consistently appear in the successes but <em>not</em> in the failures. That's <span class="term">self-contrast<span class="tooltip">Looking at multiple attempts at the same task and identifying patterns by comparison &mdash; what the successful runs did differently from the failed ones. Borrowed from contrastive learning, where signals come from comparing positive and negative examples.</span></span>.</p>
+
+<p>This is qualitatively different from standard "best-of-N" scaling. Best-of-N picks one trajectory and throws the rest away. Self-contrast uses all <em>k</em> trajectories to produce a stronger single piece of memory that can help future tasks.</p>
+
+<h3>Sequential scaling: refine one trajectory k times</h3>
+
+<p>Take the task, run it once, then critique the result and revise. Do that <em>k</em> times in sequence. This is classic <span class="term">self-refinement<span class="tooltip">After producing an answer, the model critiques its own answer and produces a revised version. Originally proposed by Madaan et al. 2023 for single-turn tasks; MaTTS applies it to multi-step agent trajectories.</span></span>. MaTTS grabs not just the final version but all the intermediate critiques and revisions &mdash; those contain useful reasoning signals that don't survive into the final trajectory.</p>
+
+<h3>The synergy: memory and scaling amplify each other</h3>
+
+<div class="insight">Better memory makes scaling more productive (the agent explores in the right neighborhood). Scaling produces better raw material for memory (contrasts between runs are a powerful teaching signal). Without memory, scaling barely helps; with weak memory, scaling sometimes <em>hurts</em>. Only ReasoningBank + MaTTS shows a clean upward curve as <em>k</em> grows.</div>
+
+<p>The numbers: on WebArena-Shopping with Gemini-2.5-flash and <em>k</em>=5 parallel trajectories, <span class="term">Pass@1<span class="tooltip">A quality-of-a-single-try metric: pick one of the k trajectories at random and ask whether it succeeded. Measures average-case quality, not best-case.</span></span> rises from 49.7% (ReasoningBank alone) to 53.0% (with MaTTS). <span class="term">Best-of-5<span class="tooltip">If you run the task 5 times, what fraction of tasks have at least one successful trajectory? Measures the ceiling of what scaling can give you if you had a perfect way to pick the winner.</span></span> rises from 49.7% to 55.1%. For comparison, the memory-free baseline goes from 39.0% to just 42.2% under the same scaling.</p>
+
+<h2 id="emergent">Emergent Behaviors</h2>
+
+<p>Because memory items accumulate and get re-retrieved as the agent keeps working, the same "strategy" can get rewritten over time. The authors find that these strategies don't just stay the same &mdash; they mature.</p>
+
+<div class="video-embed">
+  <video src="videos/evolution.mp4" autoplay muted loop playsinline></video>
+  <div class="video-caption"><a href="https://github.com/heygen-com/hyperframes" target="_blank" class="badge" title="Made with HyperFrames — HeyGen's HTML-to-video composition framework"><span class="badge-label">made with</span><span class="badge-name">HyperFrames</span></a> One memory item ("User-Specific Information Navigation") observed at four points in its lifetime &mdash; growing from a concrete action rule into high-level compositional reasoning.</div>
+</div>
+
+<p>The progression they observe, illustrated above, looks like this:</p>
+
+<ol class="big">
+  <li><strong>Procedural.</strong> Early memory items are literal: "click Next Page, Page X, or Load More links." Concrete action rules.</li>
+  <li><strong>Self-reflection.</strong> Next stage: the agent learns to catch its own mistakes. "Before clicking, re-check the element's current identifier."</li>
+  <li><strong>Adaptive check.</strong> It starts combining tools: "Before scanning, leverage any available search or filter functionality; ensure completeness."</li>
+  <li><strong>Compositional.</strong> Eventually: "Regularly cross-reference the current view with the task requirements. If data doesn't align, reassess available options such as search filters." This is task-agnostic high-level reasoning.</li>
+</ol>
+
+<p>This is reminiscent of what happens in <span class="term">reinforcement learning<span class="tooltip">A training paradigm where a model learns by trying actions, seeing what happens, and adjusting its weights to favor actions that lead to reward. Requires gradient updates &mdash; which ReasoningBank does not do.</span></span> as policies mature from reactive to strategic &mdash; except it's happening purely at test time, with no <span class="term">gradient updates<span class="tooltip">The step where a neural network's weights are actually changed during training, based on the gradient of the loss function. ReasoningBank never does this &mdash; the model's weights stay frozen. All the learning happens in the external memory bank.</span></span>. The agent is literally rewriting its own strategy sheet as it gains experience.</p>
+
+<h3>Failures are where the compositional strategies come from</h3>
+
+<p>The authors run an ablation where they strip failed trajectories out of memory construction. Performance drops from 49.7 to 46.5 on WebArena-Shopping. More strikingly, the competitor baselines (Synapse, AWM) either stall or <em>regress</em> when you try to add failure data to them &mdash; they were designed for success-only extraction and can't absorb the new signal. ReasoningBank's extraction prompts were built from the start to turn failures into preventative lessons, so the added data actually helps.</p>
+
+<h2 id="experiments">Experiments</h2>
+
+<h3>Setup</h3>
+
+<p>The paper tests three model backbones: Gemini-2.5-flash, Gemini-2.5-pro, and Claude-3.7-sonnet. Agents use <span class="term">ReAct<span class="tooltip">A standard agent prompting pattern: the agent alternates between explicit "Thought:" and "Action:" outputs at every step. Makes reasoning visible and easy to parse.</span></span>-style prompting with default decoding settings.</p>
+
+<p>Baselines compared against:</p>
+
+<ul>
+  <li><strong>No Memory</strong> &mdash; bare agent, no memory module at all.</li>
+  <li><strong>Synapse</strong> &mdash; trajectory-based memory. Stores raw past trajectories and retrieves similar ones as demonstrations.</li>
+  <li><strong>AWM (Agent Workflow Memory)</strong> &mdash; workflow-based memory. Abstracts successful trajectories into reusable procedures.</li>
+</ul>
+
+<p>Metrics: <strong>Success Rate (SR, higher is better)</strong> and <strong>average Steps (lower is better)</strong>.</p>
+
+<h2 id="results">Results</h2>
+
+<h3>WebArena overall</h3>
+
+<p>ReasoningBank beats every baseline on every model on every subset. A sampling on Gemini-2.5-flash:</p>
+
+<table class="metrics-table">
+  <thead>
+    <tr><th>Method</th><th>Shopping SR</th><th>Admin SR</th><th>Gitlab SR</th><th>Reddit SR</th><th>Overall SR</th><th>Avg Steps</th></tr>
+  </thead>
+  <tbody>
+    <tr><td class="row-label">No Memory</td><td>39.0</td><td>44.5</td><td>33.9</td><td>55.7</td><td>40.5</td><td>9.7</td></tr>
+    <tr><td class="row-label">Synapse</td><td>40.6</td><td>45.1</td><td>35.6</td><td>59.4</td><td>42.1</td><td>9.2</td></tr>
+    <tr><td class="row-label">AWM</td><td>44.4</td><td>46.7</td><td>37.2</td><td>62.3</td><td>44.1</td><td>9.0</td></tr>
+    <tr><td class="row-label">ReasoningBank</td><td>49.7</td><td>51.1</td><td>40.6</td><td>67.0</td><td>48.8</td><td>8.3</td></tr>
+    <tr><td class="row-label">+ MaTTS</td><td class="val-best">53.0</td><td class="val-best">53.8</td><td class="val-best">42.8</td><td class="val-best">70.8</td><td class="val-best">51.8</td><td class="val-best">7.9</td></tr>
+  </tbody>
+</table>
+
+<p>ReasoningBank alone lifts overall success rate from 40.5 &rarr; 48.8 (a relative gain of ~20%) and cuts steps from 9.7 &rarr; 8.3. Adding MaTTS pushes success to 51.8. These gains hold across Gemini-2.5-pro and Claude-3.7-sonnet as well, with smaller but consistent improvements.</p>
+
+<h3>Generalization: cross-domain tasks</h3>
+
+<p>On Mind2Web's cross-domain split &mdash; where test websites are entirely different from training &mdash; ReasoningBank shows its biggest relative gains. AWM's workflow memory, which was designed around narrow procedural patterns, sometimes <em>hurts</em> in this setting because the procedures don't transfer. Strategy-level memory transfers better.</p>
+
+<h3>Software engineering</h3>
+
+<p>On SWE-Bench-Verified (real GitHub issues), ReasoningBank lifts resolution rate from 34.2% to 38.8% on Gemini-2.5-flash and from 54.0% to 57.4% on Gemini-2.5-pro. Average steps drop from 30.3 to 27.5 on flash &mdash; real money saved on long-horizon code tasks.</p>
+
+<h3>Efficiency: fewer steps, especially on the tasks you solve</h3>
+
+<p>A desirable memory system cuts down exploration on problems the agent <em>is</em> going to solve, not just truncates doomed trajectories. The paper shows ReasoningBank does the former: the step reduction is much larger on successful trajectories (up to 2.1 fewer steps, 27% relative) than on failures (0.2-1.4 fewer). The agent isn't giving up earlier &mdash; it's finding the right path faster.</p>
+
+<h2 id="quiz">Final Quiz</h2>
+
+<div class="quiz">
+  <div class="quiz-q">What makes ReasoningBank different from prior memory systems like Synapse and AWM?</div>
+  <label><input type="radio" name="q1" value="a"> It uses a bigger language model.</label>
+  <label><input type="radio" name="q1" value="b"> It stores abstracted strategies from both successes and failures, instead of raw trajectories or success-only workflows.</label>
+  <label><input type="radio" name="q1" value="c"> It fine-tunes the model on past trajectories.</label>
+  <label><input type="radio" name="q1" value="d"> It uses reinforcement learning instead of prompting.</label>
+  <button class="quiz-btn" onclick="checkQuiz('q1', 'b', this)">Check</button>
+  <div class="quiz-feedback"></div>
+</div>
+
+<div class="quiz">
+  <div class="quiz-q">In MaTTS parallel scaling, how does running k trajectories help memory curation?</div>
+  <label><input type="radio" name="q2" value="a"> It produces more training data for fine-tuning.</label>
+  <label><input type="radio" name="q2" value="b"> Only the best trajectory is stored; the rest are discarded.</label>
+  <label><input type="radio" name="q2" value="c"> The system uses self-contrast &mdash; looking at what successful runs did that failed runs didn't &mdash; to extract stronger memory items.</label>
+  <label><input type="radio" name="q2" value="d"> It averages the k trajectories together into one.</label>
+  <button class="quiz-btn" onclick="checkQuiz('q2', 'c', this)">Check</button>
+  <div class="quiz-feedback"></div>
+</div>
+
+<div class="quiz">
+  <div class="quiz-q">How does ReasoningBank know whether a trajectory succeeded if there's no ground-truth answer at test time?</div>
+  <label><input type="radio" name="q3" value="a"> It uses the environment's built-in reward signal.</label>
+  <label><input type="radio" name="q3" value="b"> A separate LLM acts as a judge, reading the trajectory and labeling it success or failure. The system is robust down to ~70% judge accuracy.</label>
+  <label><input type="radio" name="q3" value="c"> A human labels every trajectory.</label>
+  <label><input type="radio" name="q3" value="d"> It assumes every trajectory is a success.</label>
+  <button class="quiz-btn" onclick="checkQuiz('q3', 'b', this)">Check</button>
+  <div class="quiz-feedback"></div>
+</div>
+
+<div class="quiz">
+  <div class="quiz-q">Why do the authors show that ReasoningBank's step-count reduction is larger on successful trajectories than failed ones?</div>
+  <label><input type="radio" name="q4" value="a"> The agent simply gives up earlier on hard tasks.</label>
+  <label><input type="radio" name="q4" value="b"> Because the memory helps the agent find the right path faster on solvable tasks, rather than just truncating doomed attempts.</label>
+  <label><input type="radio" name="q4" value="c"> Because failed tasks are easier than successful ones.</label>
+  <label><input type="radio" name="q4" value="d"> Because they filter out failed trajectories from the count.</label>
+  <button class="quiz-btn" onclick="checkQuiz('q4', 'b', this)">Check</button>
+  <div class="quiz-feedback"></div>
+</div>
+
+<div class="quiz">
+  <div class="quiz-q">Without memory, what does test-time scaling (running k trajectories) do for success rate?</div>
+  <label><input type="radio" name="q5" value="a"> It produces massive gains &mdash; memory is unnecessary.</label>
+  <label><input type="radio" name="q5" value="b"> It yields only small and inconsistent gains; extra rollouts offer diminishing returns without guidance.</label>
+  <label><input type="radio" name="q5" value="c"> It actively hurts performance in every setting.</label>
+  <label><input type="radio" name="q5" value="d"> It works identically whether memory is present or not.</label>
+  <button class="quiz-btn" onclick="checkQuiz('q5', 'b', this)">Check</button>
+  <div class="quiz-feedback"></div>
+</div>
+
+<div class="quiz">
+  <div class="quiz-q">What's the "emergent behavior" the authors describe?</div>
+  <label><input type="radio" name="q6" value="a"> The agent suddenly starts refusing to do tasks.</label>
+  <label><input type="radio" name="q6" value="b"> Memory items evolve over time from concrete action rules to high-level compositional reasoning strategies &mdash; without any weight updates.</label>
+  <label><input type="radio" name="q6" value="c"> The model grows new parameters.</label>
+  <label><input type="radio" name="q6" value="d"> The agent starts writing memory items in a new language.</label>
+  <button class="quiz-btn" onclick="checkQuiz('q6', 'b', this)">Check</button>
+  <div class="quiz-feedback"></div>
+</div>
+
+<h2 id="why-it-matters">Why This Paper Matters</h2>
+
+<h3>For builders and practitioners</h3>
+
+<p>If you're deploying an agent in production &mdash; a customer support agent, a web automation agent, an ops-assist agent &mdash; ReasoningBank is the rare "free" win: no <span class="term">fine-tuning<span class="tooltip">Training a pretrained model further on your own data to adapt it to a specific task. Requires GPUs, training data, and weight updates. ReasoningBank avoids all of this.</span></span>, no new infrastructure, just a prompt-and-retrieval layer that your agent gets better over time. The authors report 20% relative success-rate gains and 16% fewer steps, which for an LLM-call-bottlenecked product translates directly to better outcomes <em>and</em> lower inference cost. The memory bank is also human-readable, so engineers can audit and prune what's in it.</p>
+
+<p>The robustness to an imperfect judge is important practically &mdash; you don't need a gold-standard evaluator, just a good-enough LLM reviewing its own work.</p>
+
+<h3>For the research community</h3>
+
+<p>Two findings are load-bearing. First: <strong>failures are useful training signal at test time</strong>, not just at train time. The dominant paradigm has been to filter for successful demonstrations; ReasoningBank shows that with the right extraction prompts, a failed trajectory teaches you things a successful one can't.</p>
+
+<p>Second: <strong>memory and test-time scaling are complements, not substitutes</strong>. Before this paper, they were studied in parallel silos. The synergy curve &mdash; where weak memory <em>hurts</em> scaling and strong memory amplifies it &mdash; suggests the two should be co-designed going forward. The authors frame "memory-driven experience scaling" as a new scaling axis alongside model size and test-time compute.</p>
+
+<h3>The bigger picture</h3>
+
+<p>This is a paper about where <em>additional capability</em> comes from once you've frozen the weights. For years the answer was "train a bigger model" or "give it more training data." More recently it's been "let it think longer at test time." ReasoningBank points at a third lever: let the agent accumulate a library of lessons from its own experience, and reuse them. As agents move from one-shot tools to long-running systems handling thousands of tasks, the ability to self-improve without retraining stops being a nice-to-have and starts becoming the thing that separates an agent you can deploy from one you can't.</p>
+
+<p>It also suggests a concrete path toward what survey papers have been calling "self-evolving agents." The emergent progression from procedural to compositional strategies &mdash; without any gradient updates &mdash; is a small proof-of-concept that lifelong-learning agents don't necessarily require lifelong training.</p>
+
+<!-- Glossary -->
+<button class="glossary-toggle" onclick="document.querySelector('.glossary-panel').classList.toggle('open')">&#x1F4D6;</button>
+<div class="glossary-panel">
+  <h3>Glossary</h3>
+  <input type="text" id="glossary-search" placeholder="Search..." oninput="filterGlossary()">
+  <div id="glossary-entries">
+    <div class="glossary-entry"><strong>LLM agent</strong><p>A language model wrapped in a loop: observe &rarr; think &rarr; act &rarr; repeat. Can use tools, click buttons, run commands.</p></div>
+    <div class="glossary-entry"><strong>Trajectory</strong><p>The full log of one task: every thought, action, and observation, start to finish.</p></div>
+    <div class="glossary-entry"><strong>ReasoningBank</strong><p>A growing collection of structured memory items (title + description + content) distilled from past successes and failures.</p></div>
+    <div class="glossary-entry"><strong>Memory item</strong><p>One entry in the bank: a short reusable reasoning strategy or heuristic, not a raw trajectory.</p></div>
+    <div class="glossary-entry"><strong>Test-time scaling (TTS)</strong><p>Spending more compute at inference time (not training time) to get better results. Examples: best-of-N, self-refinement.</p></div>
+    <div class="glossary-entry"><strong>MaTTS</strong><p>Memory-aware Test-Time Scaling. TTS combined with ReasoningBank: scaled exploration produces contrastive signal that feeds back into memory.</p></div>
+    <div class="glossary-entry"><strong>Parallel scaling</strong><p>Run the agent k independent times on the same task. In MaTTS, all k trajectories feed self-contrast.</p></div>
+    <div class="glossary-entry"><strong>Sequential scaling</strong><p>Run the agent once, then refine its output k times. In MaTTS, intermediate critiques also feed memory.</p></div>
+    <div class="glossary-entry"><strong>Self-contrast</strong><p>Identifying strategies by comparing multiple attempts at the same task &mdash; what successful runs did differently from failed ones.</p></div>
+    <div class="glossary-entry"><strong>Self-refinement</strong><p>A technique where the model critiques its own output and produces an improved version. Repeated iteratively.</p></div>
+    <div class="glossary-entry"><strong>LLM-as-a-Judge</strong><p>Using a language model to evaluate outputs &mdash; here, to label trajectories success or failure without ground truth.</p></div>
+    <div class="glossary-entry"><strong>Embedding</strong><p>A numerical fingerprint of a piece of text that enables semantic similarity search. Similar meanings &rarr; similar vectors.</p></div>
+    <div class="glossary-entry"><strong>ReAct</strong><p>A prompting style for agents: alternate "Thought:" and "Action:" outputs at every step. Makes reasoning visible.</p></div>
+    <div class="glossary-entry"><strong>Pass@1 / Best-of-N</strong><p>Two evaluation metrics: Pass@1 picks one trajectory at random; Best-of-N picks the best of N trajectories.</p></div>
+    <div class="glossary-entry"><strong>Success Rate (SR)</strong><p>The fraction of tasks where the agent completes the goal. The primary effectiveness metric.</p></div>
+    <div class="glossary-entry"><strong>WebArena / Mind2Web / SWE-Bench</strong><p>Three agent benchmarks: WebArena is a self-hosted suite of real websites, Mind2Web tests cross-domain web generalization, SWE-Bench-Verified is real GitHub issues.</p></div>
+    <div class="glossary-entry"><strong>Synapse</strong><p>A prior memory baseline that stores raw past trajectories and retrieves similar ones.</p></div>
+    <div class="glossary-entry"><strong>AWM (Agent Workflow Memory)</strong><p>A prior memory baseline that abstracts successful trajectories into reusable workflows/procedures.</p></div>
+  </div>
+</div>
+
+</div>
+
+<script>
+// Progress bar
+window.addEventListener('scroll', function() {
+  var h = document.documentElement;
+  var b = document.body;
+  var st = 'scrollTop';
+  var sh = 'scrollHeight';
+  var percent = (h[st] || b[st]) / ((h[sh] || b[sh]) - h.clientHeight) * 100;
+  document.getElementById('progress-bar').style.width = percent + '%';
+});
+
+// Active TOC
+window.addEventListener('scroll', function() {
+  var sections = document.querySelectorAll('h2[id]');
+  var current = '';
+  sections.forEach(function(section) {
+    var top = section.getBoundingClientRect().top;
+    if (top < 150) current = section.id;
+  });
+  if ((window.innerHeight + window.scrollY) >= document.documentElement.scrollHeight - 50) {
+    current = sections[sections.length - 1].id;
+  }
+  document.querySelectorAll('.sidebar a').forEach(function(link) {
+    link.classList.remove('active');
+    if (link.getAttribute('href') === '#' + current) link.classList.add('active');
+  });
+});
+
+// Quiz
+function checkQuiz(name, correct, btn) {
+  var inputs = document.getElementsByName(name);
+  var selected = null;
+  for (var i = 0; i < inputs.length; i++) {
+    if (inputs[i].checked) { selected = inputs[i].value; break; }
+  }
+  var feedback = btn.parentElement.querySelector('.quiz-feedback');
+  feedback.style.display = 'block';
+  if (selected === correct) {
+    feedback.className = 'quiz-feedback quiz-correct';
+    feedback.textContent = 'Correct!';
+  } else if (selected === null) {
+    feedback.className = 'quiz-feedback quiz-wrong';
+    feedback.textContent = 'Pick an answer first.';
+  } else {
+    feedback.className = 'quiz-feedback quiz-wrong';
+    feedback.textContent = 'Not quite &mdash; try again.';
+  }
+}
+
+// Glossary search
+function filterGlossary() {
+  var q = document.getElementById('glossary-search').value.toLowerCase();
+  document.querySelectorAll('.glossary-entry').forEach(function(entry) {
+    var text = entry.textContent.toLowerCase();
+    entry.style.display = text.indexOf(q) >= 0 ? '' : 'none';
+  });
+}
+</script>
+
+<script data-goatcounter="https://tcho.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+
+</body>
+</html>

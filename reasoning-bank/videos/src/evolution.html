@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap');
+* { margin: 0; padding: 0; box-sizing: border-box; }
+</style>
+</head>
+<body>
+<div
+  data-composition-id="rb-evolution"
+  data-width="1920"
+  data-height="540"
+  data-start="0"
+  data-duration="16"
+>
+  <div class="scene">
+    <div class="title">Same memory item, four months of experience later</div>
+    <div class="subtitle">How a strategy in ReasoningBank evolves as the agent encounters more tasks</div>
+
+    <div class="timeline-container">
+      <div class="timeline-axis">
+        <div class="axis-line"></div>
+        <div class="axis-label axis-start">early</div>
+        <div class="axis-label axis-end">later</div>
+      </div>
+
+      <div class="cards">
+        <div class="card card1">
+          <div class="card-stage">1. Procedural</div>
+          <div class="card-body">"...actively look for and click on <em>Next Page</em>, <em>Page X</em>, or <em>Load More</em> links."</div>
+          <div class="card-tag">concrete action rule</div>
+        </div>
+
+        <div class="card card2">
+          <div class="card-stage">2. Self-Reflection</div>
+          <div class="card-body">"...it's crucial to first re-check the element's current identifier before clicking."</div>
+          <div class="card-tag">catch your own mistakes</div>
+        </div>
+
+        <div class="card card3">
+          <div class="card-stage">3. Adaptive Check</div>
+          <div class="card-body">"Before scanning, always leverage any available search or filter functionality; ensure completeness before reporting..."</div>
+          <div class="card-tag">tool-use strategy</div>
+        </div>
+
+        <div class="card card4">
+          <div class="card-stage">4. Compositional</div>
+          <div class="card-body">"Regularly cross-reference the current view with the task requirements. If data doesn't align, reassess available options such as search filters..."</div>
+          <div class="card-tag">high-level reasoning</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <style>
+    [data-composition-id="rb-evolution"] {
+      position: relative; overflow: hidden; background: #011627;
+      width: 1920px; height: 540px;
+      font-family: 'Space Mono', monospace; color: #FDFFFC;
+    }
+    .scene {
+      width: 1920px; height: 540px;
+      display: flex; flex-direction: column;
+      padding: 24px 40px 22px;
+    }
+    .title {
+      font-size: 28px; font-weight: 700;
+      text-align: center; letter-spacing: 1px;
+      margin-bottom: 6px;
+    }
+    .subtitle {
+      font-size: 15px; color: #778DA9;
+      text-align: center;
+      letter-spacing: 1px;
+      margin-bottom: 22px;
+    }
+    .timeline-container {
+      flex: 1;
+      display: flex; flex-direction: column;
+      gap: 12px;
+    }
+    .timeline-axis {
+      position: relative;
+      height: 30px;
+      display: flex; align-items: center;
+      padding: 0 24px;
+    }
+    .axis-line {
+      position: absolute;
+      left: 30px; right: 30px; top: 50%;
+      height: 2px;
+      background: linear-gradient(to right, #415A77 0%, #2EC4B6 50%, #bc8cff 100%);
+      border-radius: 2px;
+    }
+    .axis-line::before, .axis-line::after {
+      content: ''; position: absolute;
+      top: 50%; transform: translateY(-50%);
+      width: 10px; height: 10px;
+      border-radius: 50%;
+    }
+    .axis-line::before { left: -5px; background: #415A77; }
+    .axis-line::after { right: -5px; background: #bc8cff; }
+    .axis-label {
+      font-size: 13px; color: #778DA9;
+      text-transform: uppercase; letter-spacing: 2px;
+      font-weight: 700;
+      background: #011627;
+      padding: 2px 8px;
+      position: relative;
+      z-index: 2;
+    }
+    .axis-end { margin-left: auto; }
+
+    .cards {
+      flex: 1;
+      display: flex;
+      gap: 18px;
+      align-items: stretch;
+    }
+    .card {
+      flex: 1;
+      display: flex; flex-direction: column;
+      padding: 18px 20px;
+      border-radius: 12px;
+      border: 2px solid;
+      background: rgba(255,255,255,0.02);
+      gap: 10px;
+    }
+    .card1 { border-color: #415A77; background: rgba(65,90,119,0.08); }
+    .card2 { border-color: #FF9F1C; background: rgba(255,159,28,0.06); }
+    .card3 { border-color: #2EC4B6; background: rgba(46,196,182,0.06); }
+    .card4 { border-color: #bc8cff; background: rgba(188,140,255,0.08); }
+
+    .card-stage {
+      font-size: 18px; font-weight: 700;
+      letter-spacing: 2px; text-transform: uppercase;
+    }
+    .card1 .card-stage { color: #778DA9; }
+    .card2 .card-stage { color: #FF9F1C; }
+    .card3 .card-stage { color: #2EC4B6; }
+    .card4 .card-stage { color: #bc8cff; }
+
+    .card-body {
+      flex: 1;
+      font-size: 15px;
+      line-height: 1.55;
+      color: #FDFFFC;
+    }
+    .card-body em {
+      color: #FF9F1C; font-style: normal; font-weight: 700;
+    }
+
+    .card-tag {
+      font-size: 12px;
+      color: #778DA9;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      font-weight: 700;
+      padding-top: 8px;
+      border-top: 1px dashed #415A77;
+    }
+  </style>
+
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+  <script>
+    window.__timelines = window.__timelines || {};
+    var root = document.currentScript.parentElement;
+    var tl = gsap.timeline({ paused: true });
+
+    gsap.set(root.querySelector('.title'), { opacity: 0, y: -10 });
+    gsap.set(root.querySelector('.subtitle'), { opacity: 0 });
+    gsap.set(root.querySelector('.timeline-axis'), { opacity: 0 });
+    gsap.set(root.querySelectorAll('.card'), { opacity: 0, y: 20 });
+
+    tl.to(root.querySelector('.title'), { opacity: 1, y: 0, duration: 0.5 }, 0);
+    tl.to(root.querySelector('.subtitle'), { opacity: 1, duration: 0.5 }, 0.3);
+    tl.to(root.querySelector('.timeline-axis'), { opacity: 1, duration: 0.5 }, 0.7);
+
+    // Cards evolve in sequence
+    tl.to(root.querySelector('.card1'), { opacity: 1, y: 0, duration: 0.5, ease: 'back.out(1.2)' }, 1.2);
+    tl.to(root.querySelector('.card1'), {
+      boxShadow: '0 0 20px rgba(65,90,119,0.5)',
+      duration: 0.5, yoyo: true, repeat: 1
+    }, 1.7);
+
+    tl.to(root.querySelector('.card2'), { opacity: 1, y: 0, duration: 0.5, ease: 'back.out(1.2)' }, 3.5);
+    tl.to(root.querySelector('.card2'), {
+      boxShadow: '0 0 20px rgba(255,159,28,0.5)',
+      duration: 0.5, yoyo: true, repeat: 1
+    }, 4.0);
+
+    tl.to(root.querySelector('.card3'), { opacity: 1, y: 0, duration: 0.5, ease: 'back.out(1.2)' }, 6.2);
+    tl.to(root.querySelector('.card3'), {
+      boxShadow: '0 0 20px rgba(46,196,182,0.5)',
+      duration: 0.5, yoyo: true, repeat: 1
+    }, 6.7);
+
+    tl.to(root.querySelector('.card4'), { opacity: 1, y: 0, duration: 0.5, ease: 'back.out(1.2)' }, 9.0);
+    tl.to(root.querySelector('.card4'), {
+      boxShadow: '0 0 24px rgba(188,140,255,0.6)',
+      duration: 0.6, yoyo: true, repeat: 1
+    }, 9.5);
+
+    // Finale: subtle pulse across the whole timeline
+    tl.to(root.querySelectorAll('.card'), {
+      boxShadow: '0 0 14px rgba(255,255,255,0.1)',
+      duration: 0.8, yoyo: true, repeat: 1, stagger: 0.15
+    }, 12.0);
+
+    // Hold
+    tl.to({}, { duration: 1.5 }, 14.5);
+
+    window.__timelines["rb-evolution"] = tl;
+  </script>
+</div>
+</body>
+</html>
