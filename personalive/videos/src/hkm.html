@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap');
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: #011627; }
+[data-composition-id="hkm"] {
+  width: 1920px;
+  height: 540px;
+  background: #011627;
+  font-family: 'Space Mono', monospace;
+  color: #FDFFFC;
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.title {
+  position: absolute;
+  top: 28px;
+  left: 0; right: 0;
+  text-align: center;
+  font-size: 40px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  opacity: 0;
+}
+.main {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  margin-top: 56px;
+  width: 100%;
+  padding: 0 100px;
+}
+.track-row {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  width: 100%;
+  opacity: 0;
+}
+.track-label {
+  width: 260px;
+  font-size: 22px;
+  color: #8899aa;
+  text-align: right;
+  padding-right: 28px;
+  flex-shrink: 0;
+  line-height: 1.4;
+}
+.track-label.primary { color: #2EC4B6; font-weight: 700; }
+.frames-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex: 1;
+}
+.frame {
+  width: 80px;
+  height: 96px;
+  border-radius: 10px;
+  flex-shrink: 0;
+  border: 2px solid #1a3a55;
+  background: #061c2e;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  font-weight: 700;
+  position: relative;
+  overflow: hidden;
+}
+.frame-inner {
+  position: absolute; inset: 0;
+  border-radius: 9px;
+}
+.history-frame {
+  background: #0a2235;
+  border-color: #2EC4B666;
+}
+.generated-frame {
+  background: #0a2235;
+  border-color: #1a3a55;
+}
+/* drift overlay */
+.drift-layer {
+  position: absolute; inset: 0;
+  border-radius: 9px;
+  opacity: 0;
+}
+/* keyframe arrow */
+.kf-arrow {
+  position: absolute;
+  width: 3px;
+  background: #FF9F1C;
+  top: -60px;
+  height: 60px;
+  left: 50%;
+  transform: translateX(-50%);
+  opacity: 0;
+}
+.kf-arrow::after {
+  content: '▼';
+  position: absolute;
+  bottom: -20px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: #FF9F1C;
+  font-size: 16px;
+}
+/* gap between tracks */
+.track-gap {
+  height: 28px;
+}
+/* drift meter */
+.drift-section {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  margin-top: 20px;
+  opacity: 0;
+}
+.drift-meter {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.drift-bar-bg {
+  width: 600px;
+  height: 18px;
+  border-radius: 9px;
+  background: #0a2035;
+  border: 1px solid #1a3a55;
+  position: relative;
+  overflow: hidden;
+}
+.drift-bar-fill {
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  border-radius: 9px;
+  width: 0%;
+  background: linear-gradient(to right, #2EC4B6, #FF9F1C, #E71D36);
+}
+.drift-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 16px;
+  color: #8899aa;
+}
+.drift-threshold {
+  position: absolute;
+  top: -4px;
+  bottom: -4px;
+  width: 2px;
+  background: #FF9F1C;
+  left: 60%;
+}
+.drift-threshold::after {
+  content: 'τ = 17';
+  position: absolute;
+  top: -24px;
+  left: 4px;
+  font-size: 14px;
+  color: #FF9F1C;
+  white-space: nowrap;
+  font-family: 'Space Mono', monospace;
+}
+.drift-value {
+  font-size: 28px;
+  font-weight: 700;
+  color: #FF9F1C;
+  opacity: 0;
+}
+.inject-badge {
+  padding: 8px 24px;
+  border-radius: 20px;
+  background: #FF9F1C22;
+  border: 2px solid #FF9F1C;
+  color: #FF9F1C;
+  font-size: 22px;
+  font-weight: 700;
+  opacity: 0;
+}
+.corrected-badge {
+  padding: 8px 24px;
+  border-radius: 20px;
+  background: #2EC4B622;
+  border: 2px solid #2EC4B6;
+  color: #2EC4B6;
+  font-size: 22px;
+  font-weight: 700;
+  opacity: 0;
+}
+</style>
+</head>
+<body>
+<div data-composition-id="hkm" data-width="1920" data-height="540" data-start="0" data-duration="13">
+
+<div class="title" id="title">Historical Keyframe Mechanism: Preventing Temporal Drift</div>
+
+<div class="main">
+
+  <!-- History bank (reference frames) -->
+  <div class="track-row" id="history-row">
+    <div class="track-label primary">History Bank<br><span style="font-size:18px;font-weight:400;color:#8899aa">reference frames</span></div>
+    <div class="frames-row" id="history-frames"></div>
+  </div>
+
+  <div class="track-gap"></div>
+
+  <!-- Generated frames track -->
+  <div class="track-row" id="generated-row">
+    <div class="track-label">Generated<br><span style="font-size:18px;font-weight:400;color:#8899aa">current output</span></div>
+    <div class="frames-row" id="generated-frames"></div>
+  </div>
+
+  <!-- Drift meter + badges -->
+  <div class="drift-section" id="drift-section">
+    <div class="drift-meter">
+      <div style="font-size:20px;color:#8899aa">Temporal Drift</div>
+      <div class="drift-bar-bg">
+        <div class="drift-bar-fill" id="drift-fill"></div>
+        <div class="drift-threshold"></div>
+      </div>
+      <div class="drift-labels">
+        <span>stable</span>
+        <span>threshold τ</span>
+        <span>drifting</span>
+      </div>
+    </div>
+    <div class="drift-value" id="drift-value">0</div>
+    <div class="inject-badge" id="inject-badge">↓ Keyframe Injected</div>
+    <div class="corrected-badge" id="corrected-badge">✓ Drift Corrected</div>
+  </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+<script>
+window.__timelines = window.__timelines || {};
+var root = document.currentScript.parentElement;
+
+const NUM_FRAMES = 14;
+const DRIFT_COLORS = [
+  '#0a2235', // normal: no drift
+  '#122a30',
+  '#1a3228',
+  '#223820',
+  '#2e3a1a',
+  '#3d3a12',
+  '#4a350a',
+  '#5a2d06',
+  '#6a2302', // heavy drift: orange-red tint
+  '#7a1a01',
+];
+
+// Build history frames (all teal-tinted: reference quality)
+const historyFramesEl = root.querySelector('#history-frames');
+const historyFrames = [];
+for (let i = 0; i < NUM_FRAMES; i++) {
+  const f = document.createElement('div');
+  f.className = 'frame history-frame';
+  // simple face icon
+  f.textContent = '◉';
+  f.style.fontSize = '32px';
+  f.style.color = '#2EC4B666';
+  historyFramesEl.appendChild(f);
+  historyFrames.push(f);
+}
+
+// Build generated frames
+const generatedFramesEl = root.querySelector('#generated-frames');
+const generatedFrames = [];
+for (let i = 0; i < NUM_FRAMES; i++) {
+  const f = document.createElement('div');
+  f.className = 'frame generated-frame';
+  f.style.opacity = '0';
+  f.textContent = '◉';
+  f.style.fontSize = '32px';
+  f.style.color = '#2EC4B666';
+  generatedFramesEl.appendChild(f);
+  generatedFrames.push(f);
+}
+
+const tl = gsap.timeline({ paused: true });
+
+// Title
+tl.to(root.querySelector('#title'), { opacity: 1, duration: 0.5 }, 0);
+tl.to(root.querySelector('#history-row'), { opacity: 1, duration: 0.4 }, 0.6);
+tl.to(root.querySelector('#generated-row'), { opacity: 1, duration: 0.4 }, 0.9);
+tl.to(root.querySelector('#drift-section'), { opacity: 1, duration: 0.4 }, 1.2);
+
+// History frames appear (teal)
+for (let i = 0; i < NUM_FRAMES; i++) {
+  tl.to(historyFrames[i], {
+    background: '#0a2a3a',
+    borderColor: '#2EC4B666',
+    duration: 0.12
+  }, 1.5 + i * 0.1);
+}
+
+// Generated frames start appearing (matching quality)
+for (let i = 0; i < 5; i++) {
+  tl.to(generatedFrames[i], {
+    opacity: 1,
+    background: '#0a2235',
+    borderColor: '#2EC4B666',
+    duration: 0.2
+  }, 2.2 + i * 0.3);
+}
+
+// Drift starts building (frames 5-10)
+const driftStart = 3.7;
+for (let i = 5; i < 11; i++) {
+  const drift = i - 4; // 1..6
+  const driftIdx = Math.min(drift + 2, 9);
+  tl.to(generatedFrames[i], {
+    opacity: 1,
+    background: DRIFT_COLORS[driftIdx],
+    borderColor: '#FF9F1C' + (drift > 4 ? 'aa' : '44'),
+    duration: 0.2
+  }, driftStart + (i - 5) * 0.35);
+
+  // Update drift bar
+  const pct = (drift / 6) * 100;
+  tl.to(root.querySelector('#drift-fill'), {
+    width: pct + '%',
+    duration: 0.3
+  }, driftStart + (i - 5) * 0.35);
+
+  // Update drift value display
+  const driftVal = Math.round(drift * 2.8);
+  tl.to(root.querySelector('#drift-value'), {
+    opacity: 1,
+    duration: 0.1
+  }, driftStart + (i - 5) * 0.35);
+  tl.call(() => {
+    root.querySelector('#drift-value').textContent = driftVal;
+  }, [], driftStart + (i - 5) * 0.35 + 0.15);
+}
+
+// At frame 10: drift exceeds threshold — show inject badge
+const injectTime = driftStart + 5 * 0.35 + 0.4;
+tl.to(root.querySelector('#inject-badge'), { opacity: 1, duration: 0.4 }, injectTime);
+
+// Draw keyframe arrow on frame 10
+const kfArrow = document.createElement('div');
+kfArrow.className = 'kf-arrow';
+kfArrow.style.position = 'absolute';
+kfArrow.style.zIndex = '10';
+generatedFrames[10].style.position = 'relative';
+generatedFrames[10].appendChild(kfArrow);
+tl.to(kfArrow, { opacity: 1, duration: 0.3 }, injectTime);
+
+// Frame 10 snaps back to clean (keyframe injected)
+tl.to(generatedFrames[10], {
+  opacity: 1,
+  background: '#0a2a3a',
+  borderColor: '#2EC4B6',
+  duration: 0.35
+}, injectTime + 0.4);
+
+// Call to update text
+tl.call(() => {
+  root.querySelector('#drift-value').textContent = '5';
+}, [], injectTime + 0.5);
+
+// Frames 11-13: drift resets (stable after injection)
+for (let i = 11; i < NUM_FRAMES; i++) {
+  tl.to(generatedFrames[i], {
+    opacity: 1,
+    background: '#0a2235',
+    borderColor: '#2EC4B666',
+    duration: 0.2
+  }, injectTime + 0.6 + (i - 11) * 0.25);
+}
+
+// Drift bar resets
+tl.to(root.querySelector('#drift-fill'), {
+  width: '20%',
+  duration: 0.6
+}, injectTime + 0.5);
+tl.call(() => {
+  root.querySelector('#drift-value').textContent = '5';
+}, [], injectTime + 0.8);
+
+// Show corrected badge
+tl.to(root.querySelector('#corrected-badge'), { opacity: 1, duration: 0.4 }, injectTime + 1.2);
+
+window.__timelines["hkm"] = tl;
+</script>
+</div>
+</body>
+</html>

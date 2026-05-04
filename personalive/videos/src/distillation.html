@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap');
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: #011627; }
+[data-composition-id="distillation"] {
+  width: 1920px;
+  height: 540px;
+  background: #011627;
+  font-family: 'Space Mono', monospace;
+  color: #FDFFFC;
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.title {
+  position: absolute;
+  top: 28px;
+  left: 0; right: 0;
+  text-align: center;
+  font-size: 42px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  opacity: 0;
+}
+.content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 80px;
+  margin-top: 40px;
+}
+.col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  opacity: 0;
+}
+.col-title {
+  font-size: 30px;
+  font-weight: 700;
+  text-align: center;
+}
+.steps-row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+.step-dot {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 2px solid #1a3a55;
+  background: #061c2e;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  color: #3a6a8a;
+  font-family: 'Space Mono', monospace;
+}
+.step-dot.key {
+  width: 54px;
+  height: 54px;
+  font-size: 16px;
+}
+.step-connector {
+  width: 10px;
+  height: 2px;
+  background: #1a3a55;
+  flex-shrink: 0;
+}
+.col-subtitle {
+  font-size: 22px;
+  color: #8899aa;
+  text-align: center;
+}
+.time-bar-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+.time-bar {
+  height: 28px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 10px;
+  font-size: 18px;
+  font-weight: 700;
+  color: #FDFFFC;
+}
+.time-label {
+  font-size: 20px;
+  color: #8899aa;
+}
+.vs-divider {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  opacity: 0;
+}
+.vs-text {
+  font-size: 36px;
+  color: #415A77;
+  font-weight: 700;
+}
+.speedup {
+  font-size: 52px;
+  font-weight: 700;
+  color: #FF9F1C;
+  opacity: 0;
+  text-align: center;
+}
+.speedup-label {
+  font-size: 24px;
+  color: #FF9F1C;
+  opacity: 0;
+  text-align: center;
+}
+.schedule-tags {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.tag {
+  padding: 4px 14px;
+  border-radius: 20px;
+  font-size: 18px;
+  font-weight: 700;
+}
+</style>
+</head>
+<body>
+<div data-composition-id="distillation" data-width="1920" data-height="540" data-start="0" data-duration="12">
+
+<div class="title" id="title">Appearance Distillation: 20 Steps → 4 Steps</div>
+
+<div class="content">
+
+  <!-- Traditional column -->
+  <div class="col" id="col-trad">
+    <div class="col-title" style="color:#415A77">Standard Diffusion</div>
+    <div class="steps-row" id="steps-trad"></div>
+    <div class="col-subtitle">20 denoising steps</div>
+    <div class="time-bar-container">
+      <div class="time-bar" id="bar-trad" style="width:0px; background:#415A77; min-width:0">
+      </div>
+      <div class="time-label" id="time-trad" style="opacity:0">~2.0s per frame</div>
+    </div>
+  </div>
+
+  <!-- VS divider -->
+  <div class="vs-divider" id="vs-div">
+    <div class="vs-text">vs</div>
+    <div class="speedup" id="speedup-val">5×</div>
+    <div class="speedup-label" id="speedup-label">faster inference</div>
+  </div>
+
+  <!-- PersonaLive column -->
+  <div class="col" id="col-pv">
+    <div class="col-title" style="color:#2EC4B6">PersonaLive</div>
+    <div class="steps-row" id="steps-pv"></div>
+    <div class="col-subtitle">4 distilled steps</div>
+    <div class="time-bar-container">
+      <div class="time-bar" id="bar-pv" style="width:0px; background:#2EC4B6; min-width:0">
+      </div>
+      <div class="time-label" id="time-pv" style="opacity:0">~0.4s per frame</div>
+    </div>
+    <div class="schedule-tags" id="schedule-tags" style="opacity:0">
+      <div class="tag" style="background:#0a2a3a;color:#2EC4B6;border:1px solid #2EC4B626">t=0</div>
+      <div class="tag" style="background:#0a2a3a;color:#2EC4B6;border:1px solid #2EC4B626">t=333</div>
+      <div class="tag" style="background:#0a2a3a;color:#2EC4B6;border:1px solid #2EC4B626">t=666</div>
+      <div class="tag" style="background:#0a2a3a;color:#2EC4B6;border:1px solid #2EC4B626">t=999</div>
+    </div>
+  </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+<script>
+window.__timelines = window.__timelines || {};
+var root = document.currentScript.parentElement;
+
+// Build 20 traditional steps
+const tradRow = root.querySelector('#steps-trad');
+const tradDots = [];
+for (let i = 0; i < 20; i++) {
+  const dot = document.createElement('div');
+  dot.className = 'step-dot';
+  dot.style.background = '#061c2e';
+  dot.style.borderColor = '#1a3a55';
+  if (i < 19) {
+    tradRow.appendChild(dot);
+    const conn = document.createElement('div');
+    conn.className = 'step-connector';
+    tradRow.appendChild(conn);
+  } else {
+    tradRow.appendChild(dot);
+  }
+  tradDots.push(dot);
+}
+
+// Build 4 PersonaLive steps (larger, key steps)
+const pvRow = root.querySelector('#steps-pv');
+const pvDots = [];
+const pvLabels = ['t=0', '333', '666', '999'];
+for (let i = 0; i < 4; i++) {
+  const dot = document.createElement('div');
+  dot.className = 'step-dot key';
+  dot.style.background = '#061c2e';
+  dot.style.borderColor = '#1a3a55';
+  dot.textContent = pvLabels[i];
+  pvDots.push(dot);
+  pvRow.appendChild(dot);
+  if (i < 3) {
+    const conn = document.createElement('div');
+    conn.className = 'step-connector';
+    conn.style.width = '24px';
+    pvRow.appendChild(conn);
+  }
+}
+
+const tl = gsap.timeline({ paused: true });
+
+tl.to(root.querySelector('#title'), { opacity: 1, duration: 0.5 }, 0);
+tl.to(root.querySelector('#col-trad'), { opacity: 1, duration: 0.4 }, 0.7);
+tl.to(root.querySelector('#vs-div'), { opacity: 1, duration: 0.4 }, 0.9);
+tl.to(root.querySelector('#col-pv'), { opacity: 1, duration: 0.4 }, 1.1);
+
+// Light up traditional steps slowly (20 steps over 5 seconds → 0.25s each)
+for (let i = 0; i < 20; i++) {
+  tl.to(tradDots[i], {
+    background: '#415A77',
+    borderColor: '#415A7799',
+    duration: 0.15
+  }, 1.5 + i * 0.22);
+}
+
+// Light up PersonaLive steps fast (4 steps in 1.2s)
+for (let i = 0; i < 4; i++) {
+  tl.to(pvDots[i], {
+    background: '#2EC4B6',
+    borderColor: '#2EC4B699',
+    color: '#011627',
+    duration: 0.25
+  }, 1.5 + i * 0.35);
+}
+
+// Time bars appear after PersonaLive done (t ≈ 2.9)
+tl.to(root.querySelector('#bar-trad'), { width: 360, duration: 1.2, ease: 'power2.out' }, 3.2);
+tl.to(root.querySelector('#time-trad'), { opacity: 1, duration: 0.4 }, 3.5);
+tl.to(root.querySelector('#bar-pv'), { width: 72, duration: 0.4, ease: 'power2.out' }, 3.2);
+tl.to(root.querySelector('#time-pv'), { opacity: 1, duration: 0.4 }, 3.7);
+tl.to(root.querySelector('#schedule-tags'), { opacity: 1, duration: 0.5 }, 4.0);
+
+// Speedup counter
+tl.to(root.querySelector('#speedup-val'), { opacity: 1, duration: 0.4 }, 4.5);
+tl.to(root.querySelector('#speedup-label'), { opacity: 1, duration: 0.4 }, 4.7);
+
+// Traditional continues lighting up
+// (already animated above, but let the last few finish)
+
+// Hold at end, then loop
+// duration = 12s
+
+window.__timelines["distillation"] = tl;
+</script>
+</div>
+</body>
+</html>

@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap');
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: #011627; }
+[data-composition-id="streaming"] {
+  width: 1920px;
+  height: 540px;
+  background: #011627;
+  font-family: 'Space Mono', monospace;
+  color: #FDFFFC;
+  overflow: hidden;
+  position: relative;
+}
+.title {
+  position: absolute;
+  top: 32px;
+  left: 0; right: 0;
+  text-align: center;
+  font-size: 42px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  opacity: 0;
+}
+.subtitle {
+  position: absolute;
+  top: 90px;
+  left: 0; right: 0;
+  text-align: center;
+  font-size: 24px;
+  color: #8899aa;
+  opacity: 0;
+}
+.main {
+  position: absolute;
+  top: 140px;
+  left: 80px; right: 80px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 28px;
+}
+.section-label {
+  font-size: 22px;
+  color: #8899aa;
+  font-weight: 400;
+  white-space: nowrap;
+}
+.output-section {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  opacity: 0;
+}
+.timeline-section {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  opacity: 0;
+  position: relative;
+}
+.frames-row {
+  display: flex;
+  gap: 6px;
+  position: relative;
+}
+.frame {
+  width: 72px;
+  height: 92px;
+  border-radius: 8px;
+  flex-shrink: 0;
+  position: relative;
+  overflow: hidden;
+}
+.frame-body {
+  position: absolute;
+  inset: 0;
+  border-radius: 8px;
+  border: 2px solid #1a3a55;
+  background: #061c2e;
+}
+.window-box {
+  position: absolute;
+  top: -8px; bottom: -8px;
+  width: 624px; /* 8 * 72 + 7 * 6 = 576 + 42 = 618, close enough */
+  border: 3px solid #FF9F1C;
+  border-radius: 12px;
+  background: rgba(255,159,28,0.05);
+  pointer-events: none;
+  opacity: 0;
+}
+.emit-label {
+  position: absolute;
+  bottom: -44px;
+  left: 0; right: 0;
+  text-align: center;
+  font-size: 22px;
+  color: #FF9F1C;
+  font-weight: 700;
+  opacity: 0;
+}
+.noise-legend {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 20px;
+  color: #8899aa;
+  opacity: 0;
+}
+.legend-bar {
+  width: 240px;
+  height: 10px;
+  border-radius: 5px;
+  background: linear-gradient(to right, #2EC4B6, #415A77, #0a1e2e);
+}
+.bottom-row {
+  display: flex;
+  gap: 60px;
+  align-items: center;
+  margin-top: 8px;
+  opacity: 0;
+}
+.stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+.stat-val {
+  font-size: 48px;
+  font-weight: 700;
+}
+.stat-label {
+  font-size: 20px;
+  color: #8899aa;
+}
+.vs-divider {
+  font-size: 28px;
+  color: #415A77;
+}
+</style>
+</head>
+<body>
+<div data-composition-id="streaming" data-width="1920" data-height="540" data-start="0" data-duration="13">
+
+<div class="title" id="title">Micro-Chunk Streaming Generation</div>
+<div class="subtitle" id="subtitle">The denoising window slides forward, emitting clean frames continuously</div>
+
+<div class="main" id="main">
+
+  <!-- Output track -->
+  <div class="output-section" id="output-section">
+    <div class="section-label">Output ▶</div>
+    <div class="frames-row" id="output-frames"></div>
+  </div>
+
+  <!-- Timeline with sliding window -->
+  <div class="timeline-section" id="timeline-section">
+    <div class="section-label">Timeline</div>
+    <div class="frames-row" id="timeline-frames" style="position:relative;">
+      <div class="window-box" id="window-box"></div>
+    </div>
+    <div class="emit-label" id="emit-label">↑ emitting 2 frames</div>
+  </div>
+
+  <!-- Noise legend -->
+  <div class="noise-legend" id="noise-legend">
+    <span>clean</span>
+    <div class="legend-bar"></div>
+    <span>← noise →</span>
+  </div>
+
+  <!-- Stats -->
+  <div class="bottom-row" id="bottom-row">
+    <div class="stat">
+      <div class="stat-val" style="color:#2EC4B6">0.25s</div>
+      <div class="stat-label">PersonaLive first frame</div>
+    </div>
+    <div class="vs-divider">vs</div>
+    <div class="stat">
+      <div class="stat-val" style="color:#415A77">~6s</div>
+      <div class="stat-label">traditional chunk wait</div>
+    </div>
+    <div class="vs-divider">→</div>
+    <div class="stat">
+      <div class="stat-val" style="color:#FF9F1C">22×</div>
+      <div class="stat-label">speedup</div>
+    </div>
+  </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+<script>
+window.__timelines = window.__timelines || {};
+var root = document.currentScript.parentElement;
+
+const TOTAL_FRAMES = 16;
+const WINDOW_SIZE = 8;
+const EMIT_PER_STEP = 2;
+const STEPS = 4;
+const FRAME_W = 72;
+const FRAME_GAP = 6;
+const STRIDE = FRAME_W + FRAME_GAP;
+
+// Noise level colors: 0=clean, 7=full noise
+const noiseColors = [
+  '#2EC4B6', // 0 - clean teal
+  '#2aada6',
+  '#1e7a74',
+  '#134e4b',
+  '#0e3535',
+  '#0a2830',
+  '#071c26',
+  '#041420'  // 7 - nearly black
+];
+
+// Build output frames (16 slots, initially invisible)
+const outputFramesEl = root.querySelector('#output-frames');
+const outputFrames = [];
+for (let i = 0; i < TOTAL_FRAMES; i++) {
+  const f = document.createElement('div');
+  f.className = 'frame';
+  const b = document.createElement('div');
+  b.className = 'frame-body';
+  b.style.background = '#0a2035';
+  b.style.borderColor = '#1a3a55';
+  f.appendChild(b);
+  f.style.opacity = '0';
+  outputFramesEl.appendChild(f);
+  outputFrames.push({ el: f, body: b });
+}
+
+// Build timeline frames
+const timelineFramesEl = root.querySelector('#timeline-frames');
+const timelineFrames = [];
+for (let i = 0; i < TOTAL_FRAMES; i++) {
+  const f = document.createElement('div');
+  f.className = 'frame';
+  const b = document.createElement('div');
+  b.className = 'frame-body';
+  // Initial color: all frames start as noisy (they haven't been in the window yet)
+  // except the first window (0-7) which has a gradient
+  let noiseLevel = Math.min(i, 7);
+  if (i < WINDOW_SIZE) noiseLevel = i; // initial window has gradient
+  else noiseLevel = 7; // future frames are fully noisy
+  b.style.background = noiseColors[noiseLevel];
+  b.style.borderColor = i < WINDOW_SIZE ? '#FF9F1C55' : '#1a3a55';
+  f.appendChild(b);
+  timelineFramesEl.appendChild(f);
+  timelineFrames.push({ el: f, body: b, noiseLevel });
+}
+
+// Position window box
+const windowBox = root.querySelector('#window-box');
+const windowWidth = WINDOW_SIZE * FRAME_W + (WINDOW_SIZE - 1) * FRAME_GAP;
+windowBox.style.width = windowWidth + 'px';
+windowBox.style.left = '0px';
+
+const tl = gsap.timeline({ paused: true });
+
+// Intro sequence
+tl.to(root.querySelector('#title'), { opacity: 1, duration: 0.5 }, 0);
+tl.to(root.querySelector('#subtitle'), { opacity: 1, duration: 0.5 }, 0.4);
+tl.to(root.querySelector('#output-section'), { opacity: 1, duration: 0.4 }, 0.8);
+tl.to(root.querySelector('#timeline-section'), { opacity: 1, duration: 0.4 }, 1.0);
+tl.to(root.querySelector('#noise-legend'), { opacity: 1, duration: 0.4 }, 1.2);
+tl.to(windowBox, { opacity: 1, duration: 0.4 }, 1.4);
+
+// Show output frame slots (empty/dim)
+for (let i = 0; i < TOTAL_FRAMES; i++) {
+  tl.to(outputFrames[i].el, { opacity: 0.25, duration: 0.05 }, 1.5 + i * 0.04);
+}
+
+// 4 emission steps
+for (let step = 0; step < STEPS; step++) {
+  const t0 = 2.0 + step * 2.5;
+
+  // Pulse: window frames get cleaner
+  for (let w = 0; w < WINDOW_SIZE; w++) {
+    const frameIdx = step * EMIT_PER_STEP + w;
+    if (frameIdx < TOTAL_FRAMES) {
+      // Shift noise level down by EMIT_PER_STEP (getting cleaner)
+      const newNoise = Math.max(0, w - EMIT_PER_STEP);
+      tl.to(timelineFrames[frameIdx].body, {
+        background: noiseColors[newNoise],
+        duration: 0.4
+      }, t0);
+    }
+  }
+
+  // Emit EMIT_PER_STEP frames
+  for (let e = 0; e < EMIT_PER_STEP; e++) {
+    const frameIdx = step * EMIT_PER_STEP + e;
+    const t_emit = t0 + 0.5 + e * 0.2;
+
+    // Timeline frame becomes bright teal
+    tl.to(timelineFrames[frameIdx].body, {
+      background: '#2EC4B6',
+      borderColor: '#2EC4B6',
+      duration: 0.3
+    }, t_emit);
+
+    // Output slot fills in (teal)
+    tl.to(outputFrames[frameIdx].el, { opacity: 1, duration: 0.3 }, t_emit);
+    tl.to(outputFrames[frameIdx].body, {
+      background: '#2EC4B6',
+      borderColor: '#2EC4B6',
+      duration: 0.3
+    }, t_emit);
+  }
+
+  // Show emit label briefly
+  const emitLabel = root.querySelector('#emit-label');
+  tl.to(emitLabel, { opacity: 1, duration: 0.2 }, t0 + 0.5);
+  tl.to(emitLabel, { opacity: 0, duration: 0.2 }, t0 + 1.2);
+
+  // Slide window right
+  if (step < STEPS - 1) {
+    const newWindowLeft = (step + 1) * EMIT_PER_STEP * STRIDE;
+    tl.to(windowBox, { left: newWindowLeft + 'px', duration: 0.5, ease: 'power2.inOut' }, t0 + 1.4);
+
+    // Incoming frames get their gradient set
+    const nextWindowStart = (step + 1) * EMIT_PER_STEP;
+    for (let w = 0; w < WINDOW_SIZE; w++) {
+      const frameIdx = nextWindowStart + w;
+      if (frameIdx < TOTAL_FRAMES && frameIdx >= (step + 1) * EMIT_PER_STEP + EMIT_PER_STEP) {
+        // frames that haven't been processed yet get the gradient
+        const newNoise = Math.min(w, 7);
+        tl.to(timelineFrames[frameIdx].body, {
+          background: noiseColors[newNoise],
+          borderColor: '#FF9F1C55',
+          duration: 0.4
+        }, t0 + 1.4);
+      }
+    }
+  }
+}
+
+// Show stats
+tl.to(root.querySelector('#bottom-row'), { opacity: 1, duration: 0.6 }, 11.5);
+
+window.__timelines["streaming"] = tl;
+</script>
+</div>
+</body>
+</html>

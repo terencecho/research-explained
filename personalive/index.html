@@ -1,0 +1,1257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PersonaLive: Real-Time Portrait Animation, Explained</title>
+<style>
+:root {
+  --bg: #0d1117;
+  --surface: #161b22;
+  --border: #30363d;
+  --text: #e6edf3;
+  --text-muted: #8b949e;
+  --accent: #58a6ff;
+  --accent-subtle: #1f6feb22;
+  --green: #3fb950;
+  --yellow: #d29922;
+  --red: #f85149;
+  --purple: #bc8cff;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.7;
+  overflow-x: hidden;
+}
+.page-wrap {
+  display: flex;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1rem;
+  gap: 0;
+}
+/* ── Sidebar ── */
+.sidebar {
+  width: 240px;
+  flex-shrink: 0;
+  border-right: 1px solid var(--border);
+  padding: 2rem 1.5rem 2rem 0;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+  align-self: flex-start;
+}
+.sidebar-home {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  text-decoration: none;
+  margin-bottom: 1.5rem;
+  transition: color 0.15s;
+}
+.sidebar-home:hover { color: var(--accent); }
+.sidebar-title {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+  margin-bottom: 0.75rem;
+}
+.sidebar nav a {
+  display: block;
+  padding: 0.3rem 0.75rem;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  text-decoration: none;
+  border-left: 2px solid transparent;
+  margin-bottom: 0.1rem;
+  transition: color 0.15s, border-color 0.15s;
+  line-height: 1.4;
+}
+.sidebar nav a:hover { color: var(--text); border-left-color: var(--border); }
+.sidebar nav a.active { color: var(--accent); border-left-color: var(--accent); }
+
+/* ── Main content ── */
+.main-content {
+  flex: 1;
+  max-width: 860px;
+  padding: 3rem 0 6rem 3rem;
+  min-width: 0;
+}
+/* ── Progress bar ── */
+.progress-bar {
+  position: fixed;
+  top: 0; left: 0;
+  width: 0%;
+  height: 3px;
+  background: var(--accent);
+  z-index: 1000;
+  transition: width 0.1s;
+}
+/* ── Typography ── */
+h1 { font-size: 2rem; font-weight: 800; letter-spacing: -0.03em; line-height: 1.2; margin-bottom: 0.75rem; }
+h2 { font-size: 1.5rem; font-weight: 700; color: var(--accent); margin: 2.5rem 0 1rem; padding-top: 1rem; }
+h3 { font-size: 1.15rem; font-weight: 600; color: var(--purple); margin: 1.75rem 0 0.75rem; }
+p { margin-bottom: 1rem; }
+ul, ol { padding-left: 2rem; margin-bottom: 1rem; }
+li { margin-bottom: 0.3rem; }
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+.subtitle { font-size: 1.1rem; color: var(--text-muted); margin-bottom: 0.75rem; }
+.meta { font-size: 0.82rem; color: var(--text-muted); margin-bottom: 2rem; }
+/* ── Research banner ── */
+.research-banner {
+  background: linear-gradient(135deg, #011627, #0d2137, #1a1a3a);
+  border: 1px solid #2EC4B6;
+  border-radius: 12px;
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 2.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+}
+.banner-icon { font-size: 2rem; flex-shrink: 0; }
+.banner-text { flex: 1; }
+.banner-title { font-size: 0.95rem; font-weight: 700; color: var(--text); margin-bottom: 0.4rem; }
+.banner-desc { font-size: 0.82rem; color: var(--text-muted); line-height: 1.5; }
+.banner-links { display: flex; gap: 0.75rem; flex-wrap: wrap; margin-top: 0.75rem; }
+.banner-link {
+  padding: 0.3rem 0.9rem;
+  border-radius: 20px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: opacity 0.15s;
+}
+.banner-link:hover { opacity: 0.8; text-decoration: none; }
+.banner-link.primary { background: #2EC4B6; color: #011627; }
+.banner-link.secondary { background: transparent; border: 1px solid #2EC4B6; color: #2EC4B6; }
+/* ── Term tooltips ── */
+.term { color: var(--yellow); border-bottom: 1px dashed var(--yellow); cursor: help; position: relative; display: inline; }
+.term .tooltip {
+  display: none;
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 0;
+  width: 280px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.6rem 0.8rem;
+  font-size: 0.8rem;
+  color: var(--text);
+  line-height: 1.5;
+  z-index: 100;
+  pointer-events: none;
+  font-style: normal;
+  font-weight: 400;
+}
+.term:hover .tooltip { display: block; }
+/* ── Callout boxes ── */
+.analogy {
+  background: #1a2332;
+  border-left: 4px solid var(--accent);
+  border-radius: 0 8px 8px 0;
+  padding: 0.9rem 1.25rem;
+  margin: 1.25rem 0;
+  font-size: 0.92rem;
+}
+.analogy strong { color: var(--accent); }
+.insight {
+  background: #1a2a1a;
+  border-left: 4px solid var(--green);
+  border-radius: 0 8px 8px 0;
+  padding: 0.9rem 1.25rem;
+  margin: 1.25rem 0;
+  font-size: 0.92rem;
+}
+.insight strong { color: var(--green); }
+.warn {
+  background: #2a1a1a;
+  border-left: 4px solid var(--red);
+  border-radius: 0 8px 8px 0;
+  padding: 0.9rem 1.25rem;
+  margin: 1.25rem 0;
+  font-size: 0.92rem;
+}
+/* ── Architecture cards ── */
+.arch-flow {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  margin: 1.5rem 0;
+}
+.arch-card {
+  width: 100%;
+  max-width: 640px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
+  background: var(--surface);
+  position: relative;
+}
+.arch-card.highlight { border-color: #2EC4B6; }
+.arch-card-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+.arch-icon { font-size: 1.4rem; }
+.arch-name { font-weight: 700; font-size: 1rem; }
+.arch-desc { font-size: 0.85rem; color: var(--text-muted); line-height: 1.5; }
+.arch-arrow {
+  font-size: 1.25rem;
+  color: var(--text-muted);
+  padding: 0.3rem 0;
+}
+.input-tags { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.75rem; }
+.tag {
+  padding: 0.2rem 0.7rem;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+.tag-teal { background: rgba(46,196,182,0.15); color: #2EC4B6; border: 1px solid rgba(46,196,182,0.3); }
+.tag-orange { background: rgba(255,159,28,0.15); color: #FF9F1C; border: 1px solid rgba(255,159,28,0.3); }
+.tag-purple { background: rgba(188,140,255,0.15); color: var(--purple); border: 1px solid rgba(188,140,255,0.3); }
+/* ── Pipeline stages ── */
+.pipeline {
+  display: flex;
+  align-items: flex-start;
+  gap: 0;
+  margin: 1.5rem 0;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 0.5rem;
+}
+.pipeline-stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 160px;
+  gap: 0.5rem;
+}
+.pipeline-num {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 0.9rem;
+  flex-shrink: 0;
+}
+.pipeline-text {
+  text-align: center;
+  font-size: 0.8rem;
+  line-height: 1.4;
+}
+.pipeline-text strong { display: block; margin-bottom: 0.2rem; color: var(--text); }
+.pipeline-text span { color: var(--text-muted); font-style: italic; font-size: 0.75rem; }
+.pipeline-arrow {
+  font-size: 1.2rem;
+  color: var(--text-muted);
+  padding: 0 0.5rem;
+  margin-top: 10px;
+  flex-shrink: 0;
+}
+/* ── Collapsible details ── */
+details {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  margin: 0.75rem 0;
+  overflow: visible;
+}
+details > summary {
+  padding: 0.75rem 1.5rem;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 600;
+  list-style: none;
+  user-select: none;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+details > summary::-webkit-details-marker { display: none; }
+details > summary::before {
+  content: '+';
+  font-family: monospace;
+  font-size: 1rem;
+  color: var(--accent);
+  width: 1em;
+  flex-shrink: 0;
+}
+details[open] > summary::before { content: '-'; }
+details > summary:hover { background: var(--accent-subtle); border-radius: 8px 8px 0 0; }
+.details-content {
+  padding: 0 1.5rem 1.25rem;
+  font-size: 0.88rem;
+  line-height: 1.7;
+}
+.details-content ul, .details-content ol { padding-left: 2.5rem; }
+.details-content p { margin-bottom: 0.75rem; }
+/* ── Video embeds ── */
+.video-embed {
+  margin: 1.75rem 0;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+.video-embed video {
+  display: block;
+  width: 100%;
+  background: #011627;
+}
+.video-embed video[controls] { background: #000; }
+.video-caption {
+  background: var(--surface);
+  padding: 0.6rem 1rem;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+.badge {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2px 10px;
+  border-radius: 20px;
+  background: rgba(46,196,182,0.12);
+  border: 1px solid rgba(46,196,182,0.35);
+  text-decoration: none;
+  line-height: 1.3;
+  flex-shrink: 0;
+}
+.badge-label { font-size: 0.6rem; color: #2EC4B6; text-transform: uppercase; letter-spacing: 0.05em; }
+.badge-name { font-size: 0.75rem; font-weight: 700; color: #2EC4B6; }
+/* ── Demo video grid ── */
+.demo-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin: 1.5rem 0;
+}
+.demo-card {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--surface);
+}
+.demo-card video {
+  display: block;
+  width: 100%;
+}
+.demo-card-label {
+  padding: 0.5rem 0.75rem;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  text-align: center;
+}
+/* ── Results table ── */
+.metrics-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.25rem 0;
+  font-size: 0.85rem;
+}
+.metrics-table th {
+  text-align: left;
+  padding: 0.6rem 0.75rem;
+  background: var(--surface);
+  border-bottom: 2px solid var(--border);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+}
+.metrics-table td {
+  padding: 0.6rem 0.75rem;
+  border-bottom: 1px solid var(--border);
+}
+.metrics-table tr:hover td { background: var(--accent-subtle); }
+.val-best { color: var(--green); font-weight: 700; }
+.val-ours { background: rgba(88,166,255,0.06); }
+/* ── Quiz ── */
+.quiz-q {
+  margin: 1.5rem 0;
+  padding: 1.25rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+.quiz-q p {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--purple);
+  margin-bottom: 0.75rem;
+}
+.quiz-option {
+  display: block;
+  padding: 0.5rem 0.75rem;
+  margin: 0.3rem 0;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.87rem;
+}
+.quiz-option:hover { background: var(--accent-subtle); }
+.quiz-option input { margin-right: 0.5rem; }
+.quiz-btn {
+  margin-top: 0.75rem;
+  padding: 0.4rem 1rem;
+  border-radius: 6px;
+  background: var(--accent);
+  color: #000;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.85rem;
+  font-family: inherit;
+}
+.quiz-btn:hover { opacity: 0.85; }
+.quiz-feedback {
+  margin-top: 0.75rem;
+  padding: 0.6rem 0.9rem;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  display: none;
+}
+.quiz-feedback.correct { background: #1a2a1a; color: var(--green); display: block; }
+.quiz-feedback.wrong { background: #2a1a1a; color: var(--red); display: block; }
+/* ── Glossary ── */
+.glossary-toggle {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  width: 52px; height: 52px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #000;
+  border: none;
+  cursor: pointer;
+  font-size: 1.3rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+}
+.glossary-panel {
+  position: fixed;
+  bottom: 0; right: 0;
+  width: 360px;
+  max-height: 70vh;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px 16px 0 0;
+  z-index: 190;
+  display: none;
+  flex-direction: column;
+  overflow: hidden;
+}
+.glossary-panel.open { display: flex; }
+.glossary-header {
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--border);
+  font-weight: 700;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.glossary-search {
+  padding: 0.5rem 1.25rem;
+  border-bottom: 1px solid var(--border);
+}
+.glossary-search input {
+  width: 100%;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  padding: 0.4rem 0.75rem;
+  font-size: 0.85rem;
+  outline: none;
+  font-family: inherit;
+}
+.glossary-search input:focus { border-color: var(--accent); }
+.glossary-entries { overflow-y: auto; padding: 0.5rem 0; }
+.glossary-entry {
+  padding: 0.75rem 1.25rem;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.83rem;
+}
+.glossary-entry strong { color: var(--yellow); display: block; margin-bottom: 0.2rem; }
+.glossary-entry p { color: var(--text-muted); margin: 0; line-height: 1.5; }
+/* ── Mobile sidebar overlay ── */
+.mobile-toggle {
+  display: none;
+  position: fixed;
+  bottom: 2rem;
+  left: 2rem;
+  width: 48px; height: 48px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #000;
+  border: none;
+  cursor: pointer;
+  font-size: 1.2rem;
+  z-index: 200;
+  align-items: center;
+  justify-content: center;
+}
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  z-index: 299;
+}
+@media (max-width: 900px) {
+  body { overflow-x: hidden; }
+  .page-wrap { flex-direction: column; gap: 0; padding: 0; }
+  .sidebar {
+    position: fixed;
+    top: 0; left: 0;
+    width: 280px;
+    height: 100vh;
+    z-index: 300;
+    background: var(--bg);
+    border-right: 1px solid var(--border);
+    padding: 1.5rem 1.5rem;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+  }
+  .sidebar.mobile-open { transform: translateX(0); }
+  .sidebar-overlay.mobile-open { display: block; }
+  .mobile-toggle { display: flex; }
+  .main-content { padding: 2rem 1rem 5rem; }
+  .term .tooltip { width: calc(100vw - 4rem); max-width: 320px; left: 0; transform: none; }
+  .glossary-panel { width: calc(100vw - 3rem); }
+  .demo-grid { grid-template-columns: 1fr; }
+  .pipeline { overflow-x: auto; }
+  .metrics-table { display: block; overflow-x: auto; }
+}
+/* ── Section dividers ── */
+.section-divider { height: 1px; background: var(--border); margin: 2rem 0; }
+</style>
+</head>
+<body>
+<div class="progress-bar" id="progress-bar"></div>
+
+<div class="page-wrap">
+
+<!-- ── Sidebar ── -->
+<aside class="sidebar" id="sidebar">
+  <a href="../" class="sidebar-home">&larr; All Papers</a>
+  <div class="sidebar-title">Contents</div>
+  <nav id="toc">
+    <a href="#big-picture">The Big Picture</a>
+    <a href="#in-action">See It In Action</a>
+    <a href="#background">Background Concepts</a>
+    <a href="#how-it-works">How It Works</a>
+    <a href="#training">Training</a>
+    <a href="#results">Results</a>
+    <a href="#quiz">Quiz</a>
+    <a href="#why-it-matters">Why It Matters</a>
+  </nav>
+</aside>
+<div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+<!-- ── Main content ── -->
+<main class="main-content">
+
+<h1>PersonaLive: The Paper, Explained</h1>
+<p class="subtitle">A beginner-friendly guide to real-time diffusion-based portrait animation. Every AI term is defined. Every concept is grounded in analogy.</p>
+<p class="meta">Paper by Zhiyuan Li, Chi-Man Pun, Chen Fang, Jue Wang, Xiaodong Cun (University of Macau &amp; Dzine.ai &amp; Great Bay University, 2025) &middot; Explainer published May 2026</p>
+
+<div class="research-banner">
+  <div class="banner-icon">&#x1F3A5;</div>
+  <div class="banner-text">
+    <div class="banner-title">PersonaLive! Expressive Portrait Image Animation for Live Streaming</div>
+    <div class="banner-desc">A diffusion-based framework that achieves 15–20 FPS real-time portrait animation with only 0.25s latency — 7–22× faster than prior diffusion methods — using a novel micro-chunk streaming paradigm and 4-step appearance distillation.</div>
+    <div class="banner-links">
+      <a href="https://arxiv.org/abs/2512.11253" target="_blank" class="banner-link primary">arXiv Paper</a>
+      <a href="https://github.com/GVCLab/PersonaLive" target="_blank" class="banner-link secondary">GitHub</a>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ BIG PICTURE ══════════ -->
+<h2 id="big-picture">The Big Picture</h2>
+
+<p>PersonaLive solves a real problem that everyone working on virtual avatars faces: AI models that can animate a still portrait photo with realistic expressions are typically <em>too slow</em> to use in live video. They take seconds to generate each frame, making them unusable for anything that needs to respond in real time — live streams, video calls, interactive avatars.</p>
+
+<p>The paper introduces three interlocking ideas that together bring a <span class="term">diffusion model<span class="tooltip">A type of AI that generates images by learning to reverse a "noising" process — starting from pure random noise and repeatedly cleaning it up until a realistic image appears.</span></span> portrait system to real-time speed:</p>
+
+<ol>
+  <li><strong>Hybrid motion control</strong> — expressing face and head movement using two complementary signal types, enabling rich, expressive animation</li>
+  <li><strong>Appearance distillation</strong> — collapsing 20+ denoising steps into just 4, with no visible quality loss</li>
+  <li><strong>Micro-chunk streaming</strong> — generating video as a continuously sliding window, emitting clean frames at every step rather than waiting for a full chunk to finish</li>
+</ol>
+
+<div class="insight">
+  <strong>Key Insight:</strong> Structure and motion are determined in the first few denoising steps. Everything after that is just refining textures. PersonaLive exploits this by learning to skip the redundant steps — and streams output continuously so you never wait for a full batch to finish.
+</div>
+
+<p>The result: 15 FPS at 0.25 seconds of latency, compared to 0.85–1.5 second latency for the best competing approaches. On a faster decoder, it reaches 20 FPS.</p>
+
+<!-- ══════════ IN ACTION ══════════ -->
+<h2 id="in-action">See It In Action</h2>
+
+<p>The demos below are from the paper's GitHub repository — they show PersonaLive animating portrait photos with real driving videos.</p>
+
+<div class="demo-grid">
+  <div class="demo-card">
+    <video src="https://github.com/user-attachments/assets/cdc885ef-5e1c-4139-987a-2fa50fefd6a4" controls loop muted playsinline></video>
+    <div class="demo-card-label">Self-reenactment: driving with the same identity</div>
+  </div>
+  <div class="demo-card">
+    <video src="https://github.com/user-attachments/assets/014f7bae-74ce-4f56-8621-24bc76f3c123" controls loop muted playsinline></video>
+    <div class="demo-card-label">Cross-reenactment: different driving source</div>
+  </div>
+</div>
+
+<div class="demo-grid">
+  <div class="demo-card">
+    <video src="https://github.com/user-attachments/assets/1e6a0809-15d2-4cab-ae8f-8cf1728c6281" controls loop muted playsinline></video>
+    <div class="demo-card-label">Long-form avatar video stability</div>
+  </div>
+  <div class="demo-card">
+    <video src="https://github.com/user-attachments/assets/d9cf265d-9db0-4f83-81da-be967bbd5f26" controls loop muted playsinline></video>
+    <div class="demo-card-label">Expressive motion transfer</div>
+  </div>
+</div>
+
+<p>Comparison videos against prior methods:</p>
+<div class="demo-grid">
+  <div class="demo-card">
+    <video src="https://github.com/user-attachments/assets/36407cf9-bf82-43ff-9508-a794d223d3f7" controls loop muted playsinline></video>
+    <div class="demo-card-label">PersonaLive vs. X-Portrait</div>
+  </div>
+  <div class="demo-card">
+    <video src="https://github.com/user-attachments/assets/3be99b91-c6a1-4ca4-89e9-8fad42bb9583" controls loop muted playsinline></video>
+    <div class="demo-card-label">PersonaLive vs. FollowYourEmoji</div>
+  </div>
+</div>
+
+<!-- ══════════ BACKGROUND ══════════ -->
+<h2 id="background">Background Concepts</h2>
+
+<h3>Diffusion Models</h3>
+<p>A <span class="term">diffusion model<span class="tooltip">A generative AI model trained by learning to reverse a process that gradually adds random noise to images — so it can start from pure noise and work backwards to a clean image.</span></span> works in two phases:</p>
+
+<ul>
+  <li><strong>Forward (training):</strong> take a real image, add random noise in tiny increments until the image is pure static</li>
+  <li><strong>Reverse (inference):</strong> starting from pure noise, repeatedly predict and subtract the noise until a clean image emerges</li>
+</ul>
+
+<div class="analogy">
+  <strong>Real-world analogy:</strong> Imagine a document being shredded into confetti (adding noise), and your job is to reassemble it. The model learns to recognize which shreds belong together — then at inference time, it starts with a pile of confetti and rebuilds a document. Each "denoising step" is like carefully placing a few shreds back in the right spot.
+</div>
+
+<details>
+  <summary>Why does this take many steps?</summary>
+  <div class="details-content">
+    <p>The model is trained to make small, incremental corrections — not to jump from noise to clean in one shot. A typical diffusion model needs 20–50 such steps. Each step requires a full forward pass through a large neural network, which is computationally expensive.</p>
+    <p>Various techniques (<span class="term">DDIM<span class="tooltip">Denoising Diffusion Implicit Models — a sampling method that dramatically reduces the number of steps needed by using a deterministic update rule instead of a stochastic one.</span></span>, <span class="term">LCM<span class="tooltip">Latent Consistency Models — models trained to produce good output in just 2–4 steps by using a special "consistency" training objective.</span></span>, <span class="term">DMD<span class="tooltip">Distribution Matching Distillation — trains a "student" model to match the output distribution of a full diffusion model in far fewer steps.</span></span>) can reduce steps, but at the cost of quality or additional training complexity. PersonaLive's appearance distillation is a domain-specific take on this idea.</p>
+  </div>
+</details>
+
+<details>
+  <summary>What's a latent diffusion model?</summary>
+  <div class="details-content">
+    <p>Most modern video/image diffusion models (including PersonaLive's base model) work in a compressed "latent" space rather than on raw pixels. A <span class="term">VAE<span class="tooltip">Variational Autoencoder — a neural network that compresses images into a compact latent representation (encoder) and decompresses them back to pixels (decoder).</span></span> encodes the image into a small grid of feature vectors. The diffusion process runs in this compressed space, making each step much faster. At the end, the VAE decoder turns the latent back into pixels.</p>
+  </div>
+</details>
+
+<h3>Portrait Animation</h3>
+<p><span class="term">Portrait animation<span class="tooltip">The task of making a still image of a person's face move — matching the expressions, head poses, and lip movements from a "driving" video or audio input.</span></span> takes two inputs:</p>
+<ul>
+  <li>A <strong>reference image</strong> — the portrait photo of the identity you want to animate</li>
+  <li>A <strong>driving signal</strong> — a video, audio, or control parameters specifying how the face should move</li>
+</ul>
+
+<p>The challenge is transferring motion from the driver to the reference without leaking the driver's identity. If someone with a round face drives a narrow face, the output should look like the narrow face moving — not a blend of both faces.</p>
+
+<div class="analogy">
+  <strong>Real-world analogy:</strong> Think of a puppet master using their own hand movements to control a marionette. The marionette (reference portrait) moves the way the puppeteer (driver) moves, but it still looks like the marionette, not the puppeteer's hand. Portrait animation is building that puppet-master connection in software.
+</div>
+
+<h3>The Real-Time Challenge</h3>
+<p>For live streaming, every added second of latency is a fundamental problem:</p>
+<ul>
+  <li>If a person speaks and their avatar's lip moves 2 seconds later, the conversation feels broken</li>
+  <li>Standard diffusion models need 0.85–1.5 seconds per frame — at 25 FPS, that's running 20–40× slower than real time</li>
+  <li>Even video generation models optimized for speed need multiple denoising steps per frame and can't generate frames faster than they arrive</li>
+</ul>
+
+<details>
+  <summary>Why can't you just run the model faster?</summary>
+  <div class="details-content">
+    <p>Faster hardware helps, but two fundamental bottlenecks remain: (1) the number of sequential denoising steps needed per frame, and (2) the need to process full chunks of frames together to maintain temporal consistency. PersonaLive attacks both: it reduces step count from 20+ to 4, and replaces batch-chunk processing with a sliding window that emits frames continuously.</p>
+    <p>There's also a subtler issue: video diffusion models trained to generate N-frame chunks get worse results when you just run them on one frame at a time. They were trained to "see" a window of frames at once. PersonaLive's sliding training strategy preserves this while enabling streaming output.</p>
+  </div>
+</details>
+
+<!-- ══════════ HOW IT WORKS ══════════ -->
+<h2 id="how-it-works">How It Works</h2>
+
+<p>PersonaLive uses a three-stage training pipeline. Each stage adds one key capability. The base model is a <span class="term">latent diffusion model<span class="tooltip">A diffusion model that operates in the compressed latent space of a VAE rather than on raw pixels — making each denoising step much faster.</span></span> extended with video generation capability.</p>
+
+<div class="arch-flow">
+  <div class="arch-card">
+    <div class="arch-card-header">
+      <div class="arch-icon">🎭</div>
+      <div class="arch-name">Input</div>
+    </div>
+    <div class="input-tags">
+      <span class="tag tag-teal">Reference portrait</span>
+      <span class="tag tag-orange">Driving video</span>
+    </div>
+    <div class="arch-desc">A still photo of the target identity, plus a video capturing the expressions and motion to replicate</div>
+  </div>
+  <div class="arch-arrow">↓</div>
+  <div class="arch-card highlight">
+    <div class="arch-card-header">
+      <div class="arch-icon">🔮</div>
+      <div class="arch-name">Stage 1 — Hybrid Motion Control</div>
+    </div>
+    <div class="arch-desc">Extracts two complementary signals from the driving video: <strong>implicit facial embeddings</strong> (capturing fine facial dynamics via cross-attention) and <strong>3D implicit keypoints</strong> (capturing head pose, scale, and position via a pose guider). These are combined to drive expressive, full-head animation.</div>
+  </div>
+  <div class="arch-arrow">↓</div>
+  <div class="arch-card highlight">
+    <div class="arch-card-header">
+      <div class="arch-icon">⚡</div>
+      <div class="arch-name">Stage 2 — Appearance Distillation</div>
+    </div>
+    <div class="arch-desc">Compresses the denoising process from 20+ steps to just 4, using a hybrid loss (MSE + LPIPS + adversarial) and a compact noise schedule {t=0, 333, 666, 999}. No classifier-free guidance needed — adversarial training fills that role.</div>
+  </div>
+  <div class="arch-arrow">↓</div>
+  <div class="arch-card highlight">
+    <div class="arch-card-header">
+      <div class="arch-icon">🌊</div>
+      <div class="arch-name">Stage 3 — Micro-Chunk Streaming</div>
+    </div>
+    <div class="arch-desc">A sliding denoising window with progressively increasing noise levels across frames. Each step, the window advances and emits M clean frames. A sliding training strategy and historical keyframe mechanism prevent temporal drift over long videos.</div>
+  </div>
+  <div class="arch-arrow">↓</div>
+  <div class="arch-card">
+    <div class="arch-card-header">
+      <div class="arch-icon">✅</div>
+      <div class="arch-name">Output</div>
+    </div>
+    <div class="arch-desc">A continuous stream of animated portrait frames at 15–20 FPS with 0.25s latency, preserving the reference identity while mimicking the driving video's expressions</div>
+  </div>
+</div>
+
+<h3>Stage 1: Hybrid Motion Control</h3>
+
+<p>To animate a portrait convincingly, you need to capture two different kinds of motion:</p>
+
+<ul>
+  <li><strong>Fine facial dynamics</strong> — subtle expressions, eyebrow raises, mouth shapes, eye contact. These are hard to represent with simple coordinates because they're nuanced and continuous.</li>
+  <li><strong>Global head movement</strong> — how the head rotates, translates, and scales in 3D space. This needs a structured representation to avoid identity leakage.</li>
+</ul>
+
+<p>PersonaLive uses a different representation for each:</p>
+
+<p><strong>Implicit facial representations</strong> are 1D embedding vectors extracted from the driving video using a pre-trained face motion encoder. Instead of saying "lip corners move 3px left," they capture the <em>style</em> of facial motion holistically. These are injected into the model via <span class="term">cross-attention<span class="tooltip">A mechanism where one sequence (e.g., motion embeddings) can influence the generation of another (e.g., image features) by letting each element in the output attend to all elements in the input.</span></span>, letting the model "look at" the motion style as it generates each frame.</p>
+
+<div class="analogy">
+  <strong>Real-world analogy:</strong> Think of implicit facial representations as a handwriting sample that captures someone's general style — the way they loop their letters, their typical pen pressure, their slant — rather than tracing the exact path of each stroke. The model uses this style fingerprint to animate the portrait in the right "expressive style."
+</div>
+
+<p><strong>3D implicit keypoints</strong> track 21 control points on the face in 3D space (similar to a motion-capture skeleton). Rather than using all 21, the model selects the most informative subset. These are fed through a <span class="term">pose guider<span class="tooltip">A lightweight module (typically a small convolutional network) that translates structural control signals — like pose maps or keypoints — into feature representations the main model can use.</span></span> that conditions the model on global head pose without leaking identity from the driver.</p>
+
+<div class="analogy">
+  <strong>Real-world analogy:</strong> Like a puppet's 21 control strings — pulling them moves the head and face in 3D space. PersonaLive picks only the most important strings (not all 21) to control the current animation, keeping the control signal lean.
+</div>
+
+<details>
+  <summary>Why use two signals instead of one?</summary>
+  <div class="details-content">
+    <p>Each signal type excels at different things. Implicit facial embeddings are excellent for capturing subtle, nuanced expression dynamics — they've been trained specifically for this — but they don't give the model clean control over global head position and scale.</p>
+    <p>3D keypoints are more structured and give explicit, interpretable control over 3D head geometry — but they miss the fine-grained dynamics of expression. By combining both, PersonaLive gets the best of both worlds: expressive fine motion plus stable global pose control.</p>
+  </div>
+</details>
+
+<h3>Stage 2: Appearance Distillation</h3>
+
+<p>The key observation: when you watch a diffusion model generate a portrait, the <em>structure</em> (where is the nose? how is the head tilted?) is already determined in the first few denoising steps. The remaining steps just refine textures, lighting, and small details — they're doing redundant work.</p>
+
+<p>This observation motivates PersonaLive's <span class="term">appearance distillation<span class="tooltip">A training technique where a "student" model is taught to match the output of a "teacher" model in far fewer computational steps — by using a carefully designed loss function and training schedule.</span></span>: instead of 20 evenly-spaced steps, use only 4 carefully chosen noise levels: {t=0, t=333, t=666, t=999}. These four anchor points are spread across the noise schedule to ensure each step makes meaningful progress.</p>
+
+<div class="video-embed">
+  <video src="videos/distillation.mp4" autoplay muted loop playsinline></video>
+  <div class="video-caption"><a href="https://github.com/heygen-com/hyperframes" target="_blank" class="badge" title="Made with HyperFrames"><span class="badge-label">made with</span><span class="badge-name">HyperFrames</span></a> Comparing 20-step standard diffusion (left) with PersonaLive's 4-step distilled process — PersonaLive finishes before standard diffusion even reaches step 6</div>
+</div>
+
+<p>Training uses a three-part loss:</p>
+<ul>
+  <li><strong>MSE loss</strong> — the output should be numerically close to the target frame (pixel-level accuracy)</li>
+  <li><span class="term">LPIPS<span class="tooltip">Learned Perceptual Image Patch Similarity — measures image similarity based on what a neural network "perceives" as similar, rather than raw pixel differences. Correlates better with human judgment than MSE.</span></span> <strong>loss</strong> — the output should look perceptually similar (captures texture, sharpness, structure)</li>
+  <li><strong>Adversarial loss</strong> — a <span class="term">discriminator<span class="tooltip">In a GAN (generative adversarial network), the discriminator is a second neural network trained to distinguish real images from generated ones. Its feedback guides the generator toward more realistic outputs.</span></span> judges whether outputs look real; this fills the role that <span class="term">classifier-free guidance<span class="tooltip">A technique used during diffusion model inference that amplifies the effect of the conditioning signal (e.g., a text prompt) by running the model twice — once with the condition and once without — and interpolating the results. It improves quality but doubles computation.</span></span> (CFG) normally plays, without needing to run the model twice per step</li>
+</ul>
+
+<div class="insight">
+  <strong>Key Insight:</strong> Standard diffusion models at low step counts produce blurry or artifact-ridden outputs without CFG. PersonaLive's adversarial loss teaches the model to produce sharp, realistic results at just 4 steps — no CFG needed, cutting inference cost in half.
+</div>
+
+<details>
+  <summary>How does the gradient flow work during distillation training?</summary>
+  <div class="details-content">
+    <p>A subtle trick: during training, gradients are only propagated through the <em>final</em> denoising step. The earlier steps are treated as fixed. This prevents gradient explosion across multiple steps. To cover all parts of the noise schedule during training, the starting timestep is sampled randomly — so over many iterations, the model learns to handle all four anchor points.</p>
+  </div>
+</details>
+
+<h3>Stage 3: Micro-Chunk Streaming</h3>
+
+<p>Standard video diffusion models generate video in chunks: they denoise an entire N-frame window together, then output all N frames at once. The problem is latency — you must wait for all N frames to finish denoising before seeing anything.</p>
+
+<p>PersonaLive instead uses a <strong>sliding window</strong>: the denoising window of N frames is organized so that frames have <em>progressively increasing noise levels</em> from left to right. The leftmost frames are nearly clean; the rightmost are still very noisy. After one denoising step, the leftmost M frames reach "clean" status and are emitted. The window then slides right by M positions, new noisy frames enter from the right, and the process repeats.</p>
+
+<div class="video-embed">
+  <video src="videos/streaming.mp4" autoplay muted loop playsinline></video>
+  <div class="video-caption"><a href="https://github.com/heygen-com/hyperframes" target="_blank" class="badge" title="Made with HyperFrames"><span class="badge-label">made with</span><span class="badge-name">HyperFrames</span></a> The sliding window moves along the video timeline, continuously emitting clean frames — no waiting for the full chunk to finish</div>
+</div>
+
+<p>The result: the first output frame is available after just one denoising step (0.25 seconds), instead of after the full chunk of N steps.</p>
+
+<details>
+  <summary>What is "diffusion forcing" and why does it enable this?</summary>
+  <div class="details-content">
+    <p>Diffusion forcing (from a 2024 paper) is a training technique where different frames in a sequence are assigned different noise levels during training. This allows the model to denoise a "mixed-noise-level" sequence — which is exactly what PersonaLive needs for the sliding window. Without this kind of training, a video diffusion model would only know how to handle sequences where all frames have the same noise level.</p>
+  </div>
+</details>
+
+<h3>Sliding Training Strategy &amp; Historical Keyframe Mechanism</h3>
+
+<p>Two additional techniques prevent the quality from degrading over long videos:</p>
+
+<p><strong>Sliding Training Strategy (ST):</strong> During training, the model sees data formatted to simulate streaming inference — with overlapping windows, proper noise gradients, and the progressive emission pattern. Without this, there would be a "train-inference mismatch" where the model was trained on one input distribution but runs on another. This mismatch causes identity drift.</p>
+
+<p><strong>Historical Keyframe Mechanism (HKM):</strong> The model maintains a "history bank" of previously generated frames and their motion embeddings. As generation continues, the system monitors how far the current motion has drifted from the history bank. If drift exceeds a threshold (τ = 17), a <em>keyframe</em> from the history bank is selected and injected via a spatial attention module to anchor the generation back to the correct identity and appearance.</p>
+
+<div class="video-embed">
+  <video src="videos/hkm.mp4" autoplay muted loop playsinline></video>
+  <div class="video-caption"><a href="https://github.com/heygen-com/hyperframes" target="_blank" class="badge" title="Made with HyperFrames"><span class="badge-label">made with</span><span class="badge-name">HyperFrames</span></a> Without HKM, identity drift accumulates over time. When drift exceeds threshold τ=17, a historical keyframe is injected to correct the generation</div>
+</div>
+
+<p><strong>Motion-Interpolated Initialization (MII):</strong> A small extra trick for the very first window: instead of jumping abruptly from the reference photo's motion state to the driving video's motion, MII smoothly interpolates the motion control signal over the first few frames. This prevents visual artifacts at the start of the video.</p>
+
+<!-- ══════════ TRAINING ══════════ -->
+<h2 id="training">Training</h2>
+
+<p>PersonaLive trains in three sequential stages on video datasets:</p>
+
+<div class="pipeline">
+  <div class="pipeline-stage">
+    <div class="pipeline-num" style="background:rgba(46,196,182,0.15);color:#2EC4B6;border:1px solid rgba(46,196,182,0.3)">1</div>
+    <div class="pipeline-text">
+      <strong>Image-Level Motion</strong>
+      <span>30K iterations · batch 32 · hybrid motion control on single-frame supervision</span>
+    </div>
+  </div>
+  <div class="pipeline-arrow">→</div>
+  <div class="pipeline-stage">
+    <div class="pipeline-num" style="background:rgba(255,159,28,0.15);color:#FF9F1C;border:1px solid rgba(255,159,28,0.3)">2</div>
+    <div class="pipeline-text">
+      <strong>Appearance Distillation</strong>
+      <span>30K iterations · batch 32 · 4-step schedule, MSE + LPIPS + adversarial loss</span>
+    </div>
+  </div>
+  <div class="pipeline-arrow">→</div>
+  <div class="pipeline-stage">
+    <div class="pipeline-num" style="background:rgba(188,140,255,0.15);color:#bc8cff;border:1px solid rgba(188,140,255,0.3)">3</div>
+    <div class="pipeline-text">
+      <strong>Streaming Adaption</strong>
+      <span>10K iterations · batch 8 · temporal attention layers only, sliding training strategy</span>
+    </div>
+  </div>
+</div>
+
+<p><strong>Hardware:</strong> 8× NVIDIA H100 GPUs. <strong>Resolution:</strong> 512×512 @ 25 FPS. <strong>Optimizer:</strong> AdamW with learning rate 1e-5.</p>
+
+<p><strong>Training data:</strong></p>
+<ul>
+  <li><strong>VFHQ</strong> — a large-scale high-quality face video dataset</li>
+  <li><strong>NerSemble</strong> — multi-view facial performance capture data</li>
+  <li><strong>DH-FaceVid-1K</strong> — diverse in-the-wild talking head videos</li>
+</ul>
+
+<details>
+  <summary>Why only fine-tune temporal attention in Stage 3?</summary>
+  <div class="details-content">
+    <p>Temporal attention layers are the parts of the model that connect information across the time dimension — they're responsible for maintaining consistency between frames. The spatial layers (which handle individual-frame appearance) are already well-trained after Stage 2 and don't need to change for streaming. Fine-tuning only temporal layers is faster and prevents catastrophic forgetting of the appearance quality learned in Stage 2.</p>
+  </div>
+</details>
+
+<!-- ══════════ RESULTS ══════════ -->
+<h2 id="results">Results</h2>
+
+<p>PersonaLive is evaluated on two benchmarks:</p>
+<ul>
+  <li><strong>TalkingHead-1KH</strong> — a standard short-video self-reenactment benchmark</li>
+  <li><strong>LV100</strong> — a new long-video benchmark introduced by the paper: 100 videos ≥ 1 minute long, paired with 100 portrait references. Tests long-term stability, which most prior work ignores.</li>
+</ul>
+
+<div class="insight">
+  <strong>LV100 Note:</strong> The authors built this benchmark themselves because no existing benchmark tested long-video performance. It's a meaningful contribution since real live streams run for minutes or hours, not seconds.
+</div>
+
+<table class="metrics-table">
+  <thead>
+    <tr>
+      <th>Method</th>
+      <th>FPS ↑</th>
+      <th>Latency ↓</th>
+      <th>FVD ↓</th>
+      <th>L1 ↓</th>
+      <th>SSIM ↑</th>
+      <th>ID-SIM ↑</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>X-Portrait</td>
+      <td>1.17</td>
+      <td>0.851s</td>
+      <td>603.2</td>
+      <td>3.86</td>
+      <td>0.690</td>
+      <td>0.682</td>
+    </tr>
+    <tr>
+      <td>FollowYourEmoji</td>
+      <td>0.64</td>
+      <td>1.558s</td>
+      <td>612.4</td>
+      <td>3.91</td>
+      <td>0.672</td>
+      <td>0.671</td>
+    </tr>
+    <tr>
+      <td>HunyuanPortrait</td>
+      <td>0.90</td>
+      <td>1.109s</td>
+      <td>540.1</td>
+      <td>3.79</td>
+      <td>0.705</td>
+      <td>0.711</td>
+    </tr>
+    <tr class="val-ours">
+      <td><strong>PersonaLive (ours)</strong></td>
+      <td class="val-best">15.82</td>
+      <td class="val-best">0.253s</td>
+      <td class="val-best">520.6</td>
+      <td>3.94</td>
+      <td>0.681</td>
+      <td>0.698</td>
+    </tr>
+    <tr class="val-ours">
+      <td><strong>PersonaLive + TinyVAE</strong></td>
+      <td class="val-best">20.0</td>
+      <td class="val-best">0.20s</td>
+      <td>534.2</td>
+      <td>3.97</td>
+      <td>0.675</td>
+      <td>0.693</td>
+    </tr>
+  </tbody>
+</table>
+
+<p><strong>Interpreting the metrics:</strong></p>
+<ul>
+  <li><span class="term">FVD<span class="tooltip">Fréchet Video Distance — measures how similar the distribution of generated videos is to real videos. Lower is better. Like FID for images, but for video.</span></span> — lower means the generated videos are more statistically similar to real videos in terms of both quality and motion</li>
+  <li><span class="term">SSIM<span class="tooltip">Structural Similarity Index — measures image quality by comparing local patterns of pixel intensities. Ranges from 0 to 1, higher is better.</span></span> — structural similarity to ground truth frames</li>
+  <li><strong>ID-SIM</strong> — identity similarity (does the generated face look like the reference portrait?). Higher is better.</li>
+</ul>
+
+<p>PersonaLive achieves the <strong>best FVD score</strong> (most video-realistic) and by far the <strong>fastest speed</strong> (13.5× faster than the next-best competitor X-Portrait). The L1/SSIM metrics are slightly lower than some competitors — a small quality trade-off for the massive speed gain.</p>
+
+<p><strong>Ablation study highlights:</strong></p>
+<ul>
+  <li>Removing appearance distillation → severe visual degradation at 4 steps (proves the adversarial loss is essential)</li>
+  <li>Removing the sliding training strategy → ID-SIM collapses from 0.698 to 0.549 (proves the train-inference gap is real and severe)</li>
+  <li>Removing HKM → temporal drift visible in clothing and background regions</li>
+  <li>Optimal chunk emission size M=4 frames (smaller hurts long-range identity consistency)</li>
+</ul>
+
+<!-- ══════════ QUIZ ══════════ -->
+<h2 id="quiz">Quiz</h2>
+
+<div class="quiz-q" id="q1">
+  <p>What is the main bottleneck that prevents standard diffusion models from being used for live streaming avatar animation?</p>
+  <label class="quiz-option"><input type="radio" name="q1" value="a"> They can't capture facial expressions accurately</label>
+  <label class="quiz-option"><input type="radio" name="q1" value="b"> They require too many sequential denoising steps, causing high latency</label>
+  <label class="quiz-option"><input type="radio" name="q1" value="c"> They need too much memory to run on a GPU</label>
+  <label class="quiz-option"><input type="radio" name="q1" value="d"> They can only generate a single frame, not video</label>
+  <button class="quiz-btn" onclick="checkQuiz('q1','b','Standard diffusion models need 20+ denoising steps per chunk of frames, and must finish the entire chunk before outputting anything — creating 0.85–1.5 second latency per frame, far too slow for live streaming.')">Check</button>
+  <div class="quiz-feedback" id="q1-fb"></div>
+</div>
+
+<div class="quiz-q" id="q2">
+  <p>PersonaLive's appearance distillation reduces the denoising process to how many steps?</p>
+  <label class="quiz-option"><input type="radio" name="q2" value="a"> 10 steps</label>
+  <label class="quiz-option"><input type="radio" name="q2" value="b"> 8 steps</label>
+  <label class="quiz-option"><input type="radio" name="q2" value="c"> 4 steps at t={0, 333, 666, 999}</label>
+  <label class="quiz-option"><input type="radio" name="q2" value="d"> 2 steps (first and last only)</label>
+  <button class="quiz-btn" onclick="checkQuiz('q2','c','PersonaLive uses a compact schedule of exactly 4 noise levels: t=0, t=333, t=666, and t=999 — spread across the full noise range to ensure each step makes meaningful progress toward a clean image.')">Check</button>
+  <div class="quiz-feedback" id="q2-fb"></div>
+</div>
+
+<div class="quiz-q" id="q3">
+  <p>In the micro-chunk streaming paradigm, why can PersonaLive emit the first frame so quickly?</p>
+  <label class="quiz-option"><input type="radio" name="q3" value="a"> It pre-caches frames before the stream starts</label>
+  <label class="quiz-option"><input type="radio" name="q3" value="b"> It uses a different model for the first frame</label>
+  <label class="quiz-option"><input type="radio" name="q3" value="c"> The sliding window has frames at different noise levels — the leftmost frames are nearly clean after just one denoising step</label>
+  <label class="quiz-option"><input type="radio" name="q3" value="d"> It skips denoising entirely for the first frame</label>
+  <button class="quiz-btn" onclick="checkQuiz('q3','c','The sliding window contains frames at progressively higher noise levels (clean on the left, noisy on the right). After a single denoising step, the leftmost frames reach "clean" status and can be immediately emitted — no need to wait for the full chunk.')">Check</button>
+  <div class="quiz-feedback" id="q3-fb"></div>
+</div>
+
+<div class="quiz-q" id="q4">
+  <p>What does the Historical Keyframe Mechanism (HKM) prevent?</p>
+  <label class="quiz-option"><input type="radio" name="q4" value="a"> The model from running out of GPU memory</label>
+  <label class="quiz-option"><input type="radio" name="q4" value="b"> Temporal drift — where the generated identity gradually diverges from the reference portrait over long videos</label>
+  <label class="quiz-option"><input type="radio" name="q4" value="c"> The driving video from leaking into the output</label>
+  <label class="quiz-option"><input type="radio" name="q4" value="d"> Frame rate drops during generation</label>
+  <button class="quiz-btn" onclick="checkQuiz('q4','b','Without HKM, autoregressive video generation accumulates small errors over time. The identity, clothing, and background gradually drift from their original appearance. HKM detects this drift and injects reference keyframes to anchor the generation back to the correct appearance.')">Check</button>
+  <div class="quiz-feedback" id="q4-fb"></div>
+</div>
+
+<div class="quiz-q" id="q5">
+  <p>Why does PersonaLive's appearance distillation NOT need classifier-free guidance (CFG)?</p>
+  <label class="quiz-option"><input type="radio" name="q5" value="a"> CFG is only needed for text-to-image, not portrait animation</label>
+  <label class="quiz-option"><input type="radio" name="q5" value="b"> The model uses so few steps that CFG would make it worse</label>
+  <label class="quiz-option"><input type="radio" name="q5" value="c"> The adversarial (GAN) loss replaces CFG's role in producing sharp, realistic outputs</label>
+  <label class="quiz-option"><input type="radio" name="q5" value="d"> PersonaLive uses a different sampling algorithm that doesn't need CFG</label>
+  <button class="quiz-btn" onclick="checkQuiz('q5','c','CFG normally improves output sharpness by running the diffusion model twice per step — once conditioned, once unconditioned — and amplifying the difference. PersonaLive replaces this with an adversarial discriminator that directly teaches the model to produce realistic outputs, achieving the same sharpness boost without the 2× computation cost.')">Check</button>
+  <div class="quiz-feedback" id="q5-fb"></div>
+</div>
+
+<div class="quiz-q" id="q6">
+  <p>What was the approximate speedup PersonaLive achieved over the fastest prior diffusion-based method?</p>
+  <label class="quiz-option"><input type="radio" name="q6" value="a"> About 2×</label>
+  <label class="quiz-option"><input type="radio" name="q6" value="b"> About 5×</label>
+  <label class="quiz-option"><input type="radio" name="q6" value="c"> About 13×</label>
+  <label class="quiz-option"><input type="radio" name="q6" value="d"> About 50×</label>
+  <button class="quiz-btn" onclick="checkQuiz('q6','c','PersonaLive runs at 15.82 FPS vs. X-Portrait at 1.17 FPS — about 13.5× faster. The overall range claimed in the paper (7–22×) accounts for different hardware configurations and competing methods.')">Check</button>
+  <div class="quiz-feedback" id="q6-fb"></div>
+</div>
+
+<!-- ══════════ WHY IT MATTERS ══════════ -->
+<h2 id="why-it-matters">Why This Paper Matters</h2>
+
+<h3>For builders and practitioners</h3>
+<p>Live streaming with a virtual avatar has been a popular use case since the COVID era, but prior diffusion-based methods couldn't get close to real-time. This paper removes that barrier. With 15–20 FPS at 0.25s latency on modern hardware, PersonaLive opens the door to:</p>
+<ul>
+  <li><strong>Always-on virtual presenters</strong> — streamers, vTubers, and content creators who want high-quality avatar animation without dedicated capture hardware</li>
+  <li><strong>Real-time video calls with avatar overlay</strong> — privacy-preserving or stylized video conferencing</li>
+  <li><strong>Interactive AI agents with expressive faces</strong> — combine PersonaLive with a speech model and an LLM for a fully animated, low-latency AI assistant</li>
+  <li><strong>Dubbing and localization</strong> — the same streaming paradigm applies to lip-syncing translated audio in real time</li>
+</ul>
+
+<h3>For the research community</h3>
+<p>PersonaLive makes several contributions worth noting:</p>
+<ul>
+  <li><strong>Appearance distillation as a general technique</strong> — the insight that structure is established early in denoising, and subsequent steps are redundant, likely applies beyond portrait animation. Combined with adversarial training, this could accelerate many video diffusion pipelines.</li>
+  <li><strong>The sliding window streaming paradigm</strong> — applying diffusion forcing to video generation in a streaming context is novel. Prior streaming approaches used overlapping chunks, which add latency. This no-overlap sliding window approach is an important design contribution.</li>
+  <li><strong>LV100 benchmark</strong> — filling a real gap. Most portrait animation benchmarks test short clips. Long-video stability is an unsolved problem, and this benchmark makes it easier to measure progress.</li>
+  <li><strong>Empirical validation that train-inference gap is severe</strong> — the ablation showing ID-SIM drop from 0.698 to 0.549 without the sliding training strategy quantifies a problem that practitioners have noticed anecdotally but rarely measured.</li>
+</ul>
+
+<h3>The bigger picture</h3>
+<p>We're at an interesting inflection point: diffusion models have clearly "won" for image and video quality, but they've been too slow for interactive applications. PersonaLive is one of several papers in 2024–2025 showing that the gap can be closed without sacrificing quality — by rethinking the inference pipeline rather than just throwing more compute at the problem.</p>
+<p>The streaming paradigm here is particularly interesting because it's a different <em>architecture</em> for inference, not just a speed trick. As video diffusion models get larger and more capable, techniques like this will become increasingly important for making them practically useful in real-time systems.</p>
+<p>The remaining limitations are instructive too: the model struggles with non-human subjects (cartoons, animals) and doesn't yet exploit inter-frame temporal redundancy. These point to the next round of research opportunities in this space.</p>
+
+</main>
+</div>
+
+<!-- ── Glossary panel ── -->
+<button class="glossary-toggle" onclick="toggleGlossary()" title="Open glossary (📖)">&#x1F4D6;</button>
+<div class="glossary-panel" id="glossary-panel">
+  <div class="glossary-header">
+    <span>Glossary</span>
+    <button onclick="toggleGlossary()" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:1.2rem">&times;</button>
+  </div>
+  <div class="glossary-search">
+    <input type="text" id="glossary-input" placeholder="Search terms..." oninput="filterGlossary()" />
+  </div>
+  <div class="glossary-entries" id="glossary-entries">
+    <div class="glossary-entry">
+      <strong>Diffusion model</strong>
+      <p>A generative AI model trained by learning to reverse a process that gradually adds random noise to images — so it can start from pure noise and work backwards to a clean image.</p>
+    </div>
+    <div class="glossary-entry">
+      <strong>Denoising step</strong>
+      <p>One iteration of the reverse diffusion process — the model predicts and removes a small amount of noise from the current state, making the image slightly cleaner.</p>
+    </div>
+    <div class="glossary-entry">
+      <strong>Latent diffusion model</strong>
+      <p>A diffusion model that operates in the compressed latent space of a VAE rather than raw pixels — much faster per step because the latent space is far smaller than the full image.</p>
+    </div>
+    <div class="glossary-entry">
+      <strong>VAE</strong>
+      <p>Variational Autoencoder — a neural network that compresses images into a compact "latent" vector (encoder) and reconstructs them back to pixels (decoder).</p>
+    </div>
+    <div class="glossary-entry">
+      <strong>Portrait animation</strong>
+      <p>Making a still portrait photo move — animating facial expressions, mouth shapes, and head poses to match a "driving" video or audio.</p>
+    </div>
+    <div class="glossary-entry">
+      <strong>Self-reenactment</strong>
+      <p>Portrait animation where the reference portrait and the driving video are from the same person — used for evaluation because ground truth is available.</p>
+    </div>
+    <div class="glossary-entry">
+      <strong>Cross-reenactment</strong>
+      <p>Portrait animation where the reference portrait and driving video are from different people — tests identity preservation under realistic conditions.</p>
+    </div>
+    <div class="glossary-entry">
+      <strong>Implicit facial representation</strong>
+      <p>A learned embedding that captures facial motion style holistically, rather than explicit coordinates. Trained on face video to encode nuanced expression dynamics.</p>
+    </div>
+    <div class="glossary-entry">
+      <strong>3D keypoints</strong>
+      <p>A set of control points (like a skeleton) that track the position of facial landmarks in 3D space — nose tip, eye corners, mouth corners, etc. Used for structured pose control.</p>
+    </div>
+    <div class="glossary-entry">
+      <strong>Cross-attention</strong>
+      <p>A neural mechanism where one data stream (e.g., motion embeddings) influences the processing of another (e.g., image features) by allowing each element to "attend" to all elements of the other stream.</p>
+    </div>
+    <div class="glossary-entry">
+      <strong>Appearance distillation</strong>
+      <p>PersonaLive's technique for reducing denoising steps from 20+ to 4, using adversarial training to maintain quality at the lower step count.</p>
+    </div>
+    <div class="glossary-entry">
+      <strong>Classifier-free guidance (CFG)</strong>
+      <p>A diffusion inference technique that runs the model twice per step (with and without conditioning) and amplifies the difference — improving output quality but doubling compute cost.</p>
+    </div>
+    <div class="glossary-entry">
+      <strong>Discriminator</strong>
+      <p>In adversarial training, a second neural network that distinguishes real samples from generated ones. Its feedback pushes the generator to produce more realistic outputs.</p>
+    </div>
+    <div class="glossary-entry">
+      <strong>LPIPS</strong>
+      <p>Learned Perceptual Image Patch Similarity — measures image quality based on features extracted by a neural network, correlating better with human perception than raw pixel comparison.</p>
+    </div>
+    <div class="glossary-entry">
+      <strong>FVD</strong>
+      <p>Fréchet Video Distance — measures how similar the distribution of generated videos is to real videos. Lower is better.</p>
+    </div>
+    <div class="glossary-entry">
+      <strong>Micro-chunk streaming</strong>
+      <p>PersonaLive's paradigm where the denoising window slides forward continuously, emitting M clean frames per step rather than waiting for a full N-frame chunk to finish.</p>
+    </div>
+    <div class="glossary-entry">
+      <strong>Diffusion forcing</strong>
+      <p>A training technique where different frames in a video sequence are assigned different noise levels — enabling the model to handle mixed-noise sequences needed for streaming generation.</p>
+    </div>
+    <div class="glossary-entry">
+      <strong>Temporal drift</strong>
+      <p>The gradual divergence of generated video from the reference identity over long videos — accumulated errors in autoregressive generation cause appearance to shift over time.</p>
+    </div>
+    <div class="glossary-entry">
+      <strong>Historical Keyframe Mechanism (HKM)</strong>
+      <p>PersonaLive's technique for preventing temporal drift — maintains a history bank of past frames and injects reference keyframes when drift exceeds a threshold τ=17.</p>
+    </div>
+    <div class="glossary-entry">
+      <strong>AdamW</strong>
+      <p>A variant of the Adam optimizer with weight decay — commonly used for training transformer-based models. Updates model weights using momentum and gradient history.</p>
+    </div>
+    <div class="glossary-entry">
+      <strong>TinyVAE</strong>
+      <p>A smaller, faster VAE decoder that trades a small amount of image quality for higher throughput — enabling PersonaLive to reach 20 FPS instead of 15.8 FPS.</p>
+    </div>
+    <div class="glossary-entry">
+      <strong>Pose guider</strong>
+      <p>A lightweight module that translates structural control signals (keypoints, pose maps) into feature representations the main diffusion model can condition on.</p>
+    </div>
+    <div class="glossary-entry">
+      <strong>SSIM</strong>
+      <p>Structural Similarity Index — a perceptual quality metric that compares local luminance, contrast, and structure between two images. Ranges from 0 to 1, higher is better.</p>
+    </div>
+    <div class="glossary-entry">
+      <strong>Sliding training strategy</strong>
+      <p>PersonaLive's method for eliminating the train-inference gap — the model is trained on data formatted to simulate the sliding window streaming inference pattern.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ── Mobile toggle ── -->
+<button class="mobile-toggle" id="mobile-toggle" onclick="toggleSidebar()">☰</button>
+
+<script>
+// ── Progress bar ──
+window.addEventListener('scroll', function() {
+  const scrollTop = window.scrollY;
+  const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+  document.getElementById('progress-bar').style.width = (scrollTop / docHeight * 100) + '%';
+});
+
+// ── Sidebar TOC active tracking ──
+var sections = Array.from(document.querySelectorAll('h2[id]'));
+window.addEventListener('scroll', function() {
+  var scrollY = window.scrollY + 120;
+  var current = '';
+  if ((window.innerHeight + window.scrollY) >= document.documentElement.scrollHeight - 50) {
+    current = sections[sections.length - 1].id;
+  } else {
+    for (var i = 0; i < sections.length; i++) {
+      if (sections[i].offsetTop <= scrollY) current = sections[i].id;
+    }
+  }
+  document.querySelectorAll('#toc a').forEach(function(a) {
+    a.classList.toggle('active', a.getAttribute('href') === '#' + current);
+  });
+});
+
+// ── Quiz ──
+function checkQuiz(qId, correct, explanation) {
+  var selected = document.querySelector('input[name="' + qId + '"]:checked');
+  var fb = document.getElementById(qId + '-fb');
+  if (!selected) return;
+  if (selected.value === correct) {
+    fb.className = 'quiz-feedback correct';
+    fb.textContent = '✓ Correct! ' + explanation;
+  } else {
+    fb.className = 'quiz-feedback wrong';
+    fb.textContent = '✗ Not quite. ' + explanation;
+  }
+}
+
+// ── Glossary ──
+function toggleGlossary() {
+  document.getElementById('glossary-panel').classList.toggle('open');
+}
+function filterGlossary() {
+  var q = document.getElementById('glossary-input').value.toLowerCase();
+  document.querySelectorAll('.glossary-entry').forEach(function(e) {
+    e.style.display = !q || e.textContent.toLowerCase().includes(q) ? '' : 'none';
+  });
+}
+
+// ── Mobile sidebar ──
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('mobile-open');
+  document.getElementById('sidebar-overlay').classList.toggle('mobile-open');
+}
+document.getElementById('sidebar-overlay').addEventListener('click', function() {
+  document.getElementById('sidebar').classList.remove('mobile-open');
+  document.getElementById('sidebar-overlay').classList.remove('mobile-open');
+});
+</script>
+
+<script data-goatcounter="https://tcho.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+</body>
+</html>
