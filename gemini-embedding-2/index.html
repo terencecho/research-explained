@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gemini Embedding 2: The Paper, Explained</title>
+<style>
+:root {
+  --bg: #0d1117; --surface: #161b22; --border: #30363d; --text: #e6edf3; --text-muted: #8b949e;
+  --accent: #58a6ff; --accent-subtle: #1f6feb22; --green: #3fb950; --yellow: #d29922; --red: #f85149; --purple: #bc8cff;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; background: var(--bg); color: var(--text); line-height: 1.7; max-width: 1200px; margin: 0 auto; padding: 2rem 1.5rem; display: flex; gap: 0; }
+.progress-bar { position: fixed; top: 0; left: 0; height: 3px; background: var(--accent); z-index: 1000; transition: width 0.1s; }
+.sidebar { position: sticky; top: 1rem; align-self: flex-start; width: 240px; flex-shrink: 0; max-height: calc(100vh - 2rem); overflow-y: auto; padding-right: 1.25rem; border-right: 1px solid var(--border); margin-right: 2rem; scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
+.sidebar::-webkit-scrollbar { width: 4px; } .sidebar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; } .sidebar::-webkit-scrollbar-track { background: transparent; }
+.sidebar .toc-title { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); margin-bottom: 0.75rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border); }
+.sidebar a { display: block; color: var(--text-muted); text-decoration: none; font-size: 0.8rem; padding: 0.2rem 0; line-height: 1.4; transition: color 0.15s, border-color 0.15s; border-left: 2px solid transparent; padding-left: 0.6rem; }
+.sidebar a:hover { color: var(--text); } .sidebar a.active { color: var(--accent); border-left-color: var(--accent); font-weight: 600; }
+.sidebar a.section-gap { margin-top: 0.4rem; }
+.sidebar-home { display: block; font-size: 0.8rem; color: var(--text-muted); text-decoration: none; padding: 0.3rem 0.6rem; margin-bottom: 0.75rem; border-left: none !important; transition: color 0.15s; }
+.sidebar-home:hover { color: var(--accent); }
+.main-content { flex: 1; min-width: 0; max-width: 860px; }
+@media (max-width: 900px) {
+  body { display: block; max-width: 860px; overflow-x: hidden; }
+  .sidebar { position: fixed; top: 0; left: -280px; width: 260px; height: 100vh; max-height: 100vh; background: var(--surface); border-right: 1px solid var(--border); padding: 1rem; margin-right: 0; z-index: 1001; transition: left 0.25s ease; }
+  .sidebar.mobile-open { left: 0; } .main-content { max-width: 100%; } .mobile-toc-btn { display: flex !important; }
+  .mobile-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; } .mobile-overlay.active { display: block; }
+  .compare-row { grid-template-columns: 1fr; } .glossary-panel { width: calc(100vw - 3rem); right: 1.5rem; }
+  .term .tooltip { width: calc(100vw - 4rem); max-width: 320px; left: 0; transform: none; }
+  .metrics-table { display: block; overflow-x: auto; }
+  .pipeline { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .arch-card { max-width: 100%; }
+  .three-grid { grid-template-columns: 1fr; }
+}
+.mobile-toc-btn { display: none; position: fixed; bottom: 1.5rem; left: 1.5rem; width: 44px; height: 44px; background: var(--accent); color: var(--bg); border: none; border-radius: 50%; font-size: 1.1rem; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.4); z-index: 999; align-items: center; justify-content: center; }
+h1 { font-size: 2rem; margin-bottom: 0.5rem; } .subtitle { color: var(--text-muted); margin-bottom: 2rem; font-size: 1.05rem; }
+.meta { color: var(--text-muted); font-size: 0.8rem; margin-top: -1rem; margin-bottom: 1.5rem; }
+h2 { font-size: 1.5rem; margin: 2.5rem 0 1rem; color: var(--accent); border-bottom: 1px solid var(--border); padding-bottom: 0.5rem; }
+h3 { font-size: 1.2rem; margin: 1.5rem 0 0.75rem; color: var(--purple); } p { margin-bottom: 1rem; } a { color: var(--accent); }
+ul, ol { margin-bottom: 1rem; padding-left: 1.5rem; } li { margin-bottom: 0.35rem; }
+.research-banner { background: linear-gradient(135deg, #011627 0%, #0d2137 50%, #1a1a3a 100%); border: 1px solid #2EC4B6; border-radius: 12px; padding: 1.25rem 1.5rem; margin-bottom: 2rem; display: flex; align-items: center; gap: 1.25rem; }
+.research-banner .banner-icon { font-size: 2.2rem; flex-shrink: 0; } .research-banner .banner-text { flex: 1; }
+.research-banner .banner-text p { margin: 0; font-size: 0.95rem; color: var(--text-muted); line-height: 1.5; }
+.research-banner .banner-text p:first-child { font-size: 1.05rem; font-weight: 600; color: var(--text); margin-bottom: 0.25rem; }
+.research-banner a { color: #2EC4B6; text-decoration: none; font-weight: 600; } .research-banner a:hover { text-decoration: underline; }
+.banner-links { display: flex; gap: 0.75rem; margin-top: 0.5rem; flex-wrap: wrap; }
+.banner-link { display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.85rem; padding: 0.35rem 0.75rem; border-radius: 6px; border: 1px solid; text-decoration: none !important; transition: background 0.2s; }
+.banner-link.primary { border-color: #2EC4B6; color: #2EC4B6; } .banner-link.primary:hover { background: rgba(46,196,182,0.1); }
+.banner-link.secondary { border-color: var(--border); color: var(--text-muted); } .banner-link.secondary:hover { background: var(--accent-subtle); }
+.term { color: var(--yellow); cursor: help; border-bottom: 1px dashed var(--yellow); position: relative; } .term:hover { color: #e3b341; }
+.term .tooltip { display: none; position: absolute; bottom: 130%; left: 50%; transform: translateX(-50%); background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 0.75rem 1rem; width: 320px; font-size: 0.85rem; color: var(--text); z-index: 100; box-shadow: 0 4px 20px rgba(0,0,0,0.5); line-height: 1.5; }
+.term:hover .tooltip { display: block; }
+.analogy { background: #1a2332; border-left: 4px solid var(--accent); padding: 1rem 1.25rem; border-radius: 0 8px 8px 0; margin: 1rem 0; }
+.analogy::before { content: "Real-world analogy: "; font-weight: 700; color: var(--accent); }
+.insight { background: #1a2a1a; border-left: 4px solid var(--green); padding: 1rem 1.25rem; border-radius: 0 8px 8px 0; margin: 1rem 0; }
+.insight::before { content: "Key Insight: "; font-weight: 700; color: var(--green); }
+details { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; margin: 1rem 0; padding: 0; overflow: visible; }
+details summary { padding: 0.75rem 1.5rem; cursor: pointer; font-weight: 600; user-select: none; list-style: none; display: flex; align-items: center; gap: 0.5rem; }
+details summary::before { content: '+ '; color: var(--accent); font-family: monospace; font-size: 1.2rem; }
+details[open] summary::before { content: '- '; } details summary:hover { background: var(--accent-subtle); }
+details .content { padding: 0 1.5rem 1.25rem; }
+details .content ul, details .content ol { padding-left: 2.5rem; }
+
+.arch-flow { display: flex; flex-direction: column; align-items: center; gap: 0; margin: 1.5rem 0; }
+.arch-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 1rem 1.5rem; width: 100%; max-width: 560px; text-align: center; }
+.arch-card.highlight { border-color: #2EC4B6; background: linear-gradient(135deg, var(--surface) 0%, rgba(46,196,182,0.05) 100%); }
+.arch-card .name { font-weight: 700; font-size: 1em; } .arch-card .desc { color: var(--text-muted); font-size: 0.85em; margin-top: 0.25rem; }
+.arrow-down { width: 2px; height: 20px; background: var(--border); position: relative; }
+.arrow-down::after { content: ''; position: absolute; bottom: -4px; left: -4px; border: 5px solid transparent; border-top: 6px solid var(--border); }
+
+.tag-row { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-bottom: 8px; }
+.tag { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 0.8em; font-weight: 600; }
+.tag-teal { background: rgba(46,196,182,0.15); color: #2EC4B6; } .tag-orange { background: rgba(255,159,28,0.15); color: #FF9F1C; }
+.tag-purple { background: rgba(188,140,255,0.15); color: #bc8cff; } .tag-green { background: rgba(63,185,80,0.15); color: var(--green); }
+.tag-red { background: rgba(231,29,54,0.15); color: #f85149; } .tag-blue { background: rgba(88,166,255,0.15); color: var(--accent); }
+
+.compare-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 1rem 0; }
+.three-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; margin: 1.25rem 0; }
+.compare-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 1.25rem; }
+.compare-card h4 { margin-bottom: 0.5rem; } .compare-card.good { border-color: var(--green); } .compare-card.good h4 { color: var(--green); }
+.compare-card.bad { border-color: var(--red); } .compare-card.bad h4 { color: var(--red); }
+.compare-card.mid { border-color: var(--yellow); } .compare-card.mid h4 { color: var(--yellow); }
+.compare-card ul { padding-left: 1.25rem; font-size: 0.9rem; }
+.compare-card .mem-sample { font-family: 'SFMono-Regular', Menlo, monospace; font-size: 0.78rem; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 0.6rem 0.75rem; margin-top: 0.5rem; color: var(--text-muted); line-height: 1.5; }
+
+.metrics-table { width: 100%; border-collapse: collapse; margin: 1.25rem 0; font-size: 0.9rem; }
+.metrics-table th { text-transform: uppercase; font-size: 0.7rem; letter-spacing: 1px; color: var(--text-muted); padding: 0.6rem 0.75rem; text-align: left; border-bottom: 2px solid var(--border); }
+.metrics-table td { padding: 0.6rem 0.75rem; border-bottom: 1px solid var(--border); }
+.metrics-table tr:hover td { background: rgba(88,166,255,0.04); } .val-best { color: var(--green); font-weight: 700; }
+.metrics-table .row-label { font-weight: 600; }
+
+.quiz { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 1.25rem; margin: 1.5rem 0; }
+.quiz-q { font-weight: 600; margin-bottom: 0.75rem; color: var(--purple); }
+.quiz label { display: block; padding: 0.5rem 0.75rem; margin: 0.25rem 0; border-radius: 6px; cursor: pointer; transition: background 0.2s; }
+.quiz label:hover { background: var(--accent-subtle); } .quiz input[type="radio"] { margin-right: 0.5rem; }
+.quiz-btn { margin-top: 0.75rem; padding: 0.5rem 1.25rem; background: var(--accent); color: var(--bg); border: none; border-radius: 6px; font-weight: 600; cursor: pointer; }
+.quiz-btn:hover { opacity: 0.9; } .quiz-feedback { display: none; margin-top: 0.75rem; padding: 0.75rem; border-radius: 6px; }
+.quiz-correct { background: #1a2a1a; color: var(--green); } .quiz-wrong { background: #2a1a1a; color: var(--red); }
+
+.glossary-toggle { position: fixed; bottom: 1.5rem; right: 1.5rem; width: 50px; height: 50px; background: var(--accent); color: var(--bg); border: none; border-radius: 50%; font-size: 1.3rem; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.4); z-index: 999; display: flex; align-items: center; justify-content: center; }
+.glossary-panel { display: none; position: fixed; bottom: 5rem; right: 1.5rem; width: 380px; max-height: 70vh; overflow-y: auto; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 1.25rem; z-index: 998; box-shadow: 0 8px 30px rgba(0,0,0,0.5); }
+.glossary-panel.open { display: block; } .glossary-panel h3 { margin-top: 0; }
+.glossary-panel input { width: 100%; padding: 0.5rem 0.75rem; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; color: var(--text); margin-bottom: 0.75rem; font-size: 0.9rem; }
+.glossary-entry { padding: 0.5rem 0; border-bottom: 1px solid var(--border); } .glossary-entry:last-child { border-bottom: none; }
+.glossary-entry strong { color: var(--yellow); } .glossary-entry p { font-size: 0.85rem; color: var(--text-muted); margin: 0.25rem 0 0; }
+
+.video-embed { margin: 1.5rem 0; border-radius: 12px; overflow: hidden; border: 1px solid var(--border); background: #011627; }
+.video-embed video { display: block; width: 100%; height: auto; }
+.video-caption { padding: 0.5rem 0.75rem; font-size: 0.8rem; color: var(--text-muted); background: var(--surface); display: flex; align-items: center; gap: 0.5rem; }
+.video-caption .badge { display: inline-flex; flex-direction: column; align-items: center; padding: 0.2rem 0.6rem; border-radius: 4px; background: rgba(46,196,182,0.15); color: #2EC4B6; text-decoration: none; white-space: nowrap; line-height: 1.2; transition: background 0.15s; }
+.video-caption .badge .badge-label { font-size: 0.55rem; font-weight: 400; color: #778DA9; text-transform: uppercase; letter-spacing: 0.04em; }
+.video-caption .badge .badge-name { font-size: 0.75rem; font-weight: 700; } .video-caption .badge:hover { background: rgba(46,196,182,0.3); text-decoration: none; }
+
+ol.big { counter-reset: biglist; list-style: none; padding: 0; }
+ol.big li { counter-increment: biglist; padding: 8px 0 8px 48px; position: relative; margin-bottom: 8px; }
+ol.big li::before { content: counter(biglist); position: absolute; left: 0; top: 6px; width: 32px; height: 32px; border-radius: 50%; background: rgba(88,166,255,0.12); color: var(--accent); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.9em; }
+
+.stepper { margin: 1.5rem 0; padding-left: 20px; }
+.step { position: relative; padding: 0 0 1.25rem 28px; border-left: 2px solid var(--accent); }
+.step:last-child { border-left: 2px solid transparent; }
+.step::before { content: ""; position: absolute; left: -7px; top: 4px; width: 12px; height: 12px; border-radius: 50%; background: var(--accent); }
+.step strong { display: block; margin-bottom: 4px; } .step .step-desc { color: var(--text-muted); font-size: 0.95em; }
+
+.pipeline { display: flex; gap: 0; align-items: stretch; margin: 1.5rem 0; flex-wrap: nowrap; }
+.pipe-stage { flex: 1; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 1rem; position: relative; min-width: 0; }
+.pipe-stage .num { width: 28px; height: 28px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.85em; color: var(--bg); margin-bottom: 0.5rem; }
+.pipe-stage.s1 .num { background: #2EC4B6; } .pipe-stage.s1 { border-color: #2EC4B6; }
+.pipe-stage.s2 .num { background: #FF9F1C; } .pipe-stage.s2 { border-color: #FF9F1C; }
+.pipe-stage.s3 .num { background: #bc8cff; } .pipe-stage.s3 { border-color: #bc8cff; }
+.pipe-stage .stage-name { font-weight: 700; display: block; }
+.pipe-stage .stage-desc { color: var(--text-muted); font-size: 0.85em; font-style: italic; line-height: 1.5; margin-top: 0.25rem; }
+.pipe-arrow { display: flex; align-items: center; justify-content: center; padding: 0 0.5rem; color: var(--text-muted); font-size: 1.5rem; flex-shrink: 0; }
+
+.callout-number { display: inline-block; padding: 0.15rem 0.55rem; border-radius: 12px; background: rgba(63,185,80,0.12); color: var(--green); font-weight: 700; font-size: 0.85em; margin-right: 0.35rem; }
+.modality-chips { display: flex; gap: 0.5rem; flex-wrap: wrap; margin: 1rem 0; }
+.mchip { padding: 0.3rem 0.8rem; border-radius: 20px; font-size: 0.85rem; font-weight: 600; border: 1px solid; }
+.mchip.t { color: #2EC4B6; border-color: #2EC4B6; } .mchip.i { color: #FF9F1C; border-color: #FF9F1C; }
+.mchip.v { color: #bc8cff; border-color: #bc8cff; } .mchip.a { color: #f85149; border-color: #f85149; }
+</style>
+</head>
+<body>
+
+<div class="progress-bar" id="progress-bar"></div>
+<button class="mobile-toc-btn" onclick="document.querySelector('.sidebar').classList.toggle('mobile-open'); document.querySelector('.mobile-overlay').classList.toggle('active');">&#9776;</button>
+<div class="mobile-overlay" onclick="document.querySelector('.sidebar').classList.remove('mobile-open'); this.classList.remove('active');"></div>
+
+<nav class="sidebar">
+  <a href="../" class="sidebar-home">&larr; All Papers</a>
+  <div class="toc-title">Contents</div>
+  <a href="#big-picture">The Big Picture</a>
+  <a href="#background" class="section-gap">Background Concepts</a>
+  <a href="#how-it-works" class="section-gap">How It Works</a>
+  <a href="#training" class="section-gap">How It's Trained</a>
+  <a href="#audio" class="section-gap">Native Audio vs ASR</a>
+  <a href="#results" class="section-gap">Results</a>
+  <a href="#quiz" class="section-gap">Final Quiz</a>
+  <a href="#why-it-matters" class="section-gap">Why It Matters</a>
+</nav>
+
+<div class="main-content">
+
+<h1>Gemini Embedding 2: The Paper, Explained</h1>
+<p class="subtitle">A beginner-friendly guide to how one model turns text, images, video, and audio into a single shared "meaning space" &mdash; and why that beats a pile of specialized models. Every AI term is defined. Every concept is grounded in analogy.</p>
+<p class="meta">Paper by the Gemini Embedding Team (Google DeepMind, 2026) &bull; Explainer published May 2026</p>
+
+<div class="research-banner">
+  <div class="banner-icon">&#129518;</div>
+  <div class="banner-text">
+    <p>This is a companion explainer for the Gemini Embedding 2 paper</p>
+    <p>Gemini Embedding 2 is a single model that maps text, images, video, audio &mdash; and any mix of them &mdash; into one shared vector space, so a search system can compare "a photo of a dog," the word "dog," a dog video, and a bark, all with the same yardstick.</p>
+    <div class="banner-links">
+      <a href="https://arxiv.org/abs/2605.27295" target="_blank" class="banner-link primary">&#x1F4C4; Read the Paper (arXiv)</a>
+      <a href="https://deepmind.google/models/gemini-embedding/" target="_blank" class="banner-link secondary">&#x1F310; Gemini Embedding</a>
+    </div>
+  </div>
+</div>
+
+<div class="video-embed">
+  <video src="videos/hero.mp4" autoplay muted loop playsinline></video>
+  <div class="video-caption"><a href="https://github.com/heygen-com/hyperframes" target="_blank" class="badge" title="Made with HyperFrames — HeyGen's HTML-to-video composition framework"><span class="badge-label">made with</span><span class="badge-name">HyperFrames</span></a> Every modality flows through one model into a single vector space. Things that <em>mean</em> the same thing land in the same region &mdash; no matter whether they arrived as text, an image, a clip, or a sound.</div>
+</div>
+
+<h2 id="big-picture">The Big Picture</h2>
+
+<p>A huge amount of modern AI plumbing &mdash; search engines, recommendation feeds, the "retrieval" half of <span class="term">RAG<span class="tooltip">Retrieval-Augmented Generation. Before a language model answers, a retrieval system fetches relevant documents and pastes them into the prompt, so the model can ground its answer in real source material instead of relying on memory.</span></span> systems &mdash; runs on one humble primitive: the <span class="term">embedding<span class="tooltip">A list of numbers (a vector) that captures the meaning of a piece of content, arranged so that similar meanings get similar numbers. "Embedding" the content means producing that vector.</span></span>. You turn a piece of content into a list of numbers, and content that means similar things gets similar numbers. Then "find things like this" becomes "find the nearest numbers."</p>
+
+<p>For years, the catch was that you needed a <em>different</em> embedding model for each kind of content. One model for text. A separate one for images. Audio usually wasn't embedded at all &mdash; it was transcribed to text first and then handed to the text model. Video was an afterthought. Stitching these together into one search system was a mess, and none of them could handle a query that mixed, say, an image <em>and</em> a question about it.</p>
+
+<p>Gemini Embedding 2 collapses all of that into a single model. It takes text, images, video, audio, or <em>any interleaved combination</em>, and produces one embedding in one shared space. The paper tackles several problems at once:</p>
+
+<ol class="big">
+  <li><strong>Separate per-modality models can't truly mix modalities.</strong> The old <span class="term">CLIP<span class="tooltip">A 2021 model from OpenAI that learns a shared image-text space using two separate encoders (one for images, one for text) trained on image-caption pairs. The dominant design for years &mdash; but the two towers only ever meet at the final comparison step.</span></span>-style approach uses one encoder per modality and only compares them at the very end (&ldquo;<span class="term">late fusion<span class="tooltip">Process each modality with its own separate network, then combine (fuse) the results only at the final step. Cheap and modular, but the modalities never interact during processing, so the model can't reason about how an image and its caption relate.</span></span>&rdquo;). That's fine for matching a caption to a photo, but it can't reason over an image and text <em>together</em>.</li>
+  <li><strong>Audio retrieval leans on brittle transcription.</strong> The standard recipe is "run <span class="term">ASR<span class="tooltip">Automatic Speech Recognition &mdash; software that converts spoken audio into written text. The first step in most voice pipelines, and a common point of failure: once it picks the wrong words, everything downstream inherits the mistake.</span></span> to get text, then embed the text." If the transcriber mishears one word, the error poisons everything downstream.</li>
+  <li><strong>Specialized domains usually need specialized models.</strong> A model great at fine art might be terrible at microscope images. The dream is one embedder that works out of the box on astronomy, biology, recipes, and code alike.</li>
+</ol>
+
+<div class="insight">Build the embedder <em>on top of</em> Gemini, a model that already understands all these modalities deeply, and fine-tune it to produce embeddings. Because every modality is processed by the same network with full cross-modal interaction (&ldquo;<span class="term">deep fusion<span class="tooltip">Feed all modalities into a single network as one interleaved sequence so they interact throughout processing &mdash; the opposite of late fusion. The model can attend from a word to a pixel and back, producing a richer joint understanding.</span></span>&rdquo;), the resulting space is genuinely unified. The single model hits state-of-the-art on text, image, video, <em>and</em> audio retrieval simultaneously &mdash; 77.2 overall vs. 68&ndash;70 for the next-best multimodal embedders &mdash; and even beats specialized models in their own domains.</div>
+
+<h2 id="background">Background Concepts</h2>
+
+<p>The paper assumes you're comfortable with embeddings, contrastive learning, and the CLIP lineage of multimodal models. Let's build those up from scratch.</p>
+
+<h3>What is an embedding (and a vector space)?</h3>
+
+<p>An <span class="term">embedding<span class="tooltip">A vector (list of numbers) representing a piece of content's meaning. Gemini Embedding 2 outputs up to 3,072 numbers per item. Similar meanings produce vectors that point in similar directions.</span></span> is a list of numbers &mdash; a <span class="term">vector<span class="tooltip">An ordered list of numbers. A 3-dimensional vector is a point in 3D space; a 3,072-dimensional vector is a point in 3,072-dimensional space. You can't picture it, but the math (distances, angles) works exactly the same.</span></span> &mdash; that represents the meaning of some content. You can think of each number as a coordinate, so the vector is a single point in a high-dimensional space. Content with similar meaning lands at nearby points; unrelated content lands far apart. That shared coordinate system is the <span class="term">vector space<span class="tooltip">The high-dimensional space all embeddings live in. "Unified" means text, images, video, and audio all map into the same space, so their vectors can be compared directly with one another.</span></span>.</p>
+
+<div class="analogy">Think of a library where every book is placed on a vast floor so that books about similar topics sit near each other &mdash; cookbooks in one area, astronomy in another. To find books like the one in your hand, you just look at its neighbors. An embedding space is that floor, except it has thousands of dimensions instead of two, and the "books" can be sentences, photos, video clips, or sounds.</div>
+
+<p>To measure how close two vectors are, the paper uses <span class="term">cosine similarity<span class="tooltip">A measure of how aligned two vectors are, based on the angle between them (ignoring their length). +1 means same direction (very similar), 0 means unrelated, &minus;1 means opposite. The standard similarity measure for embeddings.</span></span> &mdash; the angle between them. Two vectors pointing the same way are very similar; perpendicular ones are unrelated.</p>
+
+<h3>What is retrieval, and why do embeddings power it?</h3>
+
+<p><span class="term">Retrieval<span class="tooltip">Given a query, finding the most relevant items from a large collection. Embedding-based retrieval embeds the query and every item, then returns the items whose vectors are closest to the query's.</span></span> means: given a query, find the most relevant items in a big pile. With embeddings, you embed everything once, then answer "find things like X" by embedding X and grabbing its nearest neighbors. This is the engine behind semantic search, recommendation systems, and RAG.</p>
+
+<div class="modality-chips">
+  <span class="mchip t">&#9998; text</span>
+  <span class="mchip i">&#128247; image</span>
+  <span class="mchip v">&#127909; video</span>
+  <span class="mchip a">&#128266; audio</span>
+</div>
+
+<p>A <span class="term">modality<span class="tooltip">A type of data: text, images, video, audio. A "multimodal" model handles more than one. "Cross-modal" retrieval means the query and the result are different modalities &mdash; e.g. searching images with a text query.</span></span> is just a type of content. A model that handles several is <strong>multimodal</strong>. When the query is one modality and the answer is another &mdash; like typing "a golden retriever in snow" to find a <em>photo</em> &mdash; that's <strong>cross-modal</strong> retrieval, and it only works if both modalities live in the same vector space.</p>
+
+<h3>Late fusion vs. deep fusion: the central design choice</h3>
+
+<p>This is the heart of what makes Gemini Embedding 2 different from the models that came before it, so it's worth seeing rather than just reading.</p>
+
+<div class="video-embed">
+  <video src="videos/fusion.mp4" autoplay muted loop playsinline></video>
+  <div class="video-caption"><a href="https://github.com/heygen-com/hyperframes" target="_blank" class="badge" title="Made with HyperFrames — HeyGen's HTML-to-video composition framework"><span class="badge-label">made with</span><span class="badge-name">HyperFrames</span></a> Late fusion (CLIP-style) runs each modality through its own encoder and compares only at the end. Deep fusion feeds everything through one transformer as a single interleaved sequence, letting modalities interact throughout.</div>
+</div>
+
+<div class="compare-row">
+  <div class="compare-card bad">
+    <h4>Late fusion (the old way)</h4>
+    <p>Models like CLIP, ALIGN, and SigLIP use <strong>two separate encoders</strong> &mdash; one for images, one for text &mdash; trained so a matched image and caption land near each other.</p>
+    <ul>
+      <li>Great at simple "does this caption match this image?" tasks.</li>
+      <li>Modular and efficient.</li>
+      <li><strong>But:</strong> the two halves never interact during processing. They can't handle a single input that mixes an image <em>and</em> a question, and they miss the rich interplay between modalities.</li>
+    </ul>
+  </div>
+  <div class="compare-card good">
+    <h4>Deep fusion (this paper)</h4>
+    <p>All modalities are turned into one interleaved sequence of <span class="term">tokens<span class="tooltip">The small chunks a transformer actually reads. Text becomes word-pieces; an image or video frame becomes a grid of visual tokens; audio becomes audio tokens. Gemini converts every modality into tokens it can process uniformly.</span></span> and fed through <strong>one transformer</strong>.</p>
+    <ul>
+      <li>Words can attend to pixels and vice versa, throughout the network.</li>
+      <li>Handles arbitrary mixed inputs (image + text + video together).</li>
+      <li>Produces one genuinely shared space &mdash; the richer understanding modern <span class="term">MLLMs<span class="tooltip">Multimodal Large Language Models &mdash; LLMs (like Gemini) that natively read images, audio, and video in addition to text. Gemini Embedding 2 is built on top of one.</span></span> are known for.</li>
+    </ul>
+  </div>
+</div>
+
+<h3>Transformers and bidirectional attention</h3>
+
+<p>A <span class="term">transformer<span class="tooltip">The neural network architecture behind almost all modern AI (GPT, Gemini, etc.). It processes a sequence of tokens using "attention," which lets every token look at and pull information from other tokens.</span></span> processes a sequence of tokens using <span class="term">attention<span class="tooltip">The mechanism that lets each token gather information from other tokens, weighting how much to "pay attention" to each. It's how a transformer builds context-aware representations.</span></span> &mdash; a mechanism where each token decides how much to "look at" every other token.</p>
+
+<p>Generative models like Gemini normally use <span class="term">causal attention<span class="tooltip">Each token can only attend to earlier tokens, never future ones. Necessary for generating text left-to-right, but limiting for embeddings, where the model should use the whole input at once.</span></span>: each token can only see the ones before it (necessary for generating text word by word). But for embeddings you want every token to see the <em>whole</em> input. So the paper switches the model to <span class="term">bidirectional attention<span class="tooltip">Every token can attend to every other token in both directions. Better for encoding a fixed input into a representation, since nothing is hidden from any position. The paper converts Gemini's causal attention to bidirectional for embedding.</span></span> &mdash; every token sees every other token, both directions.</p>
+
+<div class="analogy">Causal attention is reading a sentence one word at a time with the rest of the page covered &mdash; good if you're trying to predict the next word. Bidirectional attention is reading the whole sentence at once before forming an opinion &mdash; better if your job is to summarize what it means.</div>
+
+<h3>Contrastive learning</h3>
+
+<p>How do you <em>teach</em> a model to put similar things close together? <span class="term">Contrastive learning<span class="tooltip">A training method that pulls "matching" pairs (a query and its correct target) together in embedding space while pushing non-matching pairs apart. The model learns meaning by comparison, without needing explicit labels for every concept.</span></span> is the answer, and it's covered in detail in the training section below. The one-line version: show the model matched pairs (a query and its correct answer) and a bunch of mismatched pairs, then nudge the matched ones together and shove the rest apart.</p>
+
+<h2 id="how-it-works">How It Works</h2>
+
+<p>Architecturally, Gemini Embedding 2 is surprisingly clean. It starts from a pretrained Gemini model and turns it into an embedder with a few well-chosen steps.</p>
+
+<div class="arch-flow">
+  <div class="tag-row">
+    <span class="tag tag-teal">text</span>
+    <span class="tag tag-orange">image</span>
+    <span class="tag tag-purple">video</span>
+    <span class="tag tag-red">audio</span>
+    <span class="tag tag-blue">&hellip; or any interleaved mix</span>
+  </div>
+  <div class="arrow-down"></div>
+  <div class="arch-card">
+    <div class="name">Gemini-native tokenization</div>
+    <div class="desc">each modality is converted into Gemini's native token format &mdash; raw images, video, and audio go in directly, no separate encoders to bolt on</div>
+  </div>
+  <div class="arrow-down"></div>
+  <div class="arch-card highlight">
+    <div class="name">Transformer M (initialized from Gemini, bidirectional)</div>
+    <div class="desc">the full sequence of <em>L</em> tokens is processed with bidirectional attention, producing one embedding per token. This is the "pre-trained" core &mdash; it inherits everything Gemini already knows.</div>
+  </div>
+  <div class="arrow-down"></div>
+  <div class="arch-card">
+    <div class="name">Mean pooling</div>
+    <div class="desc">average all the per-token embeddings into a single vector that represents the whole input</div>
+  </div>
+  <div class="arrow-down"></div>
+  <div class="arch-card">
+    <div class="name">Linear projection f</div>
+    <div class="desc">a learned layer scales that vector to the final output size (up to 3,072 dimensions)</div>
+  </div>
+  <div class="arrow-down"></div>
+  <div class="tag-row">
+    <span class="tag tag-green">one embedding E &bull; up to 3,072 numbers</span>
+  </div>
+</div>
+
+<p>Two design choices are worth unpacking.</p>
+
+<h3>Why "initialize from Gemini" counts as pre-training</h3>
+
+<p>The model doesn't learn about the world from scratch. It starts as a copy of Gemini's parameters &mdash; which already encode an enormous amount of knowledge across all modalities &mdash; and then gets fine-tuned to <em>encode</em> rather than <em>generate</em>. The authors describe initializing from Gemini as effectively the embedding model's pre-training stage. The pooling and projection are deliberately simple precisely because the heavy lifting already happened inside Gemini.</p>
+
+<details>
+<summary>What's "mean pooling" and why so simple?</summary>
+<div class="content">
+<p>The transformer outputs one vector per input token, but a search index needs <em>one</em> vector per item. <span class="term">Mean pooling<span class="tooltip">Combining a sequence of per-token vectors into one by averaging them element-wise. The simplest pooling strategy &mdash; the paper notes prior work showed simple pooling is effective when the backbone is strong.</span></span> just averages them. The authors cite prior research showing that when your backbone model is this capable, fancy pooling schemes add little, so the simplest option wins.</p>
+</div>
+</details>
+
+<h3>Matryoshka: one vector, many sizes</h3>
+
+<p>Gemini Embedding 2 outputs 3,072-dimensional vectors, but storing and comparing millions of 3,072-number vectors is expensive. The trick is <span class="term">Matryoshka Representation Learning<span class="tooltip">A training technique (MRL) that nests smaller usable embeddings inside a larger one, like Russian nesting dolls. The first 768 or 1,536 numbers form a complete, usable embedding on their own, so you can truncate for speed without retraining.</span></span> (MRL): the model is trained so the <em>first</em> 768 numbers are a complete, usable embedding on their own, and so are the first 1,536. You can chop the vector short to save space and speed, and it still works.</p>
+
+<div class="analogy">Russian nesting dolls. The full 3,072-dimensional vector is the biggest doll, but inside it sits a perfectly good 1,536 doll, and inside that a 768 doll. You pick whichever size fits your storage budget &mdash; no need to keep different models for different sizes.</div>
+
+<h2 id="training">How It's Trained</h2>
+
+<p>The model's secret sauce is its training recipe. Everything revolves around one objective &mdash; contrastive learning &mdash; applied across many tasks and several stages.</p>
+
+<h3>The contrastive objective</h3>
+
+<div class="video-embed">
+  <video src="videos/contrastive.mp4" autoplay muted loop playsinline></video>
+  <div class="video-caption"><a href="https://github.com/heygen-com/hyperframes" target="_blank" class="badge" title="Made with HyperFrames — HeyGen's HTML-to-video composition framework"><span class="badge-label">made with</span><span class="badge-name">HyperFrames</span></a> Each query is pulled toward its correct target and pushed away from every other target in the batch (free "in-batch negatives") plus any deliberately tricky "hard negatives."</div>
+</div>
+
+<p>Each training example is a <strong>query</strong>, its correct <strong>positive target</strong>, and optionally a <strong>hard negative</strong>. The model embeds all of them and is trained with a <span class="term">contrastive loss<span class="tooltip">Specifically a noise-contrastive estimation (NCE) loss with in-batch negatives. It maximizes the similarity of the query to its positive while minimizing similarity to all negatives, using cosine similarity scaled by a temperature.</span></span> that maximizes the cosine similarity between the query and its positive while minimizing it against the negatives.</p>
+
+<p>The clever, cheap part is <span class="term">in-batch negatives<span class="tooltip">During training, every other example's target in the same batch is treated as a negative (wrong answer) for your query. This gives you many negatives for free without having to collect them, which is why large batch sizes help contrastive training.</span></span>: within a batch of, say, 1,000 examples, the other 999 targets serve as "wrong answers" for your query &mdash; for free. That's why contrastive training loves big batches: more examples per batch means more negatives to contrast against.</p>
+
+<p>A <span class="term">hard negative<span class="tooltip">A wrong answer that is deliberately similar to the right one &mdash; e.g. for the query "first purchase date," a passage about the *most recent* purchase. Training against hard negatives forces the model to learn fine distinctions, not just gross ones.</span></span> is a wrong answer that's <em>deliberately</em> close to the right one, forcing the model to learn fine distinctions instead of just obvious ones.</p>
+
+<details>
+<summary>The details: temperature, masking, and a task string</summary>
+<div class="content">
+<ul>
+<li><strong>Temperature (&tau;):</strong> a knob that sharpens or softens how aggressively the loss separates positives from negatives.</li>
+<li><strong>Masking:</strong> if two examples in a batch happen to share the same query or positive, they're masked out so the model isn't punished for a "negative" that's actually correct &mdash; important for classification tasks with few labels.</li>
+<li><strong>Task string:</strong> text examples can carry a short instruction like "question answering" or "fact checking." During training these are randomly dropped so the model stays robust even when no task hint is given &mdash; one reason it works zero-shot without prompt engineering.</li>
+<li><strong>MRL multi-loss:</strong> the loss is computed several times over nested sub-dimensions (768, 1,536, full 3,072) so all the Matryoshka sizes stay usable.</li>
+</ul>
+</div>
+</details>
+
+<h3>The multi-stage recipe</h3>
+
+<p>Training proceeds in three stages, borrowed and extended from Google's earlier Gecko and Gemini Embedding models.</p>
+
+<div class="pipeline">
+  <div class="pipe-stage s1">
+    <span class="num">1</span>
+    <span class="stage-name">Pre-Fine-Tuning (PFT)</span>
+    <span class="stage-desc">adapt the model from generating to encoding, using a huge set of noisy query&ndash;target pairs. Big batches smooth out the noise. Only text, image, and code tasks here.</span>
+  </div>
+  <div class="pipe-arrow">&rarr;</div>
+  <div class="pipe-stage s2">
+    <span class="num">2</span>
+    <span class="stage-name">Fine-Tuning (FT)</span>
+    <span class="stage-desc">train on cleaner, harder data across all modalities &mdash; text, code, documents, image, audio, video &mdash; with hard negatives and per-task tuned batch sizes.</span>
+  </div>
+  <div class="pipe-arrow">&rarr;</div>
+  <div class="pipe-stage s3">
+    <span class="num">3</span>
+    <span class="stage-name">Model Soup</span>
+    <span class="stage-desc">average the weights of several fine-tuned checkpoints into one, gaining extra robustness across modalities for free.</span>
+  </div>
+</div>
+
+<details>
+<summary>Wait &mdash; you can just average model weights together?</summary>
+<div class="content">
+<p>Yes. A <span class="term">model soup<span class="tooltip">Averaging the parameters (weights) of several separately fine-tuned models into one. Counterintuitively, the averaged model often generalizes better than any single ingredient, with zero extra inference cost.</span></span> takes several models that were fine-tuned differently and literally averages their weights, element by element. The surprising and well-replicated result is that the averaged model is often more robust than any single ingredient &mdash; and it costs nothing extra at inference time, since you still end up with one model. The paper uses it to balance the per-modality trade-offs that fine-tuning introduces (see the video-data result below).</p>
+</div>
+</details>
+
+<h3>Why synthetic data matters</h3>
+
+<p>The team uses Gemini itself to <em>generate</em> high-quality training data. On code-retrieval tasks this is dramatic: adding Gemini-synthesized data lifts the average score by <span class="callout-number">+15.8</span> points over the previous text-only Gemini Embedding model &mdash; the difference between a 70.5 and an 86.3 average on the code benchmarks studied.</p>
+
+<h2 id="audio">Native Audio vs. ASR</h2>
+
+<p>One of the paper's most striking results is about audio. The conventional pipeline transcribes speech to text first (ASR), then embeds the text. Gemini Embedding 2 can skip that and embed the raw audio directly &mdash; and that turns out to matter a lot.</p>
+
+<div class="video-embed">
+  <video src="videos/audio.mp4" autoplay muted loop playsinline></video>
+  <div class="video-caption"><a href="https://github.com/heygen-com/hyperframes" target="_blank" class="badge" title="Made with HyperFrames — HeyGen's HTML-to-video composition framework"><span class="badge-label">made with</span><span class="badge-name">HyperFrames</span></a> The cascade commits to one text guess &mdash; and if it's wrong, retrieval inherits the error. Native audio keeps the continuous signal, preserving ambiguity and acoustic cues until the very end.</div>
+</div>
+
+<p>The problem with the cascade is <strong>error propagation</strong>. The classic example: an ASR system has to make a hard choice between "recognize speech" and "wreck a nice beach" &mdash; they sound almost identical. Once it commits to the wrong text, the retrieval system is searching for the wrong thing, and there's no recovering.</p>
+
+<p>Embedding the audio directly avoids the forced decision. The model keeps the continuous acoustic signal &mdash; including <span class="term">prosody<span class="tooltip">The rhythm, stress, and intonation of speech &mdash; the musical qualities beyond the literal words. Lost the moment audio is flattened to text, but preserved when audio is embedded directly.</span></span> (intonation, emphasis) &mdash; so the embedding preserves the inherent ambiguity instead of throwing it away too early.</p>
+
+<table class="metrics-table">
+  <thead>
+    <tr><th>Setup (MSEB retrieval, <span class="term">MRR@10<span class="tooltip">Mean Reciprocal Rank at 10: for each query, score 1/(rank of the first correct result) within the top 10, then average. Higher is better; rewards putting the right answer near the top.</span></span>)</th><th>Same-language</th><th>Cross-language</th><th>Average</th></tr>
+  </thead>
+  <tbody>
+    <tr><td class="row-label">Cascade (ASR &rarr; embed text)</td><td>73.58</td><td>67.55</td><td>70.40</td></tr>
+    <tr><td class="row-label">Native audio (embed directly)</td><td class="val-best">75.58</td><td class="val-best">72.56</td><td class="val-best">73.99</td></tr>
+  </tbody>
+</table>
+
+<p>Native audio wins everywhere, and the gap <em>widens</em> for cross-language retrieval (+5.0 points), where the model matches meaning across languages without being trapped by the phonetic guesses of an intermediate transcriber.</p>
+
+<h2 id="results">Results</h2>
+
+<h3>Multimodal retrieval: one model, best at everything</h3>
+
+<p>Across a broad suite of image, text, and video retrieval benchmarks, Gemini Embedding 2 posts the highest overall score &mdash; while being one of only two compared models to even support all four modalities.</p>
+
+<table class="metrics-table">
+  <thead>
+    <tr><th>Benchmark (metric)</th><th>Gemini Embedding 2</th><th>Amazon Nova MME</th><th>Voyage-3.5-MM</th><th>Legacy Google</th></tr>
+  </thead>
+  <tbody>
+    <tr><td class="row-label">Image&rarr;Image, GUIEC (R@1)</td><td class="val-best">79.4</td><td>68.6</td><td>69.4</td><td>69.5</td></tr>
+    <tr><td class="row-label">Text&rarr;Image, MSCOCO (R@1)</td><td class="val-best">62.9</td><td>57.2</td><td>58.1</td><td>53.1</td></tr>
+    <tr><td class="row-label">Text&rarr;Video, Vatex (NDCG@10)</td><td class="val-best">68.8</td><td>60.3</td><td>55.2</td><td>54.9</td></tr>
+    <tr><td class="row-label">Image+Text&rarr;Text, EncyclopedicVQA (R@20)</td><td class="val-best">71.5</td><td>&mdash;</td><td>58.6</td><td>&mdash;</td></tr>
+    <tr><td class="row-label">Document retrieval, ViDoRe V2 (NDCG@10)</td><td>64.9</td><td>60.6</td><td class="val-best">65.5</td><td>28.9</td></tr>
+    <tr><td class="row-label"><strong>Overall</strong></td><td class="val-best">77.2</td><td>68.2</td><td>70.0</td><td>64.1</td></tr>
+  </tbody>
+</table>
+
+<p>"R@1" is <span class="term">Recall@1<span class="tooltip">The fraction of queries where the single top-ranked result is correct. Recall@k allows the right answer anywhere in the top k. Higher is better.</span></span>; "<span class="term">NDCG@10<span class="tooltip">Normalized Discounted Cumulative Gain at 10 &mdash; a ranking quality score for the top 10 results that rewards putting more-relevant items higher. Ranges 0 to 1 (shown here &times;100); higher is better.</span></span>" rewards good ranking near the top. Bottom line: it leads almost everywhere and stays competitive even where it doesn't win outright.</p>
+
+<h3>Text and code: no compromise</h3>
+
+<p>A worry with any "do-everything" model is that the new abilities dilute the old ones. They don't. On <span class="term">MTEB<span class="tooltip">Massive Text Embedding Benchmark (and its multilingual edition, MMTEB) &mdash; the standard leaderboard for text embeddings, spanning retrieval, classification, clustering, and more across 250+ languages.</span></span> multilingual, Gemini Embedding 2 scores 69.9 &mdash; <em>better</em> than the previous text-only Gemini Embedding (68.4). On code retrieval it reaches 84.0, a large jump and a new state of the art, beating even code-specialist models like voyage-code-3.</p>
+
+<h3>Specialized domains: robust out of the box</h3>
+
+<p>Tested <span class="term">zero-shot<span class="tooltip">Evaluated on a task or domain it was never specifically trained for, with no fine-tuning or examples. A strong zero-shot model works "out of the box."</span></span> on niche fields, the model doesn't just win &mdash; it wins <em>consistently</em>, where rival models swing wildly between domains (image&rarr;text Recall@5):</p>
+
+<div class="three-grid">
+  <div class="compare-card">
+    <h4 style="color: var(--accent);">Microscopy &amp; bioscience</h4>
+    <p style="font-size: 0.9em;">MicroVQA: <strong>79.3</strong> vs. 53.3 for the next best &mdash; over 48% better.</p>
+  </div>
+  <div class="compare-card">
+    <h4 style="color: var(--accent);">Astronomy</h4>
+    <p style="font-size: 0.9em;">AstroLLaVA: <strong>64.4</strong> &mdash; roughly double the best baseline.</p>
+  </div>
+  <div class="compare-card">
+    <h4 style="color: var(--accent);">Culinary (Recipe1M)</h4>
+    <p style="font-size: 0.9em;">Ingredients <strong>90.2</strong>, instructions <strong>92.1</strong> &mdash; breaking 90 where the next best sits in the low 80s.</p>
+  </div>
+</div>
+
+<p>The authors emphasize <em>consistency</em>: models like SigLIP 2 might score 81 on recipes but collapse to 8.4 on fine art. Gemini Embedding 2 stays reliable across all of them &mdash; the practical value of a truly general embedder.</p>
+
+<details>
+<summary>The in-domain video data trade-off (and how souping fixes it)</summary>
+<div class="content">
+<p>Adding a few thousand examples of a specific video dataset's training split sharply boosts that dataset (e.g. MSR-VTT jumps +7.9 points) &mdash; but can slightly hurt others (YouCook2 dipped 0.6). This is classic overfitting to a narrow target. The fix: <strong>model soup</strong>. Averaging the fine-tuned weights with the original model brings back the gains while restoring the broad robustness &mdash; in several cases beating the baseline across the board.</p>
+</div>
+</details>
+
+<h2 id="quiz">Final Quiz</h2>
+
+<div class="quiz">
+  <div class="quiz-q">What's the core architectural difference between Gemini Embedding 2 and CLIP-style models?</div>
+  <label><input type="radio" name="q1" value="a"> Gemini Embedding 2 uses a bigger image encoder.</label>
+  <label><input type="radio" name="q1" value="b"> CLIP processes all modalities in one network; Gemini Embedding 2 uses separate ones.</label>
+  <label><input type="radio" name="q1" value="c"> Gemini Embedding 2 uses deep fusion &mdash; one transformer over an interleaved sequence &mdash; instead of CLIP's separate per-modality encoders joined only at the end.</label>
+  <label><input type="radio" name="q1" value="d"> There is no real difference; both are dual-tower models.</label>
+  <button class="quiz-btn" onclick="checkQuiz('q1', 'c', this)">Check</button>
+  <div class="quiz-feedback"></div>
+</div>
+
+<div class="quiz">
+  <div class="quiz-q">Why does embedding audio directly beat the "ASR then embed text" cascade?</div>
+  <label><input type="radio" name="q2" value="a"> Because ASR is slower at runtime.</label>
+  <label><input type="radio" name="q2" value="b"> Because the cascade commits to one text guess, and any transcription error propagates into retrieval &mdash; native audio preserves the ambiguity and acoustic cues instead.</label>
+  <label><input type="radio" name="q2" value="c"> Because audio embeddings are higher-dimensional.</label>
+  <label><input type="radio" name="q2" value="d"> Because text embeddings don't support multiple languages.</label>
+  <button class="quiz-btn" onclick="checkQuiz('q2', 'b', this)">Check</button>
+  <div class="quiz-feedback"></div>
+</div>
+
+<div class="quiz">
+  <div class="quiz-q">What are "in-batch negatives" in contrastive training?</div>
+  <label><input type="radio" name="q3" value="a"> Examples the model labeled incorrectly and must be removed.</label>
+  <label><input type="radio" name="q3" value="b"> The other examples' targets in the same batch, reused for free as "wrong answers" for your query &mdash; which is why large batches help.</label>
+  <label><input type="radio" name="q3" value="c"> A penalty added when training loss goes negative.</label>
+  <label><input type="radio" name="q3" value="d"> Hard negatives that were mined offline.</label>
+  <button class="quiz-btn" onclick="checkQuiz('q3', 'b', this)">Check</button>
+  <div class="quiz-feedback"></div>
+</div>
+
+<div class="quiz">
+  <div class="quiz-q">What does Matryoshka Representation Learning (MRL) let you do?</div>
+  <label><input type="radio" name="q4" value="a"> Train multiple separate models for different vector sizes.</label>
+  <label><input type="radio" name="q4" value="b"> Truncate one 3,072-dim embedding down to 1,536 or 768 numbers and still have a usable embedding &mdash; nested like Russian dolls.</label>
+  <label><input type="radio" name="q4" value="c"> Compress audio into text before embedding.</label>
+  <label><input type="radio" name="q4" value="d"> Average several models' weights together.</label>
+  <button class="quiz-btn" onclick="checkQuiz('q4', 'b', this)">Check</button>
+  <div class="quiz-feedback"></div>
+</div>
+
+<div class="quiz">
+  <div class="quiz-q">Why do the authors call "initializing from Gemini" the embedding model's pre-training stage?</div>
+  <label><input type="radio" name="q5" value="a"> Because they retrain Gemini from scratch on embeddings.</label>
+  <label><input type="radio" name="q5" value="b"> Because the model inherits Gemini's vast multimodal knowledge as its starting point, so the embedding-specific steps (pooling, projection, fine-tuning) can stay simple.</label>
+  <label><input type="radio" name="q5" value="c"> Because Gemini is only used for tokenization.</label>
+  <label><input type="radio" name="q5" value="d"> Because pre-training and fine-tuning are the same thing.</label>
+  <button class="quiz-btn" onclick="checkQuiz('q5', 'b', this)">Check</button>
+  <div class="quiz-feedback"></div>
+</div>
+
+<div class="quiz">
+  <div class="quiz-q">What's notable about Gemini Embedding 2's performance on specialized domains like astronomy and microscopy?</div>
+  <label><input type="radio" name="q6" value="a"> It was fine-tuned specifically on each domain.</label>
+  <label><input type="radio" name="q6" value="b"> It performs zero-shot, and crucially stays consistent across domains where rival models swing wildly between strong and weak.</label>
+  <label><input type="radio" name="q6" value="c"> It only works well on the domains in its training set.</label>
+  <label><input type="radio" name="q6" value="d"> It matches but never exceeds specialized models.</label>
+  <button class="quiz-btn" onclick="checkQuiz('q6', 'b', this)">Check</button>
+  <div class="quiz-feedback"></div>
+</div>
+
+<h2 id="why-it-matters">Why This Paper Matters</h2>
+
+<h3>For builders and practitioners</h3>
+
+<p>If you build search, recommendations, or RAG, the operational win is consolidation. Instead of running and maintaining a text embedder, an image embedder, an ASR pipeline, and glue code to reconcile their incompatible vector spaces, you call one model. Mixed-modality queries &mdash; "find the moment in this video where someone explains X," with the query combining an image and text &mdash; become possible rather than hacky. And because it works <span class="term">zero-shot<span class="tooltip">Out of the box, with no task-specific tuning or prompt engineering. The paper highlights that you don't need brittle task instructions to get strong results.</span></span> without task-specific prompt engineering, you skip a whole category of fragile tuning. The Matryoshka sizing means you can dial down to 768 dimensions to cut storage and latency when you need to.</p>
+
+<h3>For the research community</h3>
+
+<p>Two results are load-bearing. First, <strong>native multimodal beats cascades</strong>: embedding raw audio outperforms transcribe-then-embed, a concrete demonstration that flattening one modality into another throws away signal you can't recover. Expect the same argument to be made for video and documents. Second, <strong>generality need not cost specialization</strong>: the multimodal model matches or beats the previous text-only model on pure text, and beats domain specialists in their own domains. That challenges the default assumption that you trade breadth for depth, and it leans heavily on three ingredients the paper validates &mdash; a strong MLLM backbone, Gemini-synthesized training data, and model souping.</p>
+
+<h3>The bigger picture</h3>
+
+<p>Embeddings are the connective tissue between raw data and everything an AI system does with it. As applications become agentic and multimodal &mdash; an assistant that reasons over your documents, screenshots, voice notes, and videos at once &mdash; a single unified representation space stops being a convenience and becomes infrastructure. This paper is a bet that the embedding layer should be as natively multimodal as the generative models it serves, built from the same foundation rather than assembled from a patchwork of specialists. If that bet holds, "which embedding model do I use for this data type?" becomes a question that no longer needs asking.</p>
+
+<!-- Glossary -->
+<button class="glossary-toggle" onclick="document.querySelector('.glossary-panel').classList.toggle('open')">&#x1F4D6;</button>
+<div class="glossary-panel">
+  <h3>Glossary</h3>
+  <input type="text" id="glossary-search" placeholder="Search..." oninput="filterGlossary()">
+  <div id="glossary-entries">
+    <div class="glossary-entry"><strong>Embedding</strong><p>A vector (list of numbers) representing the meaning of content, arranged so similar meanings have similar vectors.</p></div>
+    <div class="glossary-entry"><strong>Vector space</strong><p>The shared high-dimensional space all embeddings live in. "Unified" means all modalities map into the same one.</p></div>
+    <div class="glossary-entry"><strong>Cosine similarity</strong><p>How aligned two vectors are, by the angle between them. +1 = same direction, 0 = unrelated.</p></div>
+    <div class="glossary-entry"><strong>Retrieval</strong><p>Finding the most relevant items for a query by comparing embeddings &mdash; the engine behind search, recommendation, and RAG.</p></div>
+    <div class="glossary-entry"><strong>RAG</strong><p>Retrieval-Augmented Generation. Fetch relevant documents, then let a language model answer using them as grounding.</p></div>
+    <div class="glossary-entry"><strong>Modality</strong><p>A type of data: text, image, video, audio. Multimodal = handles several; cross-modal = query and result differ.</p></div>
+    <div class="glossary-entry"><strong>Late fusion</strong><p>Process each modality separately, combine only at the end (CLIP-style). Modalities never interact during processing.</p></div>
+    <div class="glossary-entry"><strong>Deep fusion</strong><p>Feed all modalities into one network as an interleaved sequence so they interact throughout. This paper's approach.</p></div>
+    <div class="glossary-entry"><strong>CLIP / ALIGN / SigLIP</strong><p>The dominant lineage of dual-encoder multimodal models that pioneered shared image-text spaces via late fusion.</p></div>
+    <div class="glossary-entry"><strong>MLLM</strong><p>Multimodal Large Language Model &mdash; an LLM (like Gemini) that natively reads images, audio, and video too.</p></div>
+    <div class="glossary-entry"><strong>Transformer</strong><p>The neural network architecture behind modern AI, processing token sequences using attention.</p></div>
+    <div class="glossary-entry"><strong>Attention</strong><p>The mechanism letting each token gather information from other tokens, weighting how much to "look at" each.</p></div>
+    <div class="glossary-entry"><strong>Bidirectional attention</strong><p>Every token attends to every other token in both directions &mdash; better for encoding a fixed input than causal attention.</p></div>
+    <div class="glossary-entry"><strong>Causal attention</strong><p>Each token sees only earlier tokens. Needed for generating text, limiting for embeddings.</p></div>
+    <div class="glossary-entry"><strong>Token</strong><p>The small chunk a transformer reads. Text, image patches, and audio all get converted into tokens.</p></div>
+    <div class="glossary-entry"><strong>Contrastive learning</strong><p>Training that pulls matching pairs together and pushes mismatched pairs apart in embedding space.</p></div>
+    <div class="glossary-entry"><strong>In-batch negatives</strong><p>Other examples' targets in the same batch, reused for free as wrong answers. Big batches give more of them.</p></div>
+    <div class="glossary-entry"><strong>Hard negative</strong><p>A wrong answer deliberately similar to the right one, forcing the model to learn fine distinctions.</p></div>
+    <div class="glossary-entry"><strong>Mean pooling</strong><p>Averaging per-token vectors into one vector for the whole input. The simplest pooling, used here.</p></div>
+    <div class="glossary-entry"><strong>Matryoshka (MRL)</strong><p>Training so smaller embeddings nest inside larger ones &mdash; truncate 3,072 to 1,536 or 768 and it still works.</p></div>
+    <div class="glossary-entry"><strong>Model soup</strong><p>Averaging the weights of several fine-tuned models into one, often more robust than any single ingredient.</p></div>
+    <div class="glossary-entry"><strong>ASR</strong><p>Automatic Speech Recognition &mdash; speech-to-text. The cascade approach embeds its output; errors propagate.</p></div>
+    <div class="glossary-entry"><strong>Prosody</strong><p>The rhythm, stress, and intonation of speech &mdash; lost in transcription, preserved in native audio embedding.</p></div>
+    <div class="glossary-entry"><strong>Zero-shot</strong><p>Working on a task or domain with no specific training or tuning &mdash; "out of the box."</p></div>
+    <div class="glossary-entry"><strong>MTEB / MMTEB</strong><p>Massive (Multilingual) Text Embedding Benchmark &mdash; the standard text-embedding leaderboard.</p></div>
+    <div class="glossary-entry"><strong>Recall@k</strong><p>Fraction of queries where a correct result appears in the top k. Recall@1 = the very top result is right.</p></div>
+    <div class="glossary-entry"><strong>NDCG@10</strong><p>A ranking-quality score for the top 10 results, rewarding more-relevant items ranked higher.</p></div>
+    <div class="glossary-entry"><strong>MRR@10</strong><p>Mean Reciprocal Rank at 10 &mdash; rewards putting the first correct result as high as possible in the top 10.</p></div>
+  </div>
+</div>
+
+</div>
+
+<script>
+// Progress bar
+window.addEventListener('scroll', function() {
+  var h = document.documentElement;
+  var b = document.body;
+  var st = 'scrollTop';
+  var sh = 'scrollHeight';
+  var percent = (h[st] || b[st]) / ((h[sh] || b[sh]) - h.clientHeight) * 100;
+  document.getElementById('progress-bar').style.width = percent + '%';
+});
+
+// Active TOC
+window.addEventListener('scroll', function() {
+  var sections = document.querySelectorAll('h2[id]');
+  var current = '';
+  sections.forEach(function(section) {
+    var top = section.getBoundingClientRect().top;
+    if (top < 150) current = section.id;
+  });
+  if ((window.innerHeight + window.scrollY) >= document.documentElement.scrollHeight - 50) {
+    current = sections[sections.length - 1].id;
+  }
+  document.querySelectorAll('.sidebar a').forEach(function(link) {
+    link.classList.remove('active');
+    if (link.getAttribute('href') === '#' + current) link.classList.add('active');
+  });
+});
+
+// Quiz
+function checkQuiz(name, correct, btn) {
+  var inputs = document.getElementsByName(name);
+  var selected = null;
+  for (var i = 0; i < inputs.length; i++) {
+    if (inputs[i].checked) { selected = inputs[i].value; break; }
+  }
+  var feedback = btn.parentElement.querySelector('.quiz-feedback');
+  feedback.style.display = 'block';
+  if (selected === correct) {
+    feedback.className = 'quiz-feedback quiz-correct';
+    feedback.textContent = 'Correct!';
+  } else if (selected === null) {
+    feedback.className = 'quiz-feedback quiz-wrong';
+    feedback.textContent = 'Pick an answer first.';
+  } else {
+    feedback.className = 'quiz-feedback quiz-wrong';
+    feedback.textContent = 'Not quite — try again.';
+  }
+}
+
+// Glossary search
+function filterGlossary() {
+  var q = document.getElementById('glossary-search').value.toLowerCase();
+  document.querySelectorAll('.glossary-entry').forEach(function(entry) {
+    var text = entry.textContent.toLowerCase();
+    entry.style.display = text.indexOf(q) >= 0 ? '' : 'none';
+  });
+}
+</script>
+
+<script data-goatcounter="https://tcho.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+
+</body>
+</html>

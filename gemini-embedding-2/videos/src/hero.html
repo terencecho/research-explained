@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap');
+* { margin: 0; padding: 0; box-sizing: border-box; }
+</style>
+</head>
+<body>
+<div
+  data-composition-id="ge2-hero"
+  data-width="1920"
+  data-height="540"
+  data-start="0"
+  data-duration="11"
+>
+  <div class="scene">
+    <div class="title">One Vector Space for Every Modality</div>
+
+    <div class="flow">
+      <!-- Inputs -->
+      <div class="inputs">
+        <div class="inp i-text"><span class="ico">&#9998;</span><span class="lbl">TEXT</span></div>
+        <div class="inp i-image"><span class="ico">&#128247;</span><span class="lbl">IMAGE</span></div>
+        <div class="inp i-video"><span class="ico">&#127909;</span><span class="lbl">VIDEO</span></div>
+        <div class="inp i-audio"><span class="ico">&#128266;</span><span class="lbl">AUDIO</span></div>
+      </div>
+
+      <div class="arrow a1">&#10230;</div>
+
+      <!-- Model -->
+      <div class="model">
+        <div class="model-name">Gemini<br/>Embedding&nbsp;2</div>
+        <div class="model-sub">single transformer</div>
+      </div>
+
+      <div class="arrow a2">&#10230;</div>
+
+      <!-- Vector space -->
+      <div class="space">
+        <div class="space-label">unified vector space</div>
+        <!-- DOG cluster -->
+        <div class="cluster-ring c-dog"></div>
+        <div class="dot d-text" style="left:118px; top:70px;"></div>
+        <div class="dot d-image" style="left:150px; top:92px;"></div>
+        <div class="dot d-video" style="left:108px; top:104px;"></div>
+        <div class="dot d-audio" style="left:142px; top:60px;"></div>
+        <div class="cluster-tag t-dog" style="left:84px; top:128px;">"dog" &middot; photo &middot; clip &middot; bark</div>
+        <!-- CAR cluster -->
+        <div class="cluster-ring c-car"></div>
+        <div class="dot d-text" style="left:352px; top:188px;"></div>
+        <div class="dot d-image" style="left:384px; top:206px;"></div>
+        <div class="dot d-video" style="left:344px; top:218px;"></div>
+        <div class="dot d-audio" style="left:378px; top:176px;"></div>
+        <div class="cluster-tag t-car" style="left:320px; top:244px;">"car" &middot; photo &middot; clip &middot; engine</div>
+      </div>
+    </div>
+
+    <div class="legend">
+      <span class="leg"><i class="sw d-text"></i>text</span>
+      <span class="leg"><i class="sw d-image"></i>image</span>
+      <span class="leg"><i class="sw d-video"></i>video</span>
+      <span class="leg"><i class="sw d-audio"></i>audio</span>
+      <span class="leg-note">same meaning &rarr; same region, whatever the modality</span>
+    </div>
+  </div>
+
+  <style>
+    [data-composition-id="ge2-hero"] {
+      position: relative; overflow: hidden; background: #011627;
+      width: 1920px; height: 540px;
+      font-family: 'Space Mono', monospace; color: #FDFFFC;
+    }
+    [data-composition-id="ge2-hero"] .scene {
+      width: 1920px; height: 540px;
+      display: flex; flex-direction: column;
+      padding: 28px 48px 22px;
+    }
+    [data-composition-id="ge2-hero"] .title {
+      font-size: 40px; font-weight: 700; text-align: center;
+      letter-spacing: 1px; margin-bottom: 18px;
+    }
+    [data-composition-id="ge2-hero"] .flow {
+      flex: 1; display: flex; align-items: center; justify-content: center; gap: 36px;
+    }
+    [data-composition-id="ge2-hero"] .inputs {
+      display: flex; flex-direction: column; gap: 14px;
+    }
+    [data-composition-id="ge2-hero"] .inp {
+      display: flex; align-items: center; gap: 14px;
+      width: 230px; padding: 12px 18px; border-radius: 10px;
+      border: 2px solid; background: rgba(255,255,255,0.03);
+    }
+    [data-composition-id="ge2-hero"] .inp .ico { font-size: 30px; }
+    [data-composition-id="ge2-hero"] .inp .lbl { font-size: 26px; font-weight: 700; letter-spacing: 2px; }
+    [data-composition-id="ge2-hero"] .i-text  { border-color: #2EC4B6; color: #2EC4B6; }
+    [data-composition-id="ge2-hero"] .i-image { border-color: #FF9F1C; color: #FF9F1C; }
+    [data-composition-id="ge2-hero"] .i-video { border-color: #bc8cff; color: #bc8cff; }
+    [data-composition-id="ge2-hero"] .i-audio { border-color: #E71D36; color: #E71D36; }
+    [data-composition-id="ge2-hero"] .arrow { font-size: 46px; color: #778DA9; }
+    [data-composition-id="ge2-hero"] .model {
+      width: 220px; height: 220px; border-radius: 18px;
+      border: 3px solid #58a6ff; background: rgba(88,166,255,0.08);
+      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;
+      box-shadow: 0 0 40px rgba(88,166,255,0.25);
+    }
+    [data-composition-id="ge2-hero"] .model-name { font-size: 30px; font-weight: 700; text-align: center; line-height: 1.2; color: #58a6ff; }
+    [data-composition-id="ge2-hero"] .model-sub { font-size: 18px; color: #778DA9; }
+    [data-composition-id="ge2-hero"] .space {
+      position: relative; width: 520px; height: 300px;
+      border: 2px solid #1b3a52; border-radius: 14px; background: rgba(255,255,255,0.02);
+    }
+    [data-composition-id="ge2-hero"] .space-label {
+      position: absolute; top: 10px; left: 16px; font-size: 18px; color: #778DA9; letter-spacing: 1px;
+    }
+    [data-composition-id="ge2-hero"] .dot {
+      position: absolute; width: 20px; height: 20px; border-radius: 50%;
+      transform: translate(-50%,-50%);
+    }
+    [data-composition-id="ge2-hero"] .d-text  { background: #2EC4B6; box-shadow: 0 0 12px #2EC4B6; }
+    [data-composition-id="ge2-hero"] .d-image { background: #FF9F1C; box-shadow: 0 0 12px #FF9F1C; }
+    [data-composition-id="ge2-hero"] .d-video { background: #bc8cff; box-shadow: 0 0 12px #bc8cff; }
+    [data-composition-id="ge2-hero"] .d-audio { background: #E71D36; box-shadow: 0 0 12px #E71D36; }
+    [data-composition-id="ge2-hero"] .cluster-ring {
+      position: absolute; width: 130px; height: 130px; border-radius: 50%;
+      border: 2px dashed #415A77;
+    }
+    [data-composition-id="ge2-hero"] .c-dog { left: 60px; top: 40px; }
+    [data-composition-id="ge2-hero"] .c-car { left: 294px; top: 156px; }
+    [data-composition-id="ge2-hero"] .cluster-tag {
+      position: absolute; font-size: 16px; color: #FDFFFC; white-space: nowrap;
+      background: rgba(1,22,39,0.85); padding: 3px 8px; border-radius: 6px;
+    }
+    [data-composition-id="ge2-hero"] .legend {
+      display: flex; align-items: center; justify-content: center; gap: 26px;
+      font-size: 19px; color: #c7d2dc; margin-top: 10px;
+    }
+    [data-composition-id="ge2-hero"] .leg { display: flex; align-items: center; gap: 8px; }
+    [data-composition-id="ge2-hero"] .sw { width: 14px; height: 14px; border-radius: 50%; display: inline-block; }
+    [data-composition-id="ge2-hero"] .leg-note { color: #778DA9; font-style: italic; }
+  </style>
+
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+  <script>
+    window.__timelines = window.__timelines || {};
+    var root = document.currentScript.parentElement;
+    var q = function(s){ return root.querySelectorAll(s); };
+    var tl = gsap.timeline({ paused: true });
+
+    tl.from(root.querySelector('.title'), { opacity: 0, y: -20, duration: 0.6 });
+    tl.from(root.querySelectorAll('.inp'), { opacity: 0, x: -40, duration: 0.5, stagger: 0.15 }, 0.3);
+    tl.from(root.querySelector('.a1'), { opacity: 0, duration: 0.4 }, 1.1);
+    tl.from(root.querySelector('.model'), { opacity: 0, scale: 0.6, duration: 0.6, ease: 'back.out(1.6)' }, 1.3);
+    tl.from(root.querySelector('.a2'), { opacity: 0, duration: 0.4 }, 2.0);
+    tl.from(root.querySelector('.space'), { opacity: 0, scale: 0.8, duration: 0.5 }, 2.2);
+
+    // dots fly in from the model toward their cluster positions
+    tl.from(root.querySelectorAll('.dot'), {
+      opacity: 0, scale: 0, duration: 0.5, stagger: 0.08, ease: 'back.out(2)'
+    }, 2.8);
+    tl.from(root.querySelectorAll('.cluster-ring'), { opacity: 0, scale: 0.4, duration: 0.5, stagger: 0.2 }, 3.4);
+    tl.from(root.querySelectorAll('.cluster-tag'), { opacity: 0, y: 8, duration: 0.4, stagger: 0.2 }, 3.8);
+    tl.from(root.querySelectorAll('.legend .leg'), { opacity: 0, y: 10, duration: 0.4, stagger: 0.1 }, 4.4);
+    tl.from(root.querySelector('.leg-note'), { opacity: 0, duration: 0.6 }, 5.0);
+
+    // gentle pulse on the clusters to emphasize "they sit together"
+    tl.to(root.querySelectorAll('.cluster-ring'), { scale: 1.08, duration: 0.8, yoyo: true, repeat: 2, transformOrigin: '50% 50%' }, 5.6);
+
+    window.__timelines["ge2-hero"] = tl;
+  </script>
+</div>
+</body>
+</html>

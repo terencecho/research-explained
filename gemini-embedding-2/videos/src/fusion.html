@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap');
+* { margin: 0; padding: 0; box-sizing: border-box; }
+</style>
+</head>
+<body>
+<div
+  data-composition-id="ge2-fusion"
+  data-width="1920"
+  data-height="540"
+  data-start="0"
+  data-duration="11"
+>
+  <div class="scene">
+    <div class="title">Late Fusion vs Deep Fusion</div>
+
+    <div class="cols">
+      <!-- LEFT: late fusion (CLIP-style) -->
+      <div class="col left">
+        <div class="col-head old">OLD WAY &middot; Late Fusion <span class="sub">(CLIP, ALIGN, SigLIP)</span></div>
+        <div class="towers">
+          <div class="towwrap">
+            <div class="modin img">&#128247; image</div>
+            <div class="tower t-img">image<br/>encoder</div>
+            <div class="vec v-img"></div>
+          </div>
+          <div class="towwrap">
+            <div class="modin txt">&#9998; text</div>
+            <div class="tower t-txt">text<br/>encoder</div>
+            <div class="vec v-txt"></div>
+          </div>
+        </div>
+        <div class="join-note old-note">two separate encoders &middot; compared only at the very end</div>
+        <div class="limitation">&#9888; can't reason across modalities &middot; no mixed inputs</div>
+      </div>
+
+      <div class="vs">VS</div>
+
+      <!-- RIGHT: deep fusion (Gemini) -->
+      <div class="col right">
+        <div class="col-head new">NEW WAY &middot; Deep Fusion <span class="sub">(Gemini Embedding 2)</span></div>
+        <div class="interleave">
+          <span class="tok img">&#128247;</span>
+          <span class="tok txt">&#9998;</span>
+          <span class="tok vid">&#127909;</span>
+          <span class="tok txt">&#9998;</span>
+          <span class="tok aud">&#128266;</span>
+        </div>
+        <div class="seq-label">one interleaved sequence of tokens</div>
+        <div class="single-tower">single transformer &middot; bidirectional attention
+          <div class="attn-grid">
+            <span></span><span></span><span></span><span></span><span></span>
+            <span></span><span></span><span></span><span></span><span></span>
+            <span></span><span></span><span></span><span></span><span></span>
+          </div>
+        </div>
+        <div class="vec v-uni"></div>
+        <div class="join-note new-note">one shared vector &middot; modalities interact end-to-end</div>
+      </div>
+    </div>
+  </div>
+
+  <style>
+    [data-composition-id="ge2-fusion"] {
+      position: relative; overflow: hidden; background: #011627;
+      width: 1920px; height: 540px;
+      font-family: 'Space Mono', monospace; color: #FDFFFC;
+    }
+    [data-composition-id="ge2-fusion"] .scene {
+      width: 1920px; height: 540px; display: flex; flex-direction: column;
+      padding: 24px 44px 20px;
+    }
+    [data-composition-id="ge2-fusion"] .title {
+      font-size: 40px; font-weight: 700; text-align: center; letter-spacing: 1px; margin-bottom: 16px;
+    }
+    [data-composition-id="ge2-fusion"] .cols {
+      flex: 1; display: flex; align-items: stretch; justify-content: center; gap: 24px;
+    }
+    [data-composition-id="ge2-fusion"] .col {
+      flex: 1; border-radius: 14px; border: 2px solid; padding: 16px 20px;
+      display: flex; flex-direction: column; align-items: center; gap: 12px;
+    }
+    [data-composition-id="ge2-fusion"] .left  { border-color: #E71D36; background: rgba(231,29,54,0.05); }
+    [data-composition-id="ge2-fusion"] .right { border-color: #2EC4B6; background: rgba(46,196,182,0.05); }
+    [data-composition-id="ge2-fusion"] .col-head { font-size: 22px; font-weight: 700; letter-spacing: 1px; }
+    [data-composition-id="ge2-fusion"] .col-head .sub { font-size: 17px; font-weight: 400; color: #778DA9; }
+    [data-composition-id="ge2-fusion"] .old { color: #E71D36; }
+    [data-composition-id="ge2-fusion"] .new { color: #2EC4B6; }
+    [data-composition-id="ge2-fusion"] .vs { align-self: center; font-size: 28px; font-weight: 700; color: #778DA9; }
+
+    [data-composition-id="ge2-fusion"] .towers { display: flex; gap: 48px; margin-top: 6px; }
+    [data-composition-id="ge2-fusion"] .towwrap { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+    [data-composition-id="ge2-fusion"] .modin { font-size: 22px; padding: 6px 14px; border-radius: 8px; border: 1px solid #415A77; }
+    [data-composition-id="ge2-fusion"] .tower {
+      width: 130px; height: 96px; border-radius: 10px; border: 2px solid #E71D36;
+      display: flex; align-items: center; justify-content: center; text-align: center;
+      font-size: 20px; font-weight: 700; line-height: 1.2; background: rgba(231,29,54,0.08);
+    }
+    [data-composition-id="ge2-fusion"] .vec { width: 96px; height: 22px; border-radius: 5px; }
+    [data-composition-id="ge2-fusion"] .v-img { background: #FF9F1C; }
+    [data-composition-id="ge2-fusion"] .v-txt { background: #2EC4B6; }
+    [data-composition-id="ge2-fusion"] .join-note { font-size: 18px; color: #c7d2dc; text-align: center; }
+    [data-composition-id="ge2-fusion"] .limitation { font-size: 18px; color: #E71D36; text-align: center; margin-top: auto; }
+
+    [data-composition-id="ge2-fusion"] .interleave { display: flex; gap: 10px; margin-top: 6px; }
+    [data-composition-id="ge2-fusion"] .tok {
+      width: 56px; height: 56px; border-radius: 10px; font-size: 28px;
+      display: flex; align-items: center; justify-content: center; border: 2px solid;
+    }
+    [data-composition-id="ge2-fusion"] .tok.img { border-color: #FF9F1C; }
+    [data-composition-id="ge2-fusion"] .tok.txt { border-color: #2EC4B6; }
+    [data-composition-id="ge2-fusion"] .tok.vid { border-color: #bc8cff; }
+    [data-composition-id="ge2-fusion"] .tok.aud { border-color: #E71D36; }
+    [data-composition-id="ge2-fusion"] .seq-label { font-size: 17px; color: #778DA9; }
+    [data-composition-id="ge2-fusion"] .single-tower {
+      width: 340px; border-radius: 10px; border: 2px solid #2EC4B6; background: rgba(46,196,182,0.08);
+      padding: 10px; text-align: center; font-size: 19px; font-weight: 700; line-height: 1.3;
+    }
+    [data-composition-id="ge2-fusion"] .attn-grid {
+      display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; margin-top: 8px;
+    }
+    [data-composition-id="ge2-fusion"] .attn-grid span {
+      height: 16px; background: rgba(46,196,182,0.25); border-radius: 3px;
+    }
+    [data-composition-id="ge2-fusion"] .v-uni { width: 200px; height: 24px; border-radius: 5px;
+      background: linear-gradient(90deg,#2EC4B6,#FF9F1C,#bc8cff,#E71D36); }
+  </style>
+
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+  <script>
+    window.__timelines = window.__timelines || {};
+    var root = document.currentScript.parentElement;
+    var tl = gsap.timeline({ paused: true });
+
+    tl.from(root.querySelector('.title'), { opacity: 0, y: -20, duration: 0.6 });
+    // left side builds first
+    tl.from(root.querySelector('.left'), { opacity: 0, x: -30, duration: 0.5 }, 0.4);
+    tl.from(root.querySelectorAll('.left .modin'), { opacity: 0, y: -16, duration: 0.4, stagger: 0.15 }, 0.7);
+    tl.from(root.querySelectorAll('.left .tower'), { opacity: 0, scale: 0.7, duration: 0.4, stagger: 0.15 }, 1.1);
+    tl.from(root.querySelectorAll('.left .vec'), { opacity: 0, scaleX: 0, duration: 0.4, stagger: 0.15, transformOrigin: '0 50%' }, 1.5);
+    tl.from(root.querySelector('.old-note'), { opacity: 0, duration: 0.4 }, 1.9);
+    tl.from(root.querySelector('.limitation'), { opacity: 0, y: 8, duration: 0.5 }, 2.2);
+
+    tl.from(root.querySelector('.vs'), { opacity: 0, scale: 0.5, duration: 0.4 }, 2.6);
+
+    // right side builds second
+    tl.from(root.querySelector('.right'), { opacity: 0, x: 30, duration: 0.5 }, 2.9);
+    tl.from(root.querySelectorAll('.tok'), { opacity: 0, y: -16, scale: 0.6, duration: 0.4, stagger: 0.1, ease: 'back.out(2)' }, 3.3);
+    tl.from(root.querySelector('.seq-label'), { opacity: 0, duration: 0.4 }, 3.9);
+    tl.from(root.querySelector('.single-tower'), { opacity: 0, scale: 0.8, duration: 0.5 }, 4.2);
+    tl.from(root.querySelectorAll('.attn-grid span'), { opacity: 0, scale: 0, duration: 0.3, stagger: 0.03 }, 4.6);
+    tl.from(root.querySelector('.v-uni'), { opacity: 0, scaleX: 0, duration: 0.5, transformOrigin: '50% 50%' }, 5.4);
+    tl.from(root.querySelector('.new-note'), { opacity: 0, y: 8, duration: 0.5 }, 5.9);
+
+    // emphasize cross-modal attention shimmer
+    tl.to(root.querySelectorAll('.attn-grid span'), { backgroundColor: 'rgba(46,196,182,0.6)', duration: 0.5, stagger: { each: 0.04, yoyo: true, repeat: 1 } }, 6.4);
+
+    window.__timelines["ge2-fusion"] = tl;
+  </script>
+</div>
+</body>
+</html>

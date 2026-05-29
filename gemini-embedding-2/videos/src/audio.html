@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap');
+* { margin: 0; padding: 0; box-sizing: border-box; }
+</style>
+</head>
+<body>
+<div
+  data-composition-id="ge2-audio"
+  data-width="1920"
+  data-height="540"
+  data-start="0"
+  data-duration="11"
+>
+  <div class="scene">
+    <div class="title">Native Audio Beats the ASR Cascade</div>
+
+    <div class="rows">
+      <!-- TOP: cascade -->
+      <div class="row cascade">
+        <div class="row-tag bad">CASCADE</div>
+        <div class="step"><span class="ico">&#128266;</span><div class="cap">raw audio</div></div>
+        <div class="conn">&#10230;</div>
+        <div class="step boxed"><div class="bx">ASR</div><div class="cap">transcribe</div></div>
+        <div class="conn">&#10230;</div>
+        <div class="step"><div class="txt wrong">"wreck a nice beach"</div><div class="cap err">&#9888; hard guess, committed</div></div>
+        <div class="conn">&#10230;</div>
+        <div class="step"><div class="bx ret">retrieve</div><div class="cap err">&#10007; wrong results</div></div>
+      </div>
+
+      <!-- BOTTOM: native -->
+      <div class="row native">
+        <div class="row-tag good">NATIVE</div>
+        <div class="step"><span class="ico">&#128266;</span><div class="cap">raw audio</div></div>
+        <div class="conn">&#10230;</div>
+        <div class="step boxed gd"><div class="bx gbx">Gemini<br/>Embedding&nbsp;2</div><div class="cap">embed directly</div></div>
+        <div class="conn">&#10230;</div>
+        <div class="step"><div class="wave">
+          <span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+        </div><div class="cap">keeps prosody &amp; ambiguity</div></div>
+        <div class="conn">&#10230;</div>
+        <div class="step"><div class="bx ret gret">retrieve</div><div class="cap ok">&#10003; right results</div></div>
+      </div>
+    </div>
+
+    <div class="footer">native audio +3.6 mrr@10 overall &middot; +5.0 cross-lingual &mdash; no error to propagate</div>
+  </div>
+
+  <style>
+    [data-composition-id="ge2-audio"] {
+      position: relative; overflow: hidden; background: #011627;
+      width: 1920px; height: 540px; font-family: 'Space Mono', monospace; color: #FDFFFC;
+    }
+    [data-composition-id="ge2-audio"] .scene {
+      width: 1920px; height: 540px; display: flex; flex-direction: column; padding: 26px 48px 20px;
+    }
+    [data-composition-id="ge2-audio"] .title {
+      font-size: 40px; font-weight: 700; text-align: center; letter-spacing: 1px; margin-bottom: 18px;
+    }
+    [data-composition-id="ge2-audio"] .rows { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 28px; }
+    [data-composition-id="ge2-audio"] .row {
+      display: flex; align-items: center; gap: 12px; padding: 14px 20px; border-radius: 12px; border: 2px solid;
+    }
+    [data-composition-id="ge2-audio"] .cascade { border-color: #E71D36; background: rgba(231,29,54,0.05); }
+    [data-composition-id="ge2-audio"] .native  { border-color: #2EC4B6; background: rgba(46,196,182,0.05); }
+    [data-composition-id="ge2-audio"] .row-tag { font-size: 18px; font-weight: 700; letter-spacing: 2px; width: 110px; flex-shrink: 0; }
+    [data-composition-id="ge2-audio"] .bad { color: #E71D36; }
+    [data-composition-id="ge2-audio"] .good { color: #2EC4B6; }
+    [data-composition-id="ge2-audio"] .step { display: flex; flex-direction: column; align-items: center; gap: 7px; min-width: 130px; }
+    [data-composition-id="ge2-audio"] .ico { font-size: 40px; }
+    [data-composition-id="ge2-audio"] .cap { font-size: 17px; color: #c7d2dc; text-align: center; }
+    [data-composition-id="ge2-audio"] .cap.err { color: #E71D36; }
+    [data-composition-id="ge2-audio"] .cap.ok { color: #3fb950; }
+    [data-composition-id="ge2-audio"] .conn { font-size: 32px; color: #778DA9; }
+    [data-composition-id="ge2-audio"] .bx {
+      font-size: 20px; font-weight: 700; padding: 14px 18px; border-radius: 10px; border: 2px solid #778DA9;
+      text-align: center; line-height: 1.2;
+    }
+    [data-composition-id="ge2-audio"] .gbx { border-color: #58a6ff; color: #58a6ff; background: rgba(88,166,255,0.08); }
+    [data-composition-id="ge2-audio"] .ret { border-color: #778DA9; }
+    [data-composition-id="ge2-audio"] .gret { border-color: #3fb950; color: #3fb950; }
+    [data-composition-id="ge2-audio"] .txt {
+      font-size: 19px; font-weight: 700; padding: 12px 14px; border-radius: 8px;
+    }
+    [data-composition-id="ge2-audio"] .wrong { color: #E71D36; border: 2px dashed #E71D36; text-decoration: line-through; }
+    [data-composition-id="ge2-audio"] .wave { display: flex; align-items: center; gap: 5px; height: 50px; }
+    [data-composition-id="ge2-audio"] .wave span {
+      width: 7px; border-radius: 4px; background: #2EC4B6; align-self: center;
+    }
+    [data-composition-id="ge2-audio"] .wave span:nth-child(1){height:18px;}
+    [data-composition-id="ge2-audio"] .wave span:nth-child(2){height:40px;}
+    [data-composition-id="ge2-audio"] .wave span:nth-child(3){height:26px;}
+    [data-composition-id="ge2-audio"] .wave span:nth-child(4){height:48px;}
+    [data-composition-id="ge2-audio"] .wave span:nth-child(5){height:30px;}
+    [data-composition-id="ge2-audio"] .wave span:nth-child(6){height:44px;}
+    [data-composition-id="ge2-audio"] .wave span:nth-child(7){height:20px;}
+    [data-composition-id="ge2-audio"] .wave span:nth-child(8){height:34px;}
+    [data-composition-id="ge2-audio"] .footer { text-align: center; font-size: 20px; color: #3fb950; margin-top: 14px; font-weight: 700; }
+  </style>
+
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+  <script>
+    window.__timelines = window.__timelines || {};
+    var root = document.currentScript.parentElement;
+    var tl = gsap.timeline({ paused: true });
+
+    tl.from(root.querySelector('.title'), { opacity: 0, y: -20, duration: 0.6 });
+
+    // cascade row builds step by step
+    tl.from(root.querySelector('.cascade'), { opacity: 0, y: -16, duration: 0.4 }, 0.4);
+    tl.from(root.querySelectorAll('.cascade .step, .cascade .conn'), { opacity: 0, x: -20, duration: 0.4, stagger: 0.22 }, 0.7);
+    // flash the wrong transcription
+    tl.to(root.querySelector('.cascade .wrong'), { scale: 1.1, duration: 0.4, yoyo: true, repeat: 1, transformOrigin: '50% 50%' }, 2.6);
+
+    // native row builds
+    tl.from(root.querySelector('.native'), { opacity: 0, y: 16, duration: 0.4 }, 3.3);
+    tl.from(root.querySelectorAll('.native .step, .native .conn'), { opacity: 0, x: -20, duration: 0.4, stagger: 0.22 }, 3.6);
+
+    // animate the waveform bars to feel "alive / continuous"
+    tl.to(root.querySelectorAll('.native .wave span'), {
+      scaleY: 1.5, duration: 0.4, yoyo: true, repeat: 3, stagger: { each: 0.06, from: 'center' }, transformOrigin: '50% 50%'
+    }, 5.4);
+
+    tl.from(root.querySelector('.footer'), { opacity: 0, y: 10, duration: 0.5 }, 5.8);
+
+    window.__timelines["ge2-audio"] = tl;
+  </script>
+</div>
+</body>
+</html>
