@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RADAR: The Paper, Explained</title>
+<style>
+:root {
+  --bg: #0d1117; --surface: #161b22; --border: #30363d; --text: #e6edf3; --text-muted: #8b949e;
+  --accent: #58a6ff; --accent-subtle: #1f6feb22; --green: #3fb950; --yellow: #d29922; --red: #f85149; --purple: #bc8cff;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; background: var(--bg); color: var(--text); line-height: 1.7; max-width: 1200px; margin: 0 auto; padding: 2rem 1.5rem; display: flex; gap: 0; }
+.progress-bar { position: fixed; top: 0; left: 0; height: 3px; background: var(--accent); z-index: 1000; transition: width 0.1s; }
+.sidebar { position: sticky; top: 1rem; align-self: flex-start; width: 240px; flex-shrink: 0; max-height: calc(100vh - 2rem); overflow-y: auto; padding-right: 1.25rem; border-right: 1px solid var(--border); margin-right: 2rem; scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
+.sidebar::-webkit-scrollbar { width: 4px; } .sidebar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; } .sidebar::-webkit-scrollbar-track { background: transparent; }
+.sidebar .toc-title { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); margin-bottom: 0.75rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border); }
+.sidebar a { display: block; color: var(--text-muted); text-decoration: none; font-size: 0.8rem; padding: 0.2rem 0; line-height: 1.4; transition: color 0.15s, border-color 0.15s; border-left: 2px solid transparent; padding-left: 0.6rem; }
+.sidebar a:hover { color: var(--text); } .sidebar a.active { color: var(--accent); border-left-color: var(--accent); font-weight: 600; }
+.sidebar a.section-gap { margin-top: 0.4rem; }
+.sidebar-home { display: block; font-size: 0.8rem; color: var(--text-muted); text-decoration: none; padding: 0.3rem 0.6rem; margin-bottom: 0.75rem; border-left: none !important; transition: color 0.15s; }
+.sidebar-home:hover { color: var(--accent); }
+.main-content { flex: 1; min-width: 0; max-width: 860px; }
+@media (max-width: 900px) {
+  body { display: block; max-width: 860px; overflow-x: hidden; }
+  .sidebar { position: fixed; top: 0; left: -280px; width: 260px; height: 100vh; max-height: 100vh; background: var(--surface); border-right: 1px solid var(--border); padding: 1rem; margin-right: 0; z-index: 1001; transition: left 0.25s ease; }
+  .sidebar.mobile-open { left: 0; } .main-content { max-width: 100%; } .mobile-toc-btn { display: flex !important; }
+  .mobile-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; } .mobile-overlay.active { display: block; }
+  .compare-row { grid-template-columns: 1fr; } .glossary-panel { width: calc(100vw - 3rem); right: 1.5rem; }
+  .term .tooltip { width: calc(100vw - 4rem); max-width: 320px; left: 0; transform: none; }
+  .metrics-table { display: block; overflow-x: auto; }
+  .pipeline { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .arch-card { max-width: 100%; }
+  .three-grid { grid-template-columns: 1fr; }
+}
+.mobile-toc-btn { display: none; position: fixed; bottom: 1.5rem; left: 1.5rem; width: 44px; height: 44px; background: var(--accent); color: var(--bg); border: none; border-radius: 50%; font-size: 1.1rem; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.4); z-index: 999; align-items: center; justify-content: center; }
+h1 { font-size: 2rem; margin-bottom: 0.5rem; } .subtitle { color: var(--text-muted); margin-bottom: 2rem; font-size: 1.05rem; }
+.meta { color: var(--text-muted); font-size: 0.8rem; margin-top: -1rem; margin-bottom: 1.5rem; }
+h2 { font-size: 1.5rem; margin: 2.5rem 0 1rem; color: var(--accent); border-bottom: 1px solid var(--border); padding-bottom: 0.5rem; }
+h3 { font-size: 1.2rem; margin: 1.5rem 0 0.75rem; color: var(--purple); } p { margin-bottom: 1rem; } a { color: var(--accent); }
+ul, ol { margin-bottom: 1rem; padding-left: 1.5rem; } li { margin-bottom: 0.35rem; }
+.research-banner { background: linear-gradient(135deg, #011627 0%, #0d2137 50%, #1a1a3a 100%); border: 1px solid #2EC4B6; border-radius: 12px; padding: 1.25rem 1.5rem; margin-bottom: 2rem; display: flex; align-items: center; gap: 1.25rem; }
+.research-banner .banner-icon { font-size: 2.2rem; flex-shrink: 0; } .research-banner .banner-text { flex: 1; }
+.research-banner .banner-text p { margin: 0; font-size: 0.95rem; color: var(--text-muted); line-height: 1.5; }
+.research-banner .banner-text p:first-child { font-size: 1.05rem; font-weight: 600; color: var(--text); margin-bottom: 0.25rem; }
+.research-banner a { color: #2EC4B6; text-decoration: none; font-weight: 600; } .research-banner a:hover { text-decoration: underline; }
+.banner-links { display: flex; gap: 0.75rem; margin-top: 0.5rem; flex-wrap: wrap; }
+.banner-link { display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.85rem; padding: 0.35rem 0.75rem; border-radius: 6px; border: 1px solid; text-decoration: none !important; transition: background 0.2s; }
+.banner-link.primary { border-color: #2EC4B6; color: #2EC4B6; } .banner-link.primary:hover { background: rgba(46,196,182,0.1); }
+.banner-link.secondary { border-color: var(--border); color: var(--text-muted); } .banner-link.secondary:hover { background: var(--accent-subtle); }
+.term { color: var(--yellow); cursor: help; border-bottom: 1px dashed var(--yellow); position: relative; } .term:hover { color: #e3b341; }
+.term .tooltip { display: none; position: absolute; bottom: 130%; left: 50%; transform: translateX(-50%); background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 0.75rem 1rem; width: 320px; font-size: 0.85rem; color: var(--text); z-index: 100; box-shadow: 0 4px 20px rgba(0,0,0,0.5); line-height: 1.5; }
+.term:hover .tooltip { display: block; }
+.analogy { background: #1a2332; border-left: 4px solid var(--accent); padding: 1rem 1.25rem; border-radius: 0 8px 8px 0; margin: 1rem 0; }
+.analogy::before { content: "Real-world analogy: "; font-weight: 700; color: var(--accent); }
+.insight { background: #1a2a1a; border-left: 4px solid var(--green); padding: 1rem 1.25rem; border-radius: 0 8px 8px 0; margin: 1rem 0; }
+.insight::before { content: "Key Insight: "; font-weight: 700; color: var(--green); }
+details { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; margin: 1rem 0; padding: 0; overflow: visible; }
+details summary { padding: 0.75rem 1.5rem; cursor: pointer; font-weight: 600; user-select: none; list-style: none; display: flex; align-items: center; gap: 0.5rem; }
+details summary::before { content: '+ '; color: var(--accent); font-family: monospace; font-size: 1.2rem; }
+details[open] summary::before { content: '- '; } details summary:hover { background: var(--accent-subtle); }
+details .content { padding: 0 1.5rem 1.25rem; }
+details .content ul, details .content ol { padding-left: 2.5rem; }
+
+.arch-flow { display: flex; flex-direction: column; align-items: center; gap: 0; margin: 1.5rem 0; }
+.arch-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 1rem 1.5rem; width: 100%; max-width: 560px; text-align: center; }
+.arch-card.highlight { border-color: #2EC4B6; background: linear-gradient(135deg, var(--surface) 0%, rgba(46,196,182,0.05) 100%); }
+.arch-card .name { font-weight: 700; font-size: 1em; } .arch-card .desc { color: var(--text-muted); font-size: 0.85em; margin-top: 0.25rem; }
+.arrow-down { width: 2px; height: 20px; background: var(--border); position: relative; }
+.arrow-down::after { content: ''; position: absolute; bottom: -4px; left: -4px; border: 5px solid transparent; border-top: 6px solid var(--border); }
+
+.tag-row { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-bottom: 8px; }
+.tag { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 0.8em; font-weight: 600; }
+.tag-teal { background: rgba(46,196,182,0.15); color: #2EC4B6; } .tag-orange { background: rgba(255,159,28,0.15); color: #FF9F1C; }
+.tag-purple { background: rgba(188,140,255,0.15); color: #bc8cff; } .tag-green { background: rgba(63,185,80,0.15); color: var(--green); }
+.tag-red { background: rgba(231,29,54,0.15); color: #f85149; } .tag-blue { background: rgba(88,166,255,0.15); color: var(--accent); }
+
+.compare-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 1rem 0; }
+.three-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; margin: 1.25rem 0; }
+.compare-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 1.25rem; }
+.compare-card h4 { margin-bottom: 0.5rem; } .compare-card.good { border-color: var(--green); } .compare-card.good h4 { color: var(--green); }
+.compare-card.bad { border-color: var(--red); } .compare-card.bad h4 { color: var(--red); }
+.compare-card.mid { border-color: var(--yellow); } .compare-card.mid h4 { color: var(--yellow); }
+.compare-card ul { padding-left: 1.25rem; font-size: 0.9rem; }
+
+.metrics-table { width: 100%; border-collapse: collapse; margin: 1.25rem 0; font-size: 0.9rem; }
+.metrics-table th { text-transform: uppercase; font-size: 0.7rem; letter-spacing: 1px; color: var(--text-muted); padding: 0.6rem 0.75rem; text-align: left; border-bottom: 2px solid var(--border); }
+.metrics-table td { padding: 0.6rem 0.75rem; border-bottom: 1px solid var(--border); }
+.metrics-table tr:hover td { background: rgba(88,166,255,0.04); } .val-best { color: var(--green); font-weight: 700; }
+.metrics-table .row-label { font-weight: 600; }
+
+.quiz { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 1.25rem; margin: 1.5rem 0; }
+.quiz-q { font-weight: 600; margin-bottom: 0.75rem; color: var(--purple); }
+.quiz label { display: block; padding: 0.5rem 0.75rem; margin: 0.25rem 0; border-radius: 6px; cursor: pointer; transition: background 0.2s; }
+.quiz label:hover { background: var(--accent-subtle); } .quiz input[type="radio"] { margin-right: 0.5rem; }
+.quiz-btn { margin-top: 0.75rem; padding: 0.5rem 1.25rem; background: var(--accent); color: var(--bg); border: none; border-radius: 6px; font-weight: 600; cursor: pointer; }
+.quiz-btn:hover { opacity: 0.9; } .quiz-feedback { display: none; margin-top: 0.75rem; padding: 0.75rem; border-radius: 6px; }
+.quiz-correct { background: #1a2a1a; color: var(--green); } .quiz-wrong { background: #2a1a1a; color: var(--red); }
+
+.glossary-toggle { position: fixed; bottom: 1.5rem; right: 1.5rem; width: 50px; height: 50px; background: var(--accent); color: var(--bg); border: none; border-radius: 50%; font-size: 1.3rem; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.4); z-index: 999; display: flex; align-items: center; justify-content: center; }
+.glossary-panel { display: none; position: fixed; bottom: 5rem; right: 1.5rem; width: 380px; max-height: 70vh; overflow-y: auto; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 1.25rem; z-index: 998; box-shadow: 0 8px 30px rgba(0,0,0,0.5); }
+.glossary-panel.open { display: block; } .glossary-panel h3 { margin-top: 0; }
+.glossary-panel input { width: 100%; padding: 0.5rem 0.75rem; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; color: var(--text); margin-bottom: 0.75rem; font-size: 0.9rem; }
+.glossary-entry { padding: 0.5rem 0; border-bottom: 1px solid var(--border); } .glossary-entry:last-child { border-bottom: none; }
+.glossary-entry strong { color: var(--yellow); } .glossary-entry p { font-size: 0.85rem; color: var(--text-muted); margin: 0.25rem 0 0; }
+
+.video-embed { margin: 1.5rem 0; border-radius: 12px; overflow: hidden; border: 1px solid var(--border); background: #011627; }
+.video-embed video { display: block; width: 100%; height: auto; }
+.video-caption { padding: 0.5rem 0.75rem; font-size: 0.8rem; color: var(--text-muted); background: var(--surface); display: flex; align-items: center; gap: 0.5rem; }
+.video-caption .badge { display: inline-flex; flex-direction: column; align-items: center; padding: 0.2rem 0.6rem; border-radius: 4px; background: rgba(46,196,182,0.15); color: #2EC4B6; text-decoration: none; white-space: nowrap; line-height: 1.2; transition: background 0.15s; }
+.video-caption .badge .badge-label { font-size: 0.55rem; font-weight: 400; color: #778DA9; text-transform: uppercase; letter-spacing: 0.04em; }
+.video-caption .badge .badge-name { font-size: 0.75rem; font-weight: 700; } .video-caption .badge:hover { background: rgba(46,196,182,0.3); text-decoration: none; }
+
+ol.big { counter-reset: biglist; list-style: none; padding: 0; }
+ol.big li { counter-increment: biglist; padding: 8px 0 8px 48px; position: relative; margin-bottom: 8px; }
+ol.big li::before { content: counter(biglist); position: absolute; left: 0; top: 6px; width: 32px; height: 32px; border-radius: 50%; background: rgba(88,166,255,0.12); color: var(--accent); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.9em; }
+
+.stepper { margin: 1.5rem 0; padding-left: 20px; }
+.step { position: relative; padding: 0 0 1.25rem 28px; border-left: 2px solid var(--accent); }
+.step:last-child { border-left: 2px solid transparent; }
+.step::before { content: ""; position: absolute; left: -7px; top: 4px; width: 12px; height: 12px; border-radius: 50%; background: var(--accent); }
+.step strong { display: block; margin-bottom: 4px; } .step .step-desc { color: var(--text-muted); font-size: 0.95em; }
+
+.pipeline { display: flex; gap: 0; align-items: stretch; margin: 1.5rem 0; flex-wrap: nowrap; }
+.pipe-stage { flex: 1; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 1rem; position: relative; min-width: 0; }
+.pipe-stage .num { width: 28px; height: 28px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.85em; color: var(--bg); margin-bottom: 0.5rem; }
+.pipe-stage.s1 .num { background: #2EC4B6; } .pipe-stage.s1 { border-color: #2EC4B6; }
+.pipe-stage.s2 .num { background: #FF9F1C; } .pipe-stage.s2 { border-color: #FF9F1C; }
+.pipe-stage.s3 .num { background: #bc8cff; } .pipe-stage.s3 { border-color: #bc8cff; }
+.pipe-stage .stage-name { font-weight: 700; display: block; }
+.pipe-stage .stage-desc { color: var(--text-muted); font-size: 0.85em; font-style: italic; line-height: 1.5; margin-top: 0.25rem; }
+.pipe-arrow { display: flex; align-items: center; justify-content: center; padding: 0 0.5rem; color: var(--text-muted); font-size: 1.5rem; flex-shrink: 0; }
+
+.callout-number { display: inline-block; padding: 0.15rem 0.55rem; border-radius: 12px; background: rgba(63,185,80,0.12); color: var(--green); font-weight: 700; font-size: 0.85em; margin-right: 0.35rem; }
+.statgrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin: 1.5rem 0; }
+.statgrid .stat { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 1rem; text-align: center; }
+.statgrid .stat .big { font-size: 1.7rem; font-weight: 700; color: var(--accent); display: block; }
+.statgrid .stat.green .big { color: var(--green); }
+.statgrid .stat .lab { font-size: 0.78rem; color: var(--text-muted); margin-top: 0.25rem; }
+@media (max-width: 900px) { .statgrid { grid-template-columns: 1fr 1fr; } }
+</style>
+</head>
+<body>
+
+<div class="progress-bar" id="progress-bar"></div>
+<button class="mobile-toc-btn" onclick="document.querySelector('.sidebar').classList.toggle('mobile-open'); document.querySelector('.mobile-overlay').classList.toggle('active');">&#9776;</button>
+<div class="mobile-overlay" onclick="document.querySelector('.sidebar').classList.remove('mobile-open'); this.classList.remove('active');"></div>
+
+<nav class="sidebar">
+  <a href="../" class="sidebar-home">&larr; All Papers</a>
+  <div class="toc-title">Contents</div>
+  <a href="#big-picture">The Big Picture</a>
+  <a href="#background" class="section-gap">Background Concepts</a>
+  <a href="#how-it-works" class="section-gap">How RADAR Works</a>
+  <a href="#eligibility" class="section-gap">Who Qualifies: Eligibility</a>
+  <a href="#pipelines" class="section-gap">The Two Pipelines</a>
+  <a href="#calibration" class="section-gap">Tuning the Risk Dial</a>
+  <a href="#results" class="section-gap">Results</a>
+  <a href="#quiz" class="section-gap">Final Quiz</a>
+  <a href="#why-it-matters" class="section-gap">Why It Matters</a>
+</nav>
+
+<div class="main-content">
+
+<h1>RADAR: The Paper, Explained</h1>
+<p class="subtitle">A beginner-friendly guide to how Meta automatically reviews and ships low-risk code changes &mdash; so human reviewers aren't drowned by the flood of AI-generated code. Every technical term is defined. Every concept is grounded in analogy.</p>
+<p class="meta">Paper by Adams, Banga, Bansal et al. (Meta, 2026) &bull; Explainer published June 2026</p>
+
+<div class="research-banner">
+  <div class="banner-icon">&#128225;</div>
+  <div class="banner-text">
+    <p>This is a companion explainer for &ldquo;Automating Low-Risk Code Review at Meta&rdquo;</p>
+    <p>RADAR (Risk Aware Diff Auto Review) is a multi-stage funnel that decides which code changes are safe enough to review and ship automatically &mdash; routing only the risky ones to scarce human reviewers. It has auto-reviewed 535,000+ changes and shipped 331,000+ of them.</p>
+    <div class="banner-links">
+      <a href="https://arxiv.org/abs/2605.30208" target="_blank" class="banner-link primary">&#x1F4C4; Read the Paper (arXiv)</a>
+    </div>
+  </div>
+</div>
+
+<div class="video-embed">
+  <video src="videos/hero.mp4" autoplay muted loop playsinline></video>
+  <div class="video-caption"><a href="https://github.com/heygen-com/hyperframes" target="_blank" class="badge" title="Made with HyperFrames — HeyGen's HTML-to-video composition framework"><span class="badge-label">made with</span><span class="badge-name">HyperFrames</span></a> AI agents now write most of the new code, so the volume of changes is exploding &mdash; but the number of humans available to review it stays flat. The gap between the two is a growing backlog.</div>
+</div>
+
+<h2 id="big-picture">The Big Picture</h2>
+
+<p>Before any code change goes live at a big software company, another engineer usually reads it first. This is <span class="term">code review<span class="tooltip">The practice of having one or more engineers read a proposed code change before it goes into the shared codebase. It catches bugs, enforces standards, spreads knowledge, and creates accountability.</span></span>: a second pair of eyes that catches bugs, keeps quality high, and makes sure someone other than the author understands the change. It works well &mdash; as long as there are enough reviewers to keep up.</p>
+
+<p>That assumption just broke. Over the past year at Meta, <span class="term">agentic AI<span class="tooltip">AI systems that don't just suggest code but autonomously carry out multi-step coding tasks &mdash; writing, testing, and refactoring code on their own, then submitting it for review like a human engineer would.</span></span> coding tools caused the amount of code per change to jump <strong>+105.9%</strong>, and the number of changes each developer produces per month to rise <strong>+51%</strong> &mdash; with <strong>80%+</strong> of that growth coming from AI. Humans can't read faster to compensate, so the share of changes reviewed within 24 hours started <em>falling</em>, and review queues piled up into the thousands.</p>
+
+<p>RADAR is Meta's answer. Instead of asking humans to review everything, it identifies the changes that are <em>low-risk and routine</em> &mdash; and reviews and ships those automatically, reserving human attention for the changes that actually need judgment. The paper tackles several problems at once:</p>
+
+<ol class="big">
+  <li><strong>Code is being created faster than it can be reviewed.</strong> AI agents produce a flood of changes, but human reviewer capacity is fixed. Something has to absorb the overflow without lowering the bar on safety.</li>
+  <li><strong>Not every change deserves the same scrutiny.</strong> A mechanical rename or a dead-code deletion is very different from a change to payment logic &mdash; but a traditional review queue treats them the same, so trivial changes compete with dangerous ones for a reviewer's time.</li>
+  <li><strong>Automating review is risky if done bluntly.</strong> Approve too much and you ship bugs; approve too little and you haven't helped. The hard part is finding a dial you can turn safely, and proving it stays safe at massive scale.</li>
+</ol>
+
+<div class="insight">Don't try to replace code review. Instead, build a conservative, layered <span class="term">funnel<span class="tooltip">A pipeline of sequential filters where a change must pass every stage to qualify. Each layer removes more candidates, so only the safest changes reach the end and get auto-approved.</span></span> that only lets a change through if it passes <em>every</em> safety check &mdash; static rules, a machine-learned risk score, and an AI reviewer that actually reads the code. Tune how aggressive the funnel is per team, watch the safety numbers, and expand gradually. The result: 535K+ changes auto-reviewed with a revert rate <strong>1/13</strong> and an incident rate <strong>1/50</strong> that of normal changes &mdash; while cutting review wait time by 35%.</div>
+
+<h2 id="background">Background Concepts</h2>
+
+<p>This paper assumes you know how code ships at a large company. Let's build that up from scratch &mdash; the vocabulary here is from software engineering, not deep learning.</p>
+
+<h3>Diffs, landing, and the review workflow</h3>
+
+<p>At Meta, a single proposed code change is called a <span class="term">diff<span class="tooltip">Meta's name for one self-contained proposed code change (elsewhere called a "pull request" or "changeset"). It bundles the edited lines, a description, and a test plan, and goes through review before being merged.</span></span> &mdash; the equivalent of a "pull request" on GitHub. An engineer writes a diff, describes it, and requests review. Reviewers leave comments; the author revises. When everyone's satisfied, the diff <span class="term">lands<span class="tooltip">"Landing" a diff means merging it into the shared codebase so it becomes part of the product. The opposite outcome is "abandoning" the diff.</span></span> &mdash; it gets merged into the codebase and ships. All of this runs through <span class="term">Phabricator<span class="tooltip">The code-review and continuous-integration tool Meta uses. It tracks each diff's metadata, the actions reviewers take, timestamps, and the diff's current state &mdash; the raw data this paper studies.</span></span>, Meta's review tool, which records every action and timestamp.</p>
+
+<div class="analogy">Think of a diff as a draft article submitted to a newspaper editor. The editor (reviewer) marks it up, the writer revises, and once approved it gets "published" (landed). RADAR is like an automated copy-desk that can clear the obviously-clean drafts &mdash; a typo fix, a reformatting &mdash; so the human editors can focus on the investigative pieces that need real judgment.</div>
+
+<h3>Reverts and Production Incidents: how we measure "did it go wrong?"</h3>
+
+<p>Two signals tell you a landed change caused trouble. A <span class="term">revert<span class="tooltip">Undoing a change that already landed, because it caused a problem. A high revert rate signals that changes are landing before they're truly ready.</span></span> is when a landed diff gets undone because something broke. A <span class="term">Production Incident (PI)<span class="tooltip">A logged safety/reliability event in the live product attributable to a code change &mdash; an outage, a serious bug, a regression. PIs are the most serious negative outcome and the thing RADAR is most careful to avoid.</span></span> is more serious: a logged outage or failure in the live product. These are the paper's <em>guardrail</em> metrics &mdash; the numbers that must <em>not</em> get worse when you automate. RADAR's headline safety claim is that its changes are reverted 1/13 as often and cause PIs 1/50 as often as non-RADAR changes.</p>
+
+<h3>Codemods and RACER: where the bot-written code comes from</h3>
+
+<p>A lot of code changes are mechanical and repetitive. A <span class="term">codemod<span class="tooltip">A scripted, automated code transformation applied across a codebase &mdash; e.g. "rename this function everywhere" or "migrate every call from the old API to the new one." Can be fully deterministic (a fixed rule) or LLM-generated.</span></span> is a scripted transformation applied across the codebase &mdash; like "rename this function everywhere" or "migrate every caller to the new <span class="term">API<span class="tooltip">Application Programming Interface &mdash; the defined set of functions and rules one piece of software exposes for others to call. An "API migration" mechanically updates every place that calls an old interface to use a new one.</span></span>." <span class="term">RACER<span class="tooltip">Risk-Aware Code Editing and Refactoring &mdash; Meta's GenAI tool that delegates well-defined coding tasks (dead-code removal, complexity reduction, lint fixes, migrations) to an AI agent, which generates diffs for review. A primary source of bot-authored diffs into RADAR.</span></span> (Risk-Aware Code Editing and Refactoring) is Meta's AI agent that handles bigger but still well-defined jobs &mdash; removing dead code, reducing complexity, fixing lint, migrating frameworks &mdash; by generating diffs from pre-written instruction templates called <span class="term">runbooks<span class="tooltip">A pre-configured prompt/recipe for RACER that encodes the instructions, constraints, and context for one specific type of code change. Each runbook has its own track record and safety settings.</span></span>. These bot-authored diffs are exactly the high-volume, low-judgment changes RADAR is designed to absorb.</p>
+
+<h3>The two AI components: a risk score and an AI reviewer</h3>
+
+<p>RADAR leans on two pieces of machine learning, and it's worth separating them clearly because they do different jobs:</p>
+
+<div class="compare-row">
+  <div class="compare-card">
+    <h4 style="color: var(--accent);">Diff Risk Score (DRS)</h4>
+    <p>A <span class="term">machine-learning model<span class="tooltip">A program that learns patterns from past data. DRS was trained on Meta's history of diffs and which ones caused incidents, so it can predict risk for a new diff.</span></span> that looks at a diff's <em>metadata</em> (who, what files, how big, historical patterns) and outputs a single number: how likely this change is to cause a production incident. It doesn't read the code's meaning &mdash; it predicts risk from the shape of the change.</p>
+  </div>
+  <div class="compare-card">
+    <h4 style="color: #2EC4B6;">Automated Code Review (ACR)</h4>
+    <p>An <span class="term">LLM<span class="tooltip">Large Language Model &mdash; the kind of AI (like GPT or Llama) trained on huge amounts of text and code. Here it's used to actually read and understand what a code change does, beyond surface metadata.</span></span>-based reviewer that actually <em>reads</em> the changed code and classifies it against known "safe" and "risky" patterns &mdash; then makes an accept-or-reject call. It supplies the semantic understanding that a metadata score can't.</p>
+  </div>
+</div>
+
+<details>
+<summary>What kinds of patterns does the AI reviewer treat as "safe" vs "risky"?</summary>
+<div class="content">
+<p><strong>Safe signals</strong> (can be auto-accepted): refactoring with no behavior change, dead-code removal, defensive checks, added logging, pure formatting, documentation/comment updates, import cleanup, added tests, and static resource updates.</p>
+<p><strong>Risk signals</strong> (instant disqualification): high estimated review effort (a complexity score of 4+), large structural changes, identified bugs or logic errors, performance risks, and security vulnerabilities like exposed secrets, <span class="term">SQL injection<span class="tooltip">A classic attack where malicious input is crafted so a program accidentally runs it as a database command &mdash; letting an attacker read or destroy data. A canonical "never ship this without a human looking" red flag.</span></span>, or authentication bypasses.</p>
+<p>To auto-accept, the AI reviewer must be <strong>highly confident</strong> &mdash; at least 8 out of 10 &mdash; and <em>every</em> change in the diff must fall into a safe category. Any single risk signal kills the auto-accept and sends the diff to a human.</p>
+</div>
+</details>
+
+<h2 id="how-it-works">How RADAR Works</h2>
+
+<p>RADAR is deliberately <em>not</em> a single clever model. It's a <strong>funnel</strong>: a sequence of independent safety layers, where a diff must clear every one to be auto-approved. If it fails any layer, it falls out of the funnel and goes to a human &mdash; the default-safe outcome. This design is what lets Meta roll it out gradually and tune it without ever removing the safety net.</p>
+
+<div class="video-embed">
+  <video src="videos/funnel.mp4" autoplay muted loop playsinline></video>
+  <div class="video-caption"><a href="https://github.com/heygen-com/hyperframes" target="_blank" class="badge" title="Made with HyperFrames — HeyGen's HTML-to-video composition framework"><span class="badge-label">made with</span><span class="badge-name">HyperFrames</span></a> Each diff must pass every layer in turn &mdash; static rules, then the risk score, then the AI reviewer. Anything that trips a single check is routed to a human. Only what survives all of them auto-lands.</div>
+</div>
+
+<p>The three core checks, in order, are:</p>
+
+<div class="arch-flow">
+  <div class="tag-row">
+    <span class="tag tag-blue">a new diff that's already passed eligibility</span>
+  </div>
+  <div class="arrow-down"></div>
+  <div class="arch-card">
+    <div class="name">1 &middot; Static heuristics</div>
+    <div class="desc">cheap, hard rules on metadata: the diff must not touch open-source code, <span class="term">SOX<span class="tooltip">Sarbanes-Oxley &mdash; U.S. financial-reporting regulations. Code governing financial reporting is "SOX-scoped" and legally requires human review, so RADAR never touches it.</span></span>-scoped code, or anything requiring extra reviews, and must come from an approved automation source</div>
+  </div>
+  <div class="arrow-down"></div>
+  <div class="arch-card">
+    <div class="name">2 &middot; Diff Risk Score gate</div>
+    <div class="desc">the ML risk score must fall below a configurable threshold (e.g. only the safest 5%, 20%, or 50% of diffs qualify)</div>
+  </div>
+  <div class="arrow-down"></div>
+  <div class="arch-card highlight">
+    <div class="name">3 &middot; RADAR Review Agent (the AI reviewer)</div>
+    <div class="desc">an LLM reads the actual code change, verifies no judgment-requiring business logic was touched, and confirms every change is a known-safe pattern. Any risk signal &rarr; rejected to a human.</div>
+  </div>
+  <div class="arrow-down"></div>
+  <div class="tag-row">
+    <span class="tag tag-green">passes all three &rarr; lands automatically (after a delay window)</span>
+  </div>
+</div>
+
+<p>Notice the layers are complementary. Static rules are cheap but blind to meaning. The risk score reads patterns but not intent. The AI reviewer reads intent but is the most expensive. Stacking them means a cheap layer can reject a diff before an expensive layer ever runs &mdash; and a smart layer can rescue a diff the dumb layer would wrongly fear (a huge-but-trivial mechanical refactor) or catch a subtle bug the pattern-matchers miss.</p>
+
+<details>
+<summary>Why land after a delay instead of instantly?</summary>
+<div class="content">
+<p>Even when RADAR approves a bot diff, it doesn't merge it the very same second. Approved diffs sit in a landing queue for a configurable window (e.g. 24 hours) during which a human can still step in and reject. It's a final safety valve: automation moves things forward by default, but a human always retains the ability to pull the cord before it's irreversible.</p>
+</div>
+</details>
+
+<h2 id="eligibility">Who Qualifies: the Eligibility Model</h2>
+
+<p>Before a diff ever reaches the three-layer funnel, RADAR first asks: <em>is this diff even allowed to be considered for automation?</em> This is the eligibility model, and the authors single it out as a key contribution. The trick is that <strong>different sources of code get different rules</strong>, because they carry different risk.</p>
+
+<div class="video-embed">
+  <video src="videos/routing.mp4" autoplay muted loop playsinline></video>
+  <div class="video-caption"><a href="https://github.com/heygen-com/hyperframes" target="_blank" class="badge" title="Made with HyperFrames — HeyGen's HTML-to-video composition framework"><span class="badge-label">made with</span><span class="badge-name">HyperFrames</span></a> Every diff is first sorted by who wrote it and how. Each source type then flows down its own path, with stricter or looser rules to match its risk profile.</div>
+</div>
+
+<p>The first split is <strong>human vs. bot</strong>. Bot diffs are then split further by <em>how</em> they were generated:</p>
+
+<div class="stepper">
+  <div class="step">
+    <strong>Deterministic codemods &rarr; Blanket AutoAccept</strong>
+    <span class="step-desc">A fully-specified, no-AI transformation (like a mechanical API migration). Because the <em>recipe itself</em> was vetted once, every diff it produces is trusted &mdash; these bypass per-diff AI review entirely. The least restrictive path.</span>
+  </div>
+  <div class="step">
+    <strong>AI-generated codemods &rarr; per-diff review</strong>
+    <span class="step-desc">When an LLM generates the transformation, each diff can vary, so each one must individually pass the full funnel (risk score + AI review). Variability earns per-diff scrutiny.</span>
+  </div>
+  <div class="step">
+    <strong>RACER runbooks &rarr; per-runbook eligibility, then the funnel</strong>
+    <span class="step-desc">The most granular path. Each runbook must <em>earn</em> eligibility before its diffs even enter the funnel &mdash; see below.</span>
+  </div>
+  <div class="step">
+    <strong>Human-authored diffs &rarr; Verification + Approval</strong>
+    <span class="step-desc">Eligible only if the author qualifies (role, tenure, on-call ownership) and the diff clears scope and content rules. Then it enters a two-step human-diff pipeline.</span>
+  </div>
+</div>
+
+<div class="insight">The per-runbook granularity is RADAR's most distinctive idea: two RACER runbooks might produce identical-looking transformations, but if one has a history of getting reverted, it's blocked while the other sails through. Trust is earned per source, from its own track record &mdash; not granted to a category wholesale.</div>
+
+<details>
+<summary>The four gates a RACER runbook must pass to be eligible</summary>
+<div class="content">
+<ul>
+<li><strong>Risk-history heuristics:</strong> over a 60-day lookback, the runbook must have zero production incidents, a low revert rate, a low human-rejection rate, and enough landed diffs to be statistically meaningful.</li>
+<li><strong>Per-runbook daily limits:</strong> caps on how many diffs a single runbook can auto-land per day (default conservative; trusted runbooks can be raised up to 2,000/day) so no one source floods the commit queue.</li>
+<li><strong>Per-runbook risk thresholds:</strong> trusted ("allowlisted") runbooks get the relaxed P50 risk threshold; everyone else uses the stricter P20.</li>
+<li><strong>Denylist:</strong> runbooks that have caused incidents or touch sensitive areas are permanently blocked. Anything with "test" in its name is also excluded, to avoid silently automating changes to test infrastructure.</li>
+</ul>
+</div>
+</details>
+
+<details>
+<summary>Why organizations can set their own rules</summary>
+<div class="content">
+<p>Eligibility thresholds aren't global. Each org configures its own risk appetite through a policy config controlling its risk thresholds, whether deferred review is on, and which automation sources are allowed. One org might effectively bypass the risk-score gate for bot diffs and rely on the AI reviewer alone; another keeps stricter defaults. This is how one system serves a whole company of teams with very different tolerances.</p>
+</div>
+</details>
+
+<h2 id="pipelines">The Two Pipelines</h2>
+
+<p>Eligibility routes a diff into one of two pipelines depending on whether a bot or a human wrote it. They share the same building blocks but answer slightly different questions.</p>
+
+<h3>Bot diffs: the ACE pipeline</h3>
+
+<p>For bot-authored diffs, RADAR applies a policy called <span class="term">ACE<span class="tooltip">AI Commit Eligibility &mdash; the policy that lets changes from automated sources land with no human review at all, provided they pass strict safety criteria (static checks, risk score, and the AI reviewer).</span></span> (AI Commit Eligibility): if a diff clears all three funnel layers, it can land with <em>no human review at all</em>. This is the aggressive case &mdash; and it's allowed precisely because bot diffs come from vetted, monitored sources with daily volume caps and the same delay-before-landing safety valve.</p>
+
+<h3>Human diffs: Verification, then Approval</h3>
+
+<p>Human diffs get a more cautious two-step treatment, and the human author always stays in control &mdash; they can ship with RADAR, wait for a human, or send the diff back to "needs review" at any time.</p>
+
+<div class="pipeline">
+  <div class="pipe-stage s1">
+    <span class="num">1</span>
+    <span class="stage-name">RADAR Verification</span>
+    <span class="stage-desc">Checks eligibility, content, and runs the AI reviewer + risk score (default: safest 5%). Pass &rarr; the author may ship now with a human review <em>deferred</em> to after landing.</span>
+  </div>
+  <div class="pipe-arrow">&rarr;</div>
+  <div class="pipe-stage s2">
+    <span class="num">2</span>
+    <span class="stage-name">RADAR Approval</span>
+    <span class="stage-desc">Re-checks verified diffs against <em>stricter</em> criteria. Pass &rarr; the deferred review is waived entirely: no human review is needed at all.</span>
+  </div>
+</div>
+
+<p>The distinction is subtle but important. <strong>Verification</strong> says "this looks safe enough to ship now and have a human glance at it later." <strong>Approval</strong> says "this is safe enough that no human needs to look at all." The two-step design lets RADAR be helpful (ship now, review later) for a broad set of diffs while reserving full automation for an even safer subset.</p>
+
+<div class="analogy">Verification is the express lane at airport security for trusted travelers &mdash; you go through faster, with a chance of a random secondary check later. Approval is being waved through entirely because you're a flight crew member with credentials: no secondary check at all. Same checkpoint, two tiers of trust.</div>
+
+<h2 id="calibration">Tuning the Risk Dial</h2>
+
+<p>The single most tunable knob in RADAR is the <span class="term">Diff Risk Score threshold<span class="tooltip">A percentile cutoff (written PX) on the risk score. P5 means only the lowest-risk 5% of diffs qualify; P50 means the safest 50% qualify. Lower = more conservative; higher = more diffs automated.</span></span>. It's expressed as a percentile: <strong>P5</strong> means only the safest 5% of diffs qualify, <strong>P50</strong> means the safest 50% do. A lower threshold is more conservative (fewer diffs automated, less risk); a higher one widens the net.</p>
+
+<div class="video-embed">
+  <video src="videos/threshold.mp4" autoplay muted loop playsinline></video>
+  <div class="video-caption"><a href="https://github.com/heygen-com/hyperframes" target="_blank" class="badge" title="Made with HyperFrames — HeyGen's HTML-to-video composition framework"><span class="badge-label">made with</span><span class="badge-name">HyperFrames</span></a> Diffs sorted from safest to riskiest. Sliding the threshold from P5 toward P50 lets more diffs auto-qualify &mdash; lifting the approve rate from 25% to 60.31% &mdash; while reverts and incidents stayed flat.</div>
+</div>
+
+<p>The key experiment in the paper (their second research question) relaxed this threshold from P25 to P50. The worry with widening any safety net is that risk grows with it. But RADAR's result was the opposite of alarming: the auto-approve rate climbed to <strong>60.31%</strong> &mdash; a big jump in how much work the system absorbs &mdash; while the revert and incident rates <em>didn't degrade</em>.</p>
+
+<div class="insight">The relationship between the risk threshold and safety is <strong>not linear</strong>. A wider approval envelope captured many more genuinely-low-risk diffs without a proportional increase in incidents. The practical lesson: start conservative, watch the guardrails, and relax the dial as your operational confidence grows.</div>
+
+<h2 id="results">Results</h2>
+
+<p>The paper is organized around three research questions: can it work at scale (feasibility), can you tune it safely (calibration), and does it actually save time (impact)?</p>
+
+<h3>Feasibility: it runs at real scale, safely</h3>
+
+<div class="statgrid">
+  <div class="stat"><span class="big">535K+</span><div class="lab">diffs auto-reviewed</div></div>
+  <div class="stat"><span class="big">331K+</span><div class="lab">diffs auto-landed</div></div>
+  <div class="stat"><span class="big">25K</span><div class="lab">diffs reviewed per day (peak)</div></div>
+  <div class="stat green"><span class="big">60.31%</span><div class="lab">current auto-approve rate</div></div>
+</div>
+
+<table class="metrics-table">
+  <thead>
+    <tr><th>Safety guardrail</th><th>RADAR vs. non-RADAR diffs</th></tr>
+  </thead>
+  <tbody>
+    <tr><td class="row-label">Revert rate</td><td class="val-best">1&frasl;13 (about 92% lower)</td></tr>
+    <tr><td class="row-label">Production Incident (PI) rate</td><td class="val-best">1&frasl;50 (about 98% lower)</td></tr>
+  </tbody>
+</table>
+
+<p>Those safety gaps are statistically significant, and a telling detail: when domain experts manually reviewed the production incidents, <em>none</em> were judged to be ones a human reviewer would have caught. In other words, the rare failures weren't failures of automation replacing a human's catch &mdash; they were the kind of thing that would have slipped past a person too.</p>
+
+<details>
+<summary>Why is RADAR's revert/incident rate so much lower &mdash; isn't that suspicious?</summary>
+<div class="content">
+<p>It's not magic, and the authors are careful to call it an <em>association</em>, not proof of causation. RADAR only automates diffs that are <strong>already</strong> low-risk by construction &mdash; that's the whole point of the funnel. So you'd expect them to revert and break less than the general population of diffs, which includes every gnarly, high-stakes change humans handle. The result confirms the funnel is selecting what it's supposed to, rather than claiming automation makes any given change safer.</p>
+</div>
+</details>
+
+<h3>Impact: it removes the wait, not just the work</h3>
+
+<p>The third question is whether automation actually relieves the bottleneck. Compared to human-reviewed diffs, RADAR cut the <span class="term">median time to close<span class="tooltip">The end-to-end time from when a diff is published to when it's finally closed (landed or abandoned). The median is the middle value, so half of diffs close faster and half slower.</span></span> by <strong>over 330%</strong> and the <span class="term">median diff review wall time<span class="tooltip">The real-world clock time a diff spends waiting for and undergoing review &mdash; the "sitting in the queue" time, as opposed to active work time.</span></span> by <strong>35%</strong>.</p>
+
+<p>The wall-time number is the meaningful one: it's the time a diff sits <em>waiting</em> for a human to get to it. By handling eligible diffs automatically, RADAR stops low-risk changes from clogging the queue and competing with high-risk changes for a reviewer's attention &mdash; which is the bottleneck the whole system was built to relieve.</p>
+
+<details>
+<summary>What does "over 330% reduction" actually mean &mdash; and the honest caveats</summary>
+<div class="content">
+<p>A reduction over 100% is a slightly loose way of saying the human-reviewed baseline took several times longer; read it as "many times faster to close," not a literal percentage of a single quantity. The authors are upfront about the limits: this is an <strong>observational</strong> comparison, not a randomized experiment, so it shows association rather than airtight causation. Time-to-close and wall-time also measure responsiveness, not whether defects were prevented &mdash; those are tracked separately by the revert and incident rates.</p>
+</div>
+</details>
+
+<h2 id="quiz">Final Quiz</h2>
+
+<div class="quiz">
+  <div class="quiz-q">What is RADAR's core design, and why does it matter?</div>
+  <label><input type="radio" name="q1" value="a"> A single large model that decides whether to approve any diff.</label>
+  <label><input type="radio" name="q1" value="b"> A layered funnel where a diff must pass every safety check (static rules, risk score, AI reviewer) to be auto-approved &mdash; and failing any layer sends it to a human.</label>
+  <label><input type="radio" name="q1" value="c"> A tool that replaces all human code review at Meta.</label>
+  <label><input type="radio" name="q1" value="d"> A faster text editor for writing diffs.</label>
+  <button class="quiz-btn" onclick="checkQuiz('q1', 'b', this)">Check</button>
+  <div class="quiz-feedback"></div>
+</div>
+
+<div class="quiz">
+  <div class="quiz-q">What's the difference between the Diff Risk Score (DRS) and Automated Code Review (ACR)?</div>
+  <label><input type="radio" name="q2" value="a"> They're two names for the same model.</label>
+  <label><input type="radio" name="q2" value="b"> DRS reads the code's meaning; ACR only looks at metadata.</label>
+  <label><input type="radio" name="q2" value="c"> DRS is an ML model that predicts risk from a diff's metadata/shape; ACR is an LLM that actually reads the changed code and classifies it as safe or risky.</label>
+  <label><input type="radio" name="q2" value="d"> DRS reverts diffs; ACR lands them.</label>
+  <button class="quiz-btn" onclick="checkQuiz('q2', 'c', this)">Check</button>
+  <div class="quiz-feedback"></div>
+</div>
+
+<div class="quiz">
+  <div class="quiz-q">Why do two RACER runbooks with identical transformations get treated differently?</div>
+  <label><input type="radio" name="q3" value="a"> Because eligibility is earned per-runbook from its own track record &mdash; one with a history of reverts is blocked while a clean one proceeds.</label>
+  <label><input type="radio" name="q3" value="b"> Because the newer runbook is always trusted more.</label>
+  <label><input type="radio" name="q3" value="c"> Because they touch different programming languages.</label>
+  <label><input type="radio" name="q3" value="d"> They aren't &mdash; identical transformations always get identical treatment.</label>
+  <button class="quiz-btn" onclick="checkQuiz('q3', 'a', this)">Check</button>
+  <div class="quiz-feedback"></div>
+</div>
+
+<div class="quiz">
+  <div class="quiz-q">What does the percentile threshold (e.g. P5 vs P50) control?</div>
+  <label><input type="radio" name="q4" value="a"> How many human reviewers are assigned to each diff.</label>
+  <label><input type="radio" name="q4" value="b"> How conservative the risk gate is &mdash; P5 lets only the safest 5% of diffs qualify, P50 lets the safest 50% qualify.</label>
+  <label><input type="radio" name="q4" value="c"> The delay before a diff lands.</label>
+  <label><input type="radio" name="q4" value="d"> The confidence score the AI reviewer must hit.</label>
+  <button class="quiz-btn" onclick="checkQuiz('q4', 'b', this)">Check</button>
+  <div class="quiz-feedback"></div>
+</div>
+
+<div class="quiz">
+  <div class="quiz-q">What's the difference between RADAR Verification and RADAR Approval for human diffs?</div>
+  <label><input type="radio" name="q5" value="a"> Verification waives review entirely; Approval defers it.</label>
+  <label><input type="radio" name="q5" value="b"> Verification lets a diff ship now with a human review deferred to after landing; Approval applies stricter criteria to waive human review entirely.</label>
+  <label><input type="radio" name="q5" value="c"> They are the same step with different names.</label>
+  <label><input type="radio" name="q5" value="d"> Verification is for bots; Approval is for humans.</label>
+  <button class="quiz-btn" onclick="checkQuiz('q5', 'b', this)">Check</button>
+  <div class="quiz-feedback"></div>
+</div>
+
+<div class="quiz">
+  <div class="quiz-q">When Meta relaxed the risk threshold from P25 to P50, what happened?</div>
+  <label><input type="radio" name="q6" value="a"> The approve rate fell and incidents spiked.</label>
+  <label><input type="radio" name="q6" value="b"> Nothing changed at all.</label>
+  <label><input type="radio" name="q6" value="c"> The auto-approve rate rose to 60.31% while revert and incident rates stayed flat &mdash; showing risk and threshold aren't linearly related.</label>
+  <label><input type="radio" name="q6" value="d"> Human review was eliminated company-wide.</label>
+  <button class="quiz-btn" onclick="checkQuiz('q6', 'c', this)">Check</button>
+  <div class="quiz-feedback"></div>
+</div>
+
+<h2 id="why-it-matters">Why This Paper Matters</h2>
+
+<h3>For builders and practitioners</h3>
+
+<p>If your team is feeling the same squeeze &mdash; AI assistants generating more code than anyone can review &mdash; RADAR is a concrete, copyable blueprint. The takeaways are practical: stack cheap-to-expensive checks so you fail fast; make trust <em>earned and revocable</em> per source rather than granted by category; always keep a default-safe fallback (route to a human) and a delay-before-landing valve; and expose a single tunable dial (the risk threshold) so each team can pick its own risk appetite. Crucially, it shows you can deploy this <em>incrementally</em> &mdash; start at the safest 5%, watch the guardrails, and widen as confidence grows &mdash; rather than betting the company on a big-bang rollout.</p>
+
+<h3>For the research community</h3>
+
+<p>Two findings are load-bearing. First, this <strong>inverts how risk models are used</strong>: prior work surfaced risk scores to <em>inform</em> human reviewers or route diffs to better ones. RADAR uses the same kind of score to take <em>action</em> &mdash; to decide which diffs need no human at all. That's a shift from risk-as-information to risk-as-automation. Second, it's a rare <strong>large-scale operational record</strong> (535K+ diffs, real production incidents, real revert rates) rather than a benchmark study, which is exactly the kind of evidence the field lacks as AI-generated code floods in. The honest caveats &mdash; it's observational, Meta-specific, and the metrics are proxies &mdash; are stated plainly, which makes the numbers more trustworthy, not less.</p>
+
+<h3>The bigger picture</h3>
+
+<p>For decades, the bottleneck in shipping software was <em>writing</em> the code. Generative AI is dissolving that bottleneck and quietly relocating it downstream &mdash; to review, testing, and the human accountability that gates production. RADAR is an early, concrete acknowledgment that as machines write more of the code, the systems that <em>review</em> code have to become machines too, or the whole pipeline stalls. The interesting open question the paper raises but doesn't resolve: code review was never only about catching bugs &mdash; it's also how engineers learn the codebase and spread knowledge. As more review gets automated, that human knowledge-transfer shrinks. The authors find the trade-off is currently favorable, but flag that it may shift as automation expands &mdash; a tension the whole industry will be navigating for years.</p>
+
+<!-- Glossary -->
+<button class="glossary-toggle" onclick="document.querySelector('.glossary-panel').classList.toggle('open')">&#x1F4D6;</button>
+<div class="glossary-panel">
+  <h3>Glossary</h3>
+  <input type="text" id="glossary-search" placeholder="Search..." oninput="filterGlossary()">
+  <div id="glossary-entries">
+    <div class="glossary-entry"><strong>Diff</strong><p>Meta's name for one self-contained proposed code change (a "pull request" elsewhere): edited lines, a description, and a test plan.</p></div>
+    <div class="glossary-entry"><strong>Landing</strong><p>Merging a diff into the shared codebase so it ships. The opposite is abandoning the diff.</p></div>
+    <div class="glossary-entry"><strong>Code review</strong><p>Having another engineer read a change before it ships &mdash; catches bugs, enforces standards, spreads knowledge.</p></div>
+    <div class="glossary-entry"><strong>Phabricator</strong><p>Meta's code-review and continuous-integration tool. Tracks every diff's metadata, actions, timestamps, and state.</p></div>
+    <div class="glossary-entry"><strong>Agentic AI</strong><p>AI that autonomously carries out multi-step coding tasks &mdash; writing, testing, refactoring &mdash; then submits diffs like a human.</p></div>
+    <div class="glossary-entry"><strong>Revert</strong><p>Undoing a landed change because it caused a problem. A guardrail metric.</p></div>
+    <div class="glossary-entry"><strong>Production Incident (PI)</strong><p>A logged outage or serious failure in the live product attributable to a change. The most serious negative outcome.</p></div>
+    <div class="glossary-entry"><strong>Codemod</strong><p>A scripted code transformation applied across the codebase. Deterministic (a fixed rule) or LLM-generated.</p></div>
+    <div class="glossary-entry"><strong>RACER</strong><p>Meta's GenAI tool that delegates well-defined coding tasks to an AI agent, which generates diffs from runbooks.</p></div>
+    <div class="glossary-entry"><strong>Runbook</strong><p>A pre-configured RACER prompt for one type of change. Each has its own track record and safety settings.</p></div>
+    <div class="glossary-entry"><strong>RADAR</strong><p>Risk Aware Diff Auto Review &mdash; the layered funnel that auto-reviews and lands low-risk diffs.</p></div>
+    <div class="glossary-entry"><strong>Diff Risk Score (DRS)</strong><p>An ML model predicting how likely a diff is to cause an incident, from metadata. Expressed as a percentile threshold.</p></div>
+    <div class="glossary-entry"><strong>Automated Code Review (ACR)</strong><p>An LLM that reads the actual code change and classifies it as safe or risky, making accept/reject calls.</p></div>
+    <div class="glossary-entry"><strong>LLM</strong><p>Large Language Model &mdash; AI trained on huge text/code corpora; here used to read and understand code changes.</p></div>
+    <div class="glossary-entry"><strong>Funnel</strong><p>A sequence of safety filters a diff must all pass to auto-qualify. Each layer removes more candidates.</p></div>
+    <div class="glossary-entry"><strong>ACE</strong><p>AI Commit Eligibility &mdash; the policy letting bot diffs land with no human review when they pass all safety checks.</p></div>
+    <div class="glossary-entry"><strong>RADAR Verification</strong><p>Step for human diffs: pass and you may ship now with a human review deferred to after landing.</p></div>
+    <div class="glossary-entry"><strong>RADAR Approval</strong><p>Stricter step that waives the deferred review entirely &mdash; no human review needed at all.</p></div>
+    <div class="glossary-entry"><strong>Percentile threshold (PX)</strong><p>The risk-score cutoff. P5 = safest 5% qualify; P50 = safest 50%. Lower is more conservative.</p></div>
+    <div class="glossary-entry"><strong>SOX-scoped code</strong><p>Code governing financial reporting (Sarbanes-Oxley). Legally requires human review; RADAR never automates it.</p></div>
+    <div class="glossary-entry"><strong>Time to close</strong><p>End-to-end time from publishing a diff to closing it (landed or abandoned).</p></div>
+    <div class="glossary-entry"><strong>Diff review wall time</strong><p>The clock time a diff spends waiting for and undergoing review &mdash; the queue time.</p></div>
+  </div>
+</div>
+
+</div>
+
+<script>
+// Progress bar
+window.addEventListener('scroll', function() {
+  var h = document.documentElement;
+  var b = document.body;
+  var st = 'scrollTop';
+  var sh = 'scrollHeight';
+  var percent = (h[st] || b[st]) / ((h[sh] || b[sh]) - h.clientHeight) * 100;
+  document.getElementById('progress-bar').style.width = percent + '%';
+});
+
+// Active TOC
+window.addEventListener('scroll', function() {
+  var sections = document.querySelectorAll('h2[id]');
+  var current = '';
+  sections.forEach(function(section) {
+    var top = section.getBoundingClientRect().top;
+    if (top < 150) current = section.id;
+  });
+  if ((window.innerHeight + window.scrollY) >= document.documentElement.scrollHeight - 50) {
+    current = sections[sections.length - 1].id;
+  }
+  document.querySelectorAll('.sidebar a').forEach(function(link) {
+    link.classList.remove('active');
+    if (link.getAttribute('href') === '#' + current) link.classList.add('active');
+  });
+});
+
+// Quiz
+function checkQuiz(name, correct, btn) {
+  var inputs = document.getElementsByName(name);
+  var selected = null;
+  for (var i = 0; i < inputs.length; i++) {
+    if (inputs[i].checked) { selected = inputs[i].value; break; }
+  }
+  var feedback = btn.parentElement.querySelector('.quiz-feedback');
+  feedback.style.display = 'block';
+  if (selected === correct) {
+    feedback.className = 'quiz-feedback quiz-correct';
+    feedback.textContent = 'Correct!';
+  } else if (selected === null) {
+    feedback.className = 'quiz-feedback quiz-wrong';
+    feedback.textContent = 'Pick an answer first.';
+  } else {
+    feedback.className = 'quiz-feedback quiz-wrong';
+    feedback.textContent = 'Not quite — try again.';
+  }
+}
+
+// Glossary search
+function filterGlossary() {
+  var q = document.getElementById('glossary-search').value.toLowerCase();
+  document.querySelectorAll('.glossary-entry').forEach(function(entry) {
+    var text = entry.textContent.toLowerCase();
+    entry.style.display = text.indexOf(q) >= 0 ? '' : 'none';
+  });
+}
+</script>
+
+<script data-goatcounter="https://tcho.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+
+</body>
+</html>

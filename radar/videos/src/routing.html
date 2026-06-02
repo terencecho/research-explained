@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap');
+* { margin: 0; padding: 0; box-sizing: border-box; }
+</style>
+</head>
+<body>
+<div data-composition-id="radar-routing" data-width="1920" data-height="540" data-start="0" data-duration="12">
+  <div class="scene">
+    <div class="title">Eligibility: each diff is routed by who wrote it &amp; how</div>
+
+    <div class="tree">
+      <!-- col 1: entry -->
+      <div class="col col-entry">
+        <div class="node entry">New diff</div>
+      </div>
+      <div class="conn">&rarr;</div>
+
+      <!-- col 2: decision -->
+      <div class="col col-dec">
+        <div class="node decision">Human<br>or bot?</div>
+      </div>
+      <div class="conn">&rarr;</div>
+
+      <!-- col 3: source types -->
+      <div class="col col-src">
+        <div class="node src bot" data-row="0"><span class="kind">BOT</span> Deterministic codemod</div>
+        <div class="node src bot" data-row="1"><span class="kind">BOT</span> AI codemod</div>
+        <div class="node src bot" data-row="2"><span class="kind">BOT</span> RACER runbook</div>
+        <div class="node src hum" data-row="3"><span class="kind hk">HUMAN</span> Eligible author</div>
+      </div>
+      <div class="conn">&rarr;</div>
+
+      <!-- col 4: path -->
+      <div class="col col-path">
+        <div class="node path p-green" data-row="0">Blanket AutoAccept &mdash; no per-diff review</div>
+        <div class="node path p-teal" data-row="1">ACE pipeline &mdash; per-diff AI review</div>
+        <div class="node path p-teal" data-row="2">ACE &mdash; per-runbook limits + DRS</div>
+        <div class="node path p-purple" data-row="3">Verification &rarr; Approval (waive review)</div>
+      </div>
+    </div>
+  </div>
+
+  <style>
+    [data-composition-id="radar-routing"] {
+      position: relative; overflow: hidden; background: #011627;
+      width: 1920px; height: 540px;
+      font-family: 'Space Mono', monospace; color: #FDFFFC;
+    }
+    [data-composition-id="radar-routing"] .scene {
+      width: 1920px; height: 540px; display: flex; flex-direction: column; align-items: center;
+      padding: 28px 50px 30px;
+    }
+    [data-composition-id="radar-routing"] .title { font-size: 38px; font-weight: 700; text-align: center; letter-spacing: 1px; margin-bottom: 24px; }
+    [data-composition-id="radar-routing"] .tree {
+      flex: 1; width: 100%; max-width: 1700px;
+      display: flex; align-items: center; justify-content: center; gap: 18px;
+    }
+    [data-composition-id="radar-routing"] .col { display: flex; flex-direction: column; justify-content: center; gap: 18px; }
+    [data-composition-id="radar-routing"] .col-src, [data-composition-id="radar-routing"] .col-path { height: 420px; justify-content: space-around; }
+    [data-composition-id="radar-routing"] .conn { font-size: 34px; color: #415A77; flex-shrink: 0; }
+    [data-composition-id="radar-routing"] .node {
+      border-radius: 10px; padding: 16px 20px; font-size: 22px; font-weight: 700;
+      text-align: center; border: 2px solid #415A77; background: #0d2137;
+    }
+    [data-composition-id="radar-routing"] .node.entry { background: #58a6ff; color: #011627; border-color: #58a6ff; }
+    [data-composition-id="radar-routing"] .node.decision { background: #1a1a3a; border-color: #bc8cff; color: #bc8cff; padding: 24px 26px; }
+    [data-composition-id="radar-routing"] .col-src .node { width: 360px; text-align: left; }
+    [data-composition-id="radar-routing"] .col-path .node { width: 430px; font-size: 20px; }
+    [data-composition-id="radar-routing"] .kind {
+      display: inline-block; font-size: 14px; padding: 2px 8px; border-radius: 4px;
+      background: #FF9F1C; color: #011627; margin-right: 8px; vertical-align: middle;
+    }
+    [data-composition-id="radar-routing"] .kind.hk { background: #bc8cff; }
+    [data-composition-id="radar-routing"] .node.src.bot { border-color: #FF9F1C; }
+    [data-composition-id="radar-routing"] .node.src.hum { border-color: #bc8cff; }
+    [data-composition-id="radar-routing"] .p-green { border-color: #3fb950; color: #3fb950; }
+    [data-composition-id="radar-routing"] .p-teal { border-color: #2EC4B6; color: #2EC4B6; }
+    [data-composition-id="radar-routing"] .p-purple { border-color: #bc8cff; color: #bc8cff; }
+  </style>
+
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+  <script>
+    window.__timelines = window.__timelines || {};
+    var root = document.currentScript.parentElement;
+    var q = function(s){ return root.querySelector(s); };
+    var qa = function(s){ return root.querySelectorAll(s); };
+    var tl = gsap.timeline({ paused: true });
+
+    tl.from(q('.title'), { opacity: 0, y: -18, duration: 0.5 });
+    tl.from(q('.node.entry'), { opacity: 0, x: -20, duration: 0.5 }, 0.4);
+    tl.from(q('.conn:nth-of-type(1)'), { opacity: 0, duration: 0.3 }, 0.7);
+    tl.from(q('.node.decision'), { opacity: 0, scale: 0.8, duration: 0.5 }, 0.8);
+
+    // reveal source rows one at a time, with their path
+    var srcs = qa('.col-src .node');
+    var paths = qa('.col-path .node');
+    for (var i = 0; i < srcs.length; i++) {
+      var base = 1.5 + i*1.4;
+      tl.from(srcs[i], { opacity: 0, x: -16, duration: 0.4 }, base);
+      tl.from(paths[i], { opacity: 0, x: 16, duration: 0.4 }, base + 0.35);
+      // highlight pulse on the active row to show routing
+      tl.fromTo([srcs[i], paths[i]], { boxShadow: '0 0 0 rgba(0,0,0,0)' },
+        { boxShadow: '0 0 22px rgba(255,255,255,0.25)', duration: 0.5, yoyo: true, repeat: 1 }, base + 0.6);
+    }
+
+    window.__timelines["radar-routing"] = tl;
+  </script>
+</div>
+</body>
+</html>

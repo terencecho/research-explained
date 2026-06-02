@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap');
+* { margin: 0; padding: 0; box-sizing: border-box; }
+</style>
+</head>
+<body>
+<div data-composition-id="radar-threshold" data-width="1920" data-height="540" data-start="0" data-duration="11">
+  <div class="scene">
+    <div class="title">Calibration: relax the threshold, approve more &mdash; safely</div>
+    <div class="subtitle">Every diff scored by risk and sorted low &rarr; high. Only diffs below the line auto-qualify.</div>
+
+    <div class="track-area">
+      <div class="track" id="track"></div>
+      <div class="thresh" id="thresh"><div class="thresh-label" id="thresh-label">P5</div></div>
+      <div class="axis">
+        <span>lowest risk</span>
+        <span>highest risk</span>
+      </div>
+    </div>
+
+    <div class="readouts">
+      <div class="readout">
+        <div class="ro-num" id="approve">25%</div>
+        <div class="ro-label">auto-approve rate</div>
+      </div>
+      <div class="readout">
+        <div class="ro-num safe">1&frasl;13 &middot; 1&frasl;50</div>
+        <div class="ro-label">revert &amp; incident rate vs. human-reviewed &mdash; unchanged</div>
+      </div>
+    </div>
+  </div>
+
+  <style>
+    [data-composition-id="radar-threshold"] {
+      position: relative; overflow: hidden; background: #011627;
+      width: 1920px; height: 540px;
+      font-family: 'Space Mono', monospace; color: #FDFFFC;
+    }
+    [data-composition-id="radar-threshold"] .scene {
+      width: 1920px; height: 540px; display: flex; flex-direction: column; align-items: center;
+      padding: 28px 50px 30px;
+    }
+    [data-composition-id="radar-threshold"] .title { font-size: 38px; font-weight: 700; text-align: center; letter-spacing: 1px; }
+    [data-composition-id="radar-threshold"] .subtitle { font-size: 19px; color: #778DA9; margin-top: 8px; text-align: center; }
+    [data-composition-id="radar-threshold"] .track-area {
+      flex: 1; width: 100%; max-width: 1480px; position: relative;
+      display: flex; flex-direction: column; justify-content: center; padding: 30px 0;
+    }
+    [data-composition-id="radar-threshold"] .track {
+      display: flex; gap: 4px; justify-content: center; align-items: flex-end; height: 110px;
+    }
+    [data-composition-id="radar-threshold"] .cell {
+      width: 34px; height: 90px; border-radius: 4px; opacity: 0.92;
+    }
+    [data-composition-id="radar-threshold"] .cell.approved { box-shadow: 0 0 0 3px #2EC4B6, 0 0 14px rgba(46,196,182,0.6); }
+    [data-composition-id="radar-threshold"] .thresh {
+      position: absolute; top: 50%; height: 150px; transform: translateY(-50%); width: 4px; background: #FDFFFC;
+      box-shadow: 0 0 12px rgba(255,255,255,0.7);
+    }
+    [data-composition-id="radar-threshold"] .thresh-label {
+      position: absolute; top: -42px; left: 50%; transform: translateX(-50%);
+      font-size: 26px; font-weight: 700; color: #FDFFFC; white-space: nowrap;
+      background: #1a2a1a; padding: 2px 12px; border-radius: 6px; border: 1px solid #2EC4B6;
+    }
+    [data-composition-id="radar-threshold"] .axis {
+      display: flex; justify-content: space-between; margin-top: 14px;
+      font-size: 17px; color: #778DA9;
+    }
+    [data-composition-id="radar-threshold"] .readouts { display: flex; gap: 80px; align-items: flex-start; }
+    [data-composition-id="radar-threshold"] .readout { text-align: center; max-width: 540px; }
+    [data-composition-id="radar-threshold"] .ro-num { font-size: 44px; font-weight: 700; color: #2EC4B6; }
+    [data-composition-id="radar-threshold"] .ro-num.safe { font-size: 38px; color: #3fb950; }
+    [data-composition-id="radar-threshold"] .ro-label { font-size: 17px; color: #778DA9; margin-top: 4px; }
+  </style>
+
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+  <script>
+    window.__timelines = window.__timelines || {};
+    var root = document.currentScript.parentElement;
+    var q = function(s){ return root.querySelector(s); };
+
+    // build cells: gradient green -> yellow -> red
+    var N = 36;
+    var track = q('#track');
+    var cells = [];
+    for (var i = 0; i < N; i++) {
+      var t = i / (N - 1);
+      var r, g, b;
+      if (t < 0.5) { var u = t / 0.5; r = Math.round(63 + u*(210-63)); g = Math.round(185 - u*(185-153)); b = Math.round(80 - u*(80-34)); }
+      else { var u2 = (t - 0.5) / 0.5; r = Math.round(210 + u2*(231-210)); g = Math.round(153 - u2*(153-29)); b = Math.round(34 + u2*(54-34)); }
+      var c = document.createElement('div');
+      c.className = 'cell';
+      c.style.background = 'rgb(' + r + ',' + g + ',' + b + ')';
+      track.appendChild(c);
+      cells.push(c);
+    }
+
+    var tl = gsap.timeline({ paused: true });
+    tl.from(q('.title'), { opacity: 0, y: -18, duration: 0.5 });
+    tl.from(q('.subtitle'), { opacity: 0, y: -10, duration: 0.5 }, 0.2);
+    tl.from(cells, { scaleY: 0, transformOrigin: 'bottom', opacity: 0, duration: 0.5, stagger: 0.012, ease: 'power2.out' }, 0.5);
+    tl.from(q('.axis'), { opacity: 0, duration: 0.4 }, 1.2);
+
+    // threshold positions as fraction of track width. P5 ~5%, P50 ~50%
+    var area = q('.track-area');
+    function setThreshold(frac) {
+      // left position relative to centered track. Track is centered; approximate using % of area width on the centered group.
+      var trackWidth = N*34 + (N-1)*4; // 36*34 + 35*4 = 1224 + 140 = 1364
+      var areaW = 1480;
+      var left = (areaW - trackWidth)/2 + frac * trackWidth;
+      q('#thresh').style.left = left + 'px';
+      var nApproved = Math.round(frac * N);
+      for (var k = 0; k < N; k++) {
+        if (k < nApproved) cells[k].classList.add('approved');
+        else cells[k].classList.remove('approved');
+      }
+    }
+    // counters via proxy
+    var prox = { frac: 0.05, approve: 25 };
+    function render() {
+      setThreshold(prox.frac);
+      q('#approve').textContent = prox.approve.toFixed(prox.approve >= 60 ? 2 : 0) + '%';
+    }
+    setThreshold(0.05);
+    q('#thresh-label').textContent = 'P5';
+
+    tl.add(function(){ render(); }, 1.4);
+    tl.to(prox, { frac: 0.05, approve: 25, duration: 0.01, onUpdate: render }, 1.4);
+    // hold at P5
+    tl.to(prox, { duration: 0.8 }, 1.5);
+    // sweep to P25
+    tl.to(prox, { frac: 0.25, approve: 42, duration: 1.4, ease: 'power1.inOut', onUpdate: render,
+      onStart: function(){ q('#thresh-label').textContent = 'P25'; } }, 2.4);
+    // sweep to P50
+    tl.to(prox, { frac: 0.50, approve: 60.31, duration: 1.6, ease: 'power1.inOut', onUpdate: render,
+      onStart: function(){ q('#thresh-label').textContent = 'P50'; } }, 4.2);
+
+    tl.from(q('.readout:first-child'), { opacity: 0, y: 14, duration: 0.5 }, 1.4);
+    tl.from(q('.readout:last-child'), { opacity: 0, y: 14, duration: 0.5 }, 6.0);
+    tl.to(q('.ro-num.safe'), { scale: 1.06, duration: 0.7, yoyo: true, repeat: 2, transformOrigin: 'center' }, 6.6);
+
+    window.__timelines["radar-threshold"] = tl;
+  </script>
+</div>
+</body>
+</html>
