@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap');
+* { margin: 0; padding: 0; box-sizing: border-box; }
+</style>
+</head>
+<body>
+<div data-composition-id="path-length" data-width="1920" data-height="540" data-start="0" data-duration="12">
+  <div class="scene">
+    <div class="title">Why self-attention? Every word reaches every other in one hop</div>
+
+    <div class="panel" id="rnn-panel">
+      <div class="plabel">
+        <div class="pname rnn">RNN / LSTM</div>
+        <div class="pdesc">reads one word at a time</div>
+      </div>
+      <svg class="diagram" id="rnn-svg" viewBox="0 0 1320 180" preserveAspectRatio="xMidYMid meet"></svg>
+      <div class="ptags">
+        <span class="ptag red">Path length: O(n)</span>
+        <span class="ptag red">Sequential steps: O(n)</span>
+      </div>
+    </div>
+
+    <div class="panel" id="self-panel">
+      <div class="plabel">
+        <div class="pname self">Self-Attention</div>
+        <div class="pdesc">all words at once</div>
+      </div>
+      <svg class="diagram" id="self-svg" viewBox="0 0 1320 180" preserveAspectRatio="xMidYMid meet"></svg>
+      <div class="ptags">
+        <span class="ptag teal">Path length: O(1)</span>
+        <span class="ptag teal">Sequential steps: O(1)</span>
+      </div>
+    </div>
+  </div>
+
+  <style>
+    [data-composition-id="path-length"] {
+      position: relative; overflow: hidden; background: #011627;
+      width: 1920px; height: 540px;
+      font-family: 'Space Mono', monospace; color: #FDFFFC;
+    }
+    [data-composition-id="path-length"] .scene {
+      width: 1920px; height: 540px; display: flex; flex-direction: column;
+      align-items: center; padding: 22px 40px 18px;
+    }
+    [data-composition-id="path-length"] .title {
+      font-size: 40px; font-weight: 700; text-align: center; letter-spacing: 0.5px; margin-bottom: 8px;
+    }
+    [data-composition-id="path-length"] .panel {
+      flex: 1; width: 100%; max-width: 1860px; display: flex; align-items: center; gap: 10px;
+    }
+    [data-composition-id="path-length"] .plabel { width: 250px; flex-shrink: 0; text-align: right; padding-right: 8px; }
+    [data-composition-id="path-length"] .pname { font-size: 30px; font-weight: 700; }
+    [data-composition-id="path-length"] .pname.rnn { color: #FF9F1C; }
+    [data-composition-id="path-length"] .pname.self { color: #2EC4B6; }
+    [data-composition-id="path-length"] .pdesc { font-size: 17px; color: #778DA9; margin-top: 4px; }
+    [data-composition-id="path-length"] .diagram { flex: 1; height: 188px; min-width: 0; }
+    [data-composition-id="path-length"] .ptags { width: 270px; flex-shrink: 0; display: flex; flex-direction: column; gap: 10px; }
+    [data-composition-id="path-length"] .ptag { font-size: 19px; font-weight: 700; padding: 7px 14px; border-radius: 8px; text-align: center; }
+    [data-composition-id="path-length"] .ptag.red { color: #FF9F1C; background: rgba(255,159,28,0.12); border: 1px solid #FF9F1C; }
+    [data-composition-id="path-length"] .ptag.teal { color: #2EC4B6; background: rgba(46,196,182,0.12); border: 1px solid #2EC4B6; }
+  </style>
+
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+  <script>
+    window.__timelines = window.__timelines || {};
+    var root = document.currentScript.parentElement;
+    var SVGNS = 'http://www.w3.org/2000/svg';
+    var words = ['The', 'cat', 'sat', 'on', 'the', 'mat'];
+    var N = words.length;
+    var baseY = 142, r = 32, x0 = 70, x1 = 1250;
+    var xs = [];
+    for (var i = 0; i < N; i++) xs.push(x0 + (x1 - x0) * i / (N - 1));
+
+    function mk(tag, attrs) {
+      var e = document.createElementNS(SVGNS, tag);
+      for (var k in attrs) e.setAttribute(k, attrs[k]);
+      return e;
+    }
+    function drawTokens(svg, color) {
+      var g = [];
+      for (var i = 0; i < N; i++) {
+        var grp = mk('g', { class: 'tok' });
+        var c = mk('circle', { cx: xs[i], cy: baseY, r: r, fill: '#0d2137', stroke: color, 'stroke-width': 2 });
+        var t = mk('text', { x: xs[i], y: baseY + 8, 'text-anchor': 'middle', fill: '#FDFFFC', 'font-size': 22, 'font-family': "'Space Mono', monospace", 'font-weight': 700 });
+        t.textContent = words[i];
+        grp.appendChild(c); grp.appendChild(t);
+        svg.appendChild(grp); g.push(grp);
+      }
+      return g;
+    }
+    function arc(svg, i, j, color, w, op) {
+      var x1 = xs[i], x2 = xs[j];
+      var lift = (j - i) * 28;
+      var cy = baseY - r - lift;
+      var p = mk('path', { d: 'M ' + x1 + ' ' + (baseY - r) + ' Q ' + ((x1 + x2) / 2) + ' ' + cy + ' ' + x2 + ' ' + (baseY - r), fill: 'none', stroke: color, 'stroke-width': w, opacity: op });
+      svg.appendChild(p);
+      return p;
+    }
+
+    var rnnSvg = root.querySelector('#rnn-svg');
+    var selfSvg = root.querySelector('#self-svg');
+
+    // RNN: straight connectors between adjacent tokens, then a long bracket arc 0->N-1
+    var rnnConns = [];
+    for (var i = 0; i < N - 1; i++) {
+      var ln = mk('line', { x1: xs[i] + r, y1: baseY, x2: xs[i + 1] - r, y2: baseY, stroke: '#FF9F1C', 'stroke-width': 5, 'marker-end': '' });
+      rnnSvg.appendChild(ln); rnnConns.push(ln);
+    }
+    var rnnTokens = drawTokens(rnnSvg, '#FF9F1C');
+    var rnnBracket = arc(rnnSvg, 0, N - 1, '#E71D36', 4, 1);
+    rnnBracket.setAttribute('stroke-dasharray', '8 6');
+    var rnnLabel = mk('text', { x: (xs[0] + xs[N - 1]) / 2, y: 22, 'text-anchor': 'middle', fill: '#E71D36', 'font-size': 22, 'font-family': "'Space Mono', monospace", 'font-weight': 700 });
+    rnnLabel.textContent = (N - 1) + ' hops to link first ↔ last';
+    rnnSvg.appendChild(rnnLabel);
+
+    // Self-attention: all-pairs arcs, then highlight 0<->N-1
+    var selfArcs = [];
+    for (var a = 0; a < N; a++) for (var b = a + 1; b < N; b++) {
+      var isFar = (a === 0 && b === N - 1);
+      selfArcs.push(arc(selfSvg, a, b, isFar ? '#FDFFFC' : '#2EC4B6', isFar ? 5 : 2.5, 0.55));
+    }
+    var selfTokens = drawTokens(selfSvg, '#2EC4B6');
+    var selfLabel = mk('text', { x: (xs[0] + xs[N - 1]) / 2, y: 22, 'text-anchor': 'middle', fill: '#FDFFFC', 'font-size': 22, 'font-family': "'Space Mono', monospace", 'font-weight': 700 });
+    selfLabel.textContent = '1 hop — every pair connected directly';
+    selfSvg.appendChild(selfLabel);
+
+    var tl = gsap.timeline({ paused: true });
+    tl.from(root.querySelector('.title'), { opacity: 0, y: -18, duration: 0.6 });
+    // RNN reveal
+    tl.from(root.querySelector('#rnn-panel .plabel'), { opacity: 0, x: -20, duration: 0.4 }, 0.5);
+    tl.from(rnnTokens, { opacity: 0, scale: 0.5, transformOrigin: 'center', duration: 0.4, stagger: 0.45 }, 0.7);
+    tl.from(rnnConns, { opacity: 0, scaleX: 0, transformOrigin: 'left center', duration: 0.35, stagger: 0.45 }, 0.95);
+    tl.from([rnnBracket, rnnLabel], { opacity: 0, duration: 0.5 }, 3.4);
+    tl.from(root.querySelector('#rnn-panel .ptags'), { opacity: 0, x: 20, duration: 0.5 }, 3.6);
+    // Self reveal (fast / parallel)
+    tl.from(root.querySelector('#self-panel .plabel'), { opacity: 0, x: -20, duration: 0.4 }, 4.4);
+    tl.from(selfTokens, { opacity: 0, scale: 0.5, transformOrigin: 'center', duration: 0.5 }, 4.6);
+    tl.from(selfArcs, { opacity: 0, duration: 0.5, stagger: 0.03 }, 4.9);
+    tl.from(selfLabel, { opacity: 0, duration: 0.5 }, 5.6);
+    tl.from(root.querySelector('#self-panel .ptags'), { opacity: 0, x: 20, duration: 0.5 }, 5.6);
+    // emphasize the direct far arc
+    tl.to(selfArcs[selfArcs.length - 1 - (N - 2)] || selfArcs[0], {}, 6.0);
+
+    window.__timelines["path-length"] = tl;
+  </script>
+</div>
+</body>
+</html>

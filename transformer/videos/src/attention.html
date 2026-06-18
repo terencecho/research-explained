@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap');
+* { margin: 0; padding: 0; box-sizing: border-box; }
+</style>
+</head>
+<body>
+<div data-composition-id="attn-qkv" data-width="1920" data-height="540" data-start="0" data-duration="11">
+  <div class="scene">
+    <div class="title">Attention: each word asks &ldquo;who should I look at?&rdquo;</div>
+
+    <div class="stage">
+      <!-- Query -->
+      <div class="query-col">
+        <div class="qlabel">QUERY</div>
+        <div class="qbox">&ldquo;it&rdquo;</div>
+        <div class="qsub">what does this refer to?</div>
+      </div>
+
+      <div class="big-arrow">&rarr;</div>
+
+      <!-- Keys / scores / weights -->
+      <div class="rows">
+        <div class="rows-head">
+          <span class="h-key">KEY (each other word)</span>
+          <span class="h-score">MATCH SCORE</span>
+          <span class="h-weight">ATTENTION WEIGHT (softmax)</span>
+        </div>
+        <div class="row" data-w="0.71">
+          <span class="key best">animal</span>
+          <span class="score">9.2</span>
+          <span class="wbar-wrap"><span class="wbar best"></span><span class="wval">71%</span></span>
+        </div>
+        <div class="row" data-w="0.14">
+          <span class="key">tired</span>
+          <span class="score">4.5</span>
+          <span class="wbar-wrap"><span class="wbar"></span><span class="wval">14%</span></span>
+        </div>
+        <div class="row" data-w="0.09">
+          <span class="key">street</span>
+          <span class="score">3.4</span>
+          <span class="wbar-wrap"><span class="wbar"></span><span class="wval">9%</span></span>
+        </div>
+        <div class="row" data-w="0.03">
+          <span class="key">The</span>
+          <span class="score">1.1</span>
+          <span class="wbar-wrap"><span class="wbar"></span><span class="wval">3%</span></span>
+        </div>
+        <div class="row" data-w="0.03">
+          <span class="key">because</span>
+          <span class="score">0.8</span>
+          <span class="wbar-wrap"><span class="wbar"></span><span class="wval">3%</span></span>
+        </div>
+      </div>
+
+      <div class="big-arrow">&rarr;</div>
+
+      <!-- Output -->
+      <div class="out-col">
+        <div class="qlabel">OUTPUT</div>
+        <div class="obox">&asymp; &ldquo;animal&rdquo;</div>
+        <div class="qsub">a weighted blend of values</div>
+      </div>
+    </div>
+
+    <div class="footer-tag">Output = &Sigma; (weight &times; value) &mdash; mostly the value of the word it matched</div>
+  </div>
+
+  <style>
+    [data-composition-id="attn-qkv"] {
+      position: relative; overflow: hidden; background: #011627;
+      width: 1920px; height: 540px;
+      font-family: 'Space Mono', monospace; color: #FDFFFC;
+    }
+    [data-composition-id="attn-qkv"] .scene {
+      width: 1920px; height: 540px; display: flex; flex-direction: column;
+      align-items: center; padding: 26px 50px 26px;
+    }
+    [data-composition-id="attn-qkv"] .title {
+      font-size: 42px; font-weight: 700; text-align: center; letter-spacing: 0.5px; margin-bottom: 14px;
+    }
+    [data-composition-id="attn-qkv"] .stage {
+      flex: 1; width: 100%; max-width: 1760px;
+      display: flex; align-items: center; justify-content: center; gap: 22px;
+    }
+    [data-composition-id="attn-qkv"] .query-col, [data-composition-id="attn-qkv"] .out-col {
+      display: flex; flex-direction: column; align-items: center; width: 270px; flex-shrink: 0;
+    }
+    [data-composition-id="attn-qkv"] .qlabel { font-size: 20px; font-weight: 700; color: #778DA9; letter-spacing: 2px; margin-bottom: 12px; }
+    [data-composition-id="attn-qkv"] .qbox {
+      font-size: 46px; font-weight: 700; color: #bc8cff; background: rgba(188,140,255,0.12);
+      border: 2px solid #bc8cff; border-radius: 12px; padding: 14px 36px;
+    }
+    [data-composition-id="attn-qkv"] .obox {
+      font-size: 40px; font-weight: 700; color: #3fb950; background: rgba(63,185,80,0.12);
+      border: 2px solid #3fb950; border-radius: 12px; padding: 14px 28px; white-space: nowrap;
+    }
+    [data-composition-id="attn-qkv"] .qsub { font-size: 17px; color: #778DA9; margin-top: 12px; text-align: center; line-height: 1.4; }
+    [data-composition-id="attn-qkv"] .big-arrow { font-size: 44px; color: #415A77; flex-shrink: 0; }
+    [data-composition-id="attn-qkv"] .rows { display: flex; flex-direction: column; gap: 9px; width: 720px; flex-shrink: 0; }
+    [data-composition-id="attn-qkv"] .rows-head { display: flex; align-items: center; font-size: 14px; color: #778DA9; letter-spacing: 1px; font-weight: 700; padding-bottom: 2px; }
+    [data-composition-id="attn-qkv"] .h-key { width: 200px; }
+    [data-composition-id="attn-qkv"] .h-score { width: 130px; text-align: center; }
+    [data-composition-id="attn-qkv"] .h-weight { flex: 1; }
+    [data-composition-id="attn-qkv"] .row { display: flex; align-items: center; height: 50px; }
+    [data-composition-id="attn-qkv"] .key {
+      width: 200px; font-size: 27px; font-weight: 700; color: #FDFFFC;
+      background: #0d2137; border: 1px solid #415A77; border-radius: 8px; padding: 7px 16px; text-align: center;
+    }
+    [data-composition-id="attn-qkv"] .key.best { color: #2EC4B6; border-color: #2EC4B6; background: rgba(46,196,182,0.12); }
+    [data-composition-id="attn-qkv"] .score { width: 130px; text-align: center; font-size: 26px; font-weight: 700; color: #FF9F1C; }
+    [data-composition-id="attn-qkv"] .wbar-wrap { flex: 1; display: flex; align-items: center; gap: 12px; }
+    [data-composition-id="attn-qkv"] .wbar {
+      height: 30px; background: #415A77; border-radius: 6px; transform-origin: left center; display: block;
+    }
+    [data-composition-id="attn-qkv"] .wbar.best { background: #2EC4B6; }
+    [data-composition-id="attn-qkv"] .wval { font-size: 22px; font-weight: 700; color: #FDFFFC; }
+    [data-composition-id="attn-qkv"] .footer-tag {
+      font-size: 25px; color: #2EC4B6; font-weight: 700; text-align: center; margin-top: 12px; flex-shrink: 0;
+    }
+  </style>
+
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+  <script>
+    window.__timelines = window.__timelines || {};
+    var root = document.currentScript.parentElement;
+    var q = function(s){ return root.querySelector(s); };
+    var qa = function(s){ return root.querySelectorAll(s); };
+
+    // size weight bars to their data-w (max width 360px)
+    var rows = qa('.row');
+    rows.forEach(function(r){
+      var w = parseFloat(r.getAttribute('data-w'));
+      r.querySelector('.wbar').style.width = (40 + w * 320) + 'px';
+    });
+
+    var tl = gsap.timeline({ paused: true });
+    tl.from(q('.title'), { opacity: 0, y: -20, duration: 0.6 });
+    tl.from('.query-col', { opacity: 0, x: -30, duration: 0.6 }, '<+0.2');
+    tl.from(q('.rows-head'), { opacity: 0, duration: 0.4 }, 1.0);
+    tl.from(qa('.key'), { opacity: 0, x: -20, duration: 0.45, stagger: 0.12 }, 1.2);
+    tl.from(qa('.score'), { opacity: 0, scale: 0.6, duration: 0.4, stagger: 0.12 }, 1.9);
+    tl.from(qa('.wbar'), { scaleX: 0, duration: 0.6, stagger: 0.12, ease: 'power2.out' }, 2.7);
+    tl.from(qa('.wval'), { opacity: 0, duration: 0.3, stagger: 0.12 }, 3.0);
+    tl.from(qa('.big-arrow')[1], { opacity: 0, x: -10, duration: 0.4 }, 3.9);
+    tl.from('.out-col', { opacity: 0, x: 30, duration: 0.6 }, 4.1);
+    // pulse the winning row
+    tl.to(q('.row .key.best'), { boxShadow: '0 0 22px rgba(46,196,182,0.7)', duration: 0.8, yoyo: true, repeat: 3 }, 4.8);
+    tl.from(q('.footer-tag'), { opacity: 0, y: 14, duration: 0.6 }, 5.0);
+
+    window.__timelines["attn-qkv"] = tl;
+  </script>
+</div>
+</body>
+</html>

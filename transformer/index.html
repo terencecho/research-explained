@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Attention Is All You Need: The Paper, Explained</title>
+<style>
+:root {
+  --bg: #0d1117; --surface: #161b22; --border: #30363d; --text: #e6edf3; --text-muted: #8b949e;
+  --accent: #58a6ff; --accent-subtle: #1f6feb22; --green: #3fb950; --yellow: #d29922; --red: #f85149; --purple: #bc8cff;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; background: var(--bg); color: var(--text); line-height: 1.7; max-width: 1200px; margin: 0 auto; padding: 2rem 1.5rem; display: flex; gap: 0; }
+.progress-bar { position: fixed; top: 0; left: 0; height: 3px; background: var(--accent); z-index: 1000; transition: width 0.1s; }
+.sidebar { position: sticky; top: 1rem; align-self: flex-start; width: 240px; flex-shrink: 0; max-height: calc(100vh - 2rem); overflow-y: auto; padding-right: 1.25rem; border-right: 1px solid var(--border); margin-right: 2rem; scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
+.sidebar::-webkit-scrollbar { width: 4px; } .sidebar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; } .sidebar::-webkit-scrollbar-track { background: transparent; }
+.sidebar .toc-title { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); margin-bottom: 0.75rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border); }
+.sidebar a { display: block; color: var(--text-muted); text-decoration: none; font-size: 0.8rem; padding: 0.2rem 0; line-height: 1.4; transition: color 0.15s, border-color 0.15s; border-left: 2px solid transparent; padding-left: 0.6rem; }
+.sidebar a:hover { color: var(--text); } .sidebar a.active { color: var(--accent); border-left-color: var(--accent); font-weight: 600; }
+.sidebar a.section-gap { margin-top: 0.4rem; }
+.sidebar-home { display: block; font-size: 0.8rem; color: var(--text-muted); text-decoration: none; padding: 0.3rem 0.6rem; margin-bottom: 0.75rem; border-left: none !important; transition: color 0.15s; }
+.sidebar-home:hover { color: var(--accent); }
+.main-content { flex: 1; min-width: 0; max-width: 860px; }
+@media (max-width: 900px) {
+  body { display: block; max-width: 860px; overflow-x: hidden; }
+  .sidebar { position: fixed; top: 0; left: -280px; width: 260px; height: 100vh; max-height: 100vh; background: var(--surface); border-right: 1px solid var(--border); padding: 1rem; margin-right: 0; z-index: 1001; transition: left 0.25s ease; }
+  .sidebar.mobile-open { left: 0; } .main-content { max-width: 100%; } .mobile-toc-btn { display: flex !important; }
+  .mobile-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; } .mobile-overlay.active { display: block; }
+  .compare-row { grid-template-columns: 1fr; } .glossary-panel { width: calc(100vw - 3rem); right: 1.5rem; }
+  .term .tooltip { width: calc(100vw - 4rem); max-width: 320px; left: 0; transform: none; }
+  .metrics-table { display: block; overflow-x: auto; }
+  .pipeline { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .arch-card { max-width: 100%; }
+  .three-grid { grid-template-columns: 1fr; }
+  .arch2 { flex-direction: column; }
+  .qkv-grid { grid-template-columns: 1fr; }
+}
+.mobile-toc-btn { display: none; position: fixed; bottom: 1.5rem; left: 1.5rem; width: 44px; height: 44px; background: var(--accent); color: var(--bg); border: none; border-radius: 50%; font-size: 1.1rem; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.4); z-index: 999; align-items: center; justify-content: center; }
+h1 { font-size: 2rem; margin-bottom: 0.5rem; } .subtitle { color: var(--text-muted); margin-bottom: 2rem; font-size: 1.05rem; }
+.meta { color: var(--text-muted); font-size: 0.8rem; margin-top: -1rem; margin-bottom: 1.5rem; }
+h2 { font-size: 1.5rem; margin: 2.5rem 0 1rem; color: var(--accent); border-bottom: 1px solid var(--border); padding-bottom: 0.5rem; }
+h3 { font-size: 1.2rem; margin: 1.5rem 0 0.75rem; color: var(--purple); } p { margin-bottom: 1rem; } a { color: var(--accent); }
+ul, ol { margin-bottom: 1rem; padding-left: 1.5rem; } li { margin-bottom: 0.35rem; }
+.research-banner { background: linear-gradient(135deg, #011627 0%, #0d2137 50%, #1a1a3a 100%); border: 1px solid #2EC4B6; border-radius: 12px; padding: 1.25rem 1.5rem; margin-bottom: 2rem; display: flex; align-items: center; gap: 1.25rem; }
+.research-banner .banner-icon { font-size: 2.2rem; flex-shrink: 0; } .research-banner .banner-text { flex: 1; }
+.research-banner .banner-text p { margin: 0; font-size: 0.95rem; color: var(--text-muted); line-height: 1.5; }
+.research-banner .banner-text p:first-child { font-size: 1.05rem; font-weight: 600; color: var(--text); margin-bottom: 0.25rem; }
+.research-banner a { color: #2EC4B6; text-decoration: none; font-weight: 600; } .research-banner a:hover { text-decoration: underline; }
+.banner-links { display: flex; gap: 0.75rem; margin-top: 0.5rem; flex-wrap: wrap; }
+.banner-link { display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.85rem; padding: 0.35rem 0.75rem; border-radius: 6px; border: 1px solid; text-decoration: none !important; transition: background 0.2s; }
+.banner-link.primary { border-color: #2EC4B6; color: #2EC4B6; } .banner-link.primary:hover { background: rgba(46,196,182,0.1); }
+.banner-link.secondary { border-color: var(--border); color: var(--text-muted); } .banner-link.secondary:hover { background: var(--accent-subtle); }
+.term { color: var(--yellow); cursor: help; border-bottom: 1px dashed var(--yellow); position: relative; } .term:hover { color: #e3b341; }
+.term .tooltip { display: none; position: absolute; bottom: 130%; left: 50%; transform: translateX(-50%); background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 0.75rem 1rem; width: 320px; font-size: 0.85rem; color: var(--text); z-index: 100; box-shadow: 0 4px 20px rgba(0,0,0,0.5); line-height: 1.5; }
+.term:hover .tooltip { display: block; }
+.analogy { background: #1a2332; border-left: 4px solid var(--accent); padding: 1rem 1.25rem; border-radius: 0 8px 8px 0; margin: 1rem 0; }
+.analogy::before { content: "Real-world analogy: "; font-weight: 700; color: var(--accent); }
+.insight { background: #1a2a1a; border-left: 4px solid var(--green); padding: 1rem 1.25rem; border-radius: 0 8px 8px 0; margin: 1rem 0; }
+.insight::before { content: "Key Insight: "; font-weight: 700; color: var(--green); }
+details { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; margin: 1rem 0; padding: 0; overflow: visible; }
+details summary { padding: 0.75rem 1.5rem; cursor: pointer; font-weight: 600; user-select: none; list-style: none; display: flex; align-items: center; gap: 0.5rem; }
+details summary::before { content: '+ '; color: var(--accent); font-family: monospace; font-size: 1.2rem; }
+details[open] summary::before { content: '- '; } details summary:hover { background: var(--accent-subtle); }
+details .content { padding: 0 1.5rem 1.25rem; }
+details .content ul, details .content ol { padding-left: 2.5rem; }
+
+.arch-flow { display: flex; flex-direction: column; align-items: center; gap: 0; margin: 1.5rem 0; }
+.arch-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 1rem 1.5rem; width: 100%; max-width: 560px; text-align: center; }
+.arch-card.highlight { border-color: #2EC4B6; background: linear-gradient(135deg, var(--surface) 0%, rgba(46,196,182,0.05) 100%); }
+.arch-card .name { font-weight: 700; font-size: 1em; } .arch-card .desc { color: var(--text-muted); font-size: 0.85em; margin-top: 0.25rem; }
+.arrow-down { width: 2px; height: 20px; background: var(--border); position: relative; }
+.arrow-down::after { content: ''; position: absolute; bottom: -4px; left: -4px; border: 5px solid transparent; border-top: 6px solid var(--border); }
+
+.arch2 { display: flex; gap: 1.5rem; margin: 1.5rem 0; align-items: stretch; }
+.arch-col { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; background: rgba(255,255,255,0.015); border: 1px dashed var(--border); border-radius: 12px; padding: 1rem 0.75rem 1.25rem; }
+.arch-col.enc { border-color: rgba(88,166,255,0.4); }
+.arch-col.dec { border-color: rgba(188,140,255,0.4); }
+.col-head { font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.75rem; }
+.arch-col.enc .col-head { color: var(--accent); }
+.arch-col.dec .col-head { color: var(--purple); }
+.arch-card.sm { padding: 0.6rem 0.9rem; max-width: 100%; font-size: 0.92rem; }
+.arch-note { font-size: 0.8rem; color: var(--text-muted); text-align: center; margin-top: 0.5rem; font-style: italic; }
+
+.tag-row { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-bottom: 8px; }
+.tag { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 0.8em; font-weight: 600; }
+.tag-teal { background: rgba(46,196,182,0.15); color: #2EC4B6; } .tag-orange { background: rgba(255,159,28,0.15); color: #FF9F1C; }
+.tag-purple { background: rgba(188,140,255,0.15); color: #bc8cff; } .tag-green { background: rgba(63,185,80,0.15); color: var(--green); }
+.tag-red { background: rgba(231,29,54,0.15); color: #f85149; } .tag-blue { background: rgba(88,166,255,0.15); color: var(--accent); }
+
+.compare-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 1rem 0; }
+.three-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; margin: 1.25rem 0; }
+.compare-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 1.25rem; }
+.compare-card h4 { margin-bottom: 0.5rem; } .compare-card.good { border-color: var(--green); } .compare-card.good h4 { color: var(--green); }
+.compare-card.bad { border-color: var(--red); } .compare-card.bad h4 { color: var(--red); }
+.compare-card.mid { border-color: var(--yellow); } .compare-card.mid h4 { color: var(--yellow); }
+.compare-card ul { padding-left: 1.25rem; font-size: 0.9rem; }
+
+.metrics-table { width: 100%; border-collapse: collapse; margin: 1.25rem 0; font-size: 0.9rem; }
+.metrics-table th { text-transform: uppercase; font-size: 0.7rem; letter-spacing: 1px; color: var(--text-muted); padding: 0.6rem 0.75rem; text-align: left; border-bottom: 2px solid var(--border); }
+.metrics-table td { padding: 0.6rem 0.75rem; border-bottom: 1px solid var(--border); }
+.metrics-table tr:hover td { background: rgba(88,166,255,0.04); } .val-best { color: var(--green); font-weight: 700; }
+.metrics-table .row-label { font-weight: 600; }
+
+.quiz { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 1.25rem; margin: 1.5rem 0; }
+.quiz-q { font-weight: 600; margin-bottom: 0.75rem; color: var(--purple); }
+.quiz label { display: block; padding: 0.5rem 0.75rem; margin: 0.25rem 0; border-radius: 6px; cursor: pointer; transition: background 0.2s; }
+.quiz label:hover { background: var(--accent-subtle); } .quiz input[type="radio"] { margin-right: 0.5rem; }
+.quiz-btn { margin-top: 0.75rem; padding: 0.5rem 1.25rem; background: var(--accent); color: var(--bg); border: none; border-radius: 6px; font-weight: 600; cursor: pointer; }
+.quiz-btn:hover { opacity: 0.9; } .quiz-feedback { display: none; margin-top: 0.75rem; padding: 0.75rem; border-radius: 6px; }
+.quiz-correct { background: #1a2a1a; color: var(--green); } .quiz-wrong { background: #2a1a1a; color: var(--red); }
+
+.glossary-toggle { position: fixed; bottom: 1.5rem; right: 1.5rem; width: 50px; height: 50px; background: var(--accent); color: var(--bg); border: none; border-radius: 50%; font-size: 1.3rem; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.4); z-index: 999; display: flex; align-items: center; justify-content: center; }
+.glossary-panel { display: none; position: fixed; bottom: 5rem; right: 1.5rem; width: 380px; max-height: 70vh; overflow-y: auto; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 1.25rem; z-index: 998; box-shadow: 0 8px 30px rgba(0,0,0,0.5); }
+.glossary-panel.open { display: block; } .glossary-panel h3 { margin-top: 0; }
+.glossary-panel input { width: 100%; padding: 0.5rem 0.75rem; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; color: var(--text); margin-bottom: 0.75rem; font-size: 0.9rem; }
+.glossary-entry { padding: 0.5rem 0; border-bottom: 1px solid var(--border); } .glossary-entry:last-child { border-bottom: none; }
+.glossary-entry strong { color: var(--yellow); } .glossary-entry p { font-size: 0.85rem; color: var(--text-muted); margin: 0.25rem 0 0; }
+
+.video-embed { margin: 1.5rem 0; border-radius: 12px; overflow: hidden; border: 1px solid var(--border); background: #011627; }
+.video-embed video { display: block; width: 100%; height: auto; }
+.video-caption { padding: 0.5rem 0.75rem; font-size: 0.8rem; color: var(--text-muted); background: var(--surface); display: flex; align-items: center; gap: 0.5rem; }
+.video-caption .badge { display: inline-flex; flex-direction: column; align-items: center; padding: 0.2rem 0.6rem; border-radius: 4px; background: rgba(46,196,182,0.15); color: #2EC4B6; text-decoration: none; white-space: nowrap; line-height: 1.2; transition: background 0.15s; }
+.video-caption .badge .badge-label { font-size: 0.55rem; font-weight: 400; color: #778DA9; text-transform: uppercase; letter-spacing: 0.04em; }
+.video-caption .badge .badge-name { font-size: 0.75rem; font-weight: 700; } .video-caption .badge:hover { background: rgba(46,196,182,0.3); text-decoration: none; }
+
+ol.big { counter-reset: biglist; list-style: none; padding: 0; }
+ol.big li { counter-increment: biglist; padding: 8px 0 8px 48px; position: relative; margin-bottom: 8px; }
+ol.big li::before { content: counter(biglist); position: absolute; left: 0; top: 6px; width: 32px; height: 32px; border-radius: 50%; background: rgba(88,166,255,0.12); color: var(--accent); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.9em; }
+
+.stepper { margin: 1.5rem 0; padding-left: 20px; }
+.step { position: relative; padding: 0 0 1.25rem 28px; border-left: 2px solid var(--accent); }
+.step:last-child { border-left: 2px solid transparent; }
+.step::before { content: ""; position: absolute; left: -7px; top: 4px; width: 12px; height: 12px; border-radius: 50%; background: var(--accent); }
+.step strong { display: block; margin-bottom: 4px; } .step .step-desc { color: var(--text-muted); font-size: 0.95em; }
+
+.pipeline { display: flex; gap: 0; align-items: stretch; margin: 1.5rem 0; flex-wrap: nowrap; }
+.pipe-stage { flex: 1; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 1rem; position: relative; min-width: 0; }
+.pipe-stage .num { width: 28px; height: 28px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.85em; color: var(--bg); margin-bottom: 0.5rem; }
+.pipe-stage.s1 .num { background: #2EC4B6; } .pipe-stage.s1 { border-color: #2EC4B6; }
+.pipe-stage.s2 .num { background: #FF9F1C; } .pipe-stage.s2 { border-color: #FF9F1C; }
+.pipe-stage.s3 .num { background: #bc8cff; } .pipe-stage.s3 { border-color: #bc8cff; }
+.pipe-stage .stage-name { font-weight: 700; display: block; }
+.pipe-stage .stage-desc { color: var(--text-muted); font-size: 0.85em; font-style: italic; line-height: 1.5; margin-top: 0.25rem; }
+.pipe-arrow { display: flex; align-items: center; justify-content: center; padding: 0 0.5rem; color: var(--text-muted); font-size: 1.5rem; flex-shrink: 0; }
+
+.statgrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin: 1.5rem 0; }
+.statgrid .stat { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 1rem; text-align: center; }
+.statgrid .stat .big { font-size: 1.7rem; font-weight: 700; color: var(--accent); display: block; }
+.statgrid .stat.green .big { color: var(--green); }
+.statgrid .stat .lab { font-size: 0.78rem; color: var(--text-muted); margin-top: 0.25rem; }
+@media (max-width: 900px) { .statgrid { grid-template-columns: 1fr 1fr; } }
+
+/* QKV explanation grid */
+.qkv-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin: 1.25rem 0; }
+.qkv-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 1rem 1.1rem; }
+.qkv-card .qkv-let { font-size: 1.4rem; font-weight: 700; }
+.qkv-card.q { border-color: var(--purple); } .qkv-card.q .qkv-let { color: var(--purple); }
+.qkv-card.k { border-color: var(--accent); } .qkv-card.k .qkv-let { color: var(--accent); }
+.qkv-card.v { border-color: #2EC4B6; } .qkv-card.v .qkv-let { color: #2EC4B6; }
+.qkv-card p { font-size: 0.85rem; margin: 0.35rem 0 0; color: var(--text-muted); }
+
+/* Interactive attention demo */
+.attn-demo { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 1.25rem 1.4rem; margin: 1.25rem 0; }
+.attn-demo .demo-hint { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.9rem; }
+.attn-sentence { display: flex; flex-wrap: wrap; gap: 0.4rem; line-height: 2.4; }
+.attn-word { padding: 0.25rem 0.6rem; border-radius: 6px; cursor: pointer; font-size: 1.05rem; border: 1px solid transparent; transition: background 0.18s, border-color 0.18s; user-select: none; }
+.attn-word:hover { border-color: var(--accent); }
+.attn-word.query { outline: 2px solid var(--purple); outline-offset: 1px; font-weight: 700; }
+.attn-readout { margin-top: 0.9rem; font-size: 0.9rem; color: var(--text-muted); min-height: 1.4rem; }
+.attn-readout b { color: var(--purple); }
+.attn-legend { display: flex; align-items: center; gap: 0.5rem; margin-top: 0.6rem; font-size: 0.78rem; color: var(--text-muted); }
+.attn-legend .bar { height: 12px; width: 140px; border-radius: 4px; background: linear-gradient(90deg, rgba(46,196,182,0.08), rgba(46,196,182,0.95)); }
+
+/* Mobile grid collapses — placed last so they win over the base grid rules at equal specificity */
+@media (max-width: 900px) {
+  .qkv-grid { grid-template-columns: 1fr; }
+  .arch2 { flex-direction: column; }
+  .compare-row { grid-template-columns: 1fr; }
+  .three-grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<div class="progress-bar" id="progress-bar"></div>
+<button class="mobile-toc-btn" onclick="document.querySelector('.sidebar').classList.toggle('mobile-open'); document.querySelector('.mobile-overlay').classList.toggle('active');">&#9776;</button>
+<div class="mobile-overlay" onclick="document.querySelector('.sidebar').classList.remove('mobile-open'); this.classList.remove('active');"></div>
+
+<nav class="sidebar">
+  <a href="../" class="sidebar-home">&larr; All Papers</a>
+  <div class="toc-title">Contents</div>
+  <a href="#big-picture">The Big Picture</a>
+  <a href="#in-action" class="section-gap">See It In Action</a>
+  <a href="#background" class="section-gap">Background Concepts</a>
+  <a href="#attention" class="section-gap">The Heart of It: Attention</a>
+  <a href="#architecture" class="section-gap">The Transformer, Assembled</a>
+  <a href="#why-self-attention" class="section-gap">Why Self-Attention Wins</a>
+  <a href="#training" class="section-gap">How It's Trained</a>
+  <a href="#inference" class="section-gap">How It Generates Text</a>
+  <a href="#results" class="section-gap">Results</a>
+  <a href="#quiz" class="section-gap">Final Quiz</a>
+  <a href="#why-it-matters" class="section-gap">Why It Matters</a>
+</nav>
+
+<div class="main-content">
+
+<h1>Attention Is All You Need: The Paper, Explained</h1>
+<p class="subtitle">A beginner-friendly guide to the Transformer &mdash; the architecture behind ChatGPT, Gemini, Claude, and almost every modern AI model. Every technical term is defined. Every concept is grounded in analogy.</p>
+<p class="meta">Paper by Vaswani, Shazeer, Parmar, Uszkoreit, Jones, Gomez, Kaiser &amp; Polosukhin (Google Brain &amp; Google Research, 2017) &bull; Explainer published June 2026</p>
+
+<div class="research-banner">
+  <div class="banner-icon">&#129504;</div>
+  <div class="banner-text">
+    <p>This is a companion explainer for &ldquo;Attention Is All You Need&rdquo;</p>
+    <p>The 2017 paper that introduced the <strong>Transformer</strong>: a neural network that ditched the step-by-step processing everyone relied on and replaced it entirely with <strong>attention</strong>. It trained faster, read whole sentences at once, and set new translation records &mdash; then became the foundation for the entire large-language-model era.</p>
+    <div class="banner-links">
+      <a href="https://arxiv.org/abs/1706.03762" target="_blank" class="banner-link primary">&#x1F4C4; Read the Paper (arXiv)</a>
+      <a href="https://github.com/tensorflow/tensor2tensor" target="_blank" class="banner-link secondary">&#x1F4BB; Original Code (tensor2tensor)</a>
+    </div>
+  </div>
+</div>
+
+<h2 id="big-picture">The Big Picture</h2>
+
+<p>In 2017, the best way to make a computer translate a sentence &mdash; or do almost anything with language &mdash; was to feed it the words <em>one at a time</em>, in order, using a kind of network that kept a running memory of what it had seen so far. These were called <span class="term">recurrent neural networks<span class="tooltip">A recurrent neural network (RNN) processes a sequence one element at a time, updating an internal "memory" (hidden state) at each step and passing it forward. Powerful for sequences, but inherently sequential.</span></span>. They worked, but they had a stubborn flaw: because each word had to wait for the previous word to be processed, you couldn't do the work in parallel &mdash; and modern hardware (<span class="term">GPUs<span class="tooltip">Graphics Processing Units &mdash; chips with thousands of small cores that do many calculations at once. They make deep learning fast, but only if the work can be split into parallel pieces. RNNs couldn't.</span></span>) is built to do thousands of things at once.</p>
+
+<p>The Transformer's radical proposal was in its title: <strong>attention is all you need</strong>. Throw out the step-by-step recurrence entirely. Instead, let every word look directly at every other word in the sentence, all at the same time, and decide for itself which other words matter. That single idea &mdash; called <span class="term">self-attention<span class="tooltip">A mechanism that lets each word in a sentence directly "look at" and pull information from every other word, computing for itself how relevant each one is. The core building block of the Transformer.</span></span> &mdash; is what the whole paper is built on. The problems it solved:</p>
+
+<ol class="big">
+  <li><strong>Recurrence forbids parallelism.</strong> Processing word 10 required finishing words 1 through 9 first. On a chip designed to run thousands of operations simultaneously, that's like owning a highway and being forced to drive single file. The Transformer processes all words at once.</li>
+  <li><strong>Long-range connections were fragile.</strong> To link the first word of a paragraph to the last, an RNN had to pass information through every word in between &mdash; a long, lossy game of telephone. The Transformer connects any two words <em>directly</em>, in a single step, no matter how far apart.</li>
+  <li><strong>Training was slow and expensive.</strong> Because of the above, top translation models took a long time and a lot of compute. The Transformer beat them while training in a small fraction of the time.</li>
+</ol>
+
+<div class="insight">Replace the sequential "read word by word and remember" loop with a parallel "every word attends to every other word at once" operation. This made training dramatically faster, made long-range relationships easy to learn, and &mdash; almost as a side effect &mdash; produced an architecture so general it now powers nearly every large AI model in existence.</div>
+
+<h2 id="in-action">See It In Action</h2>
+
+<p>Before any math, here's the intuition you should hold onto. When a model reads a sentence, the word <em>&ldquo;it&rdquo;</em> is ambiguous &mdash; what does it refer to? Self-attention lets the word &ldquo;it&rdquo; look at every other word and decide. Click any word below to see (illustratively) which other words it would pay the most attention to. Notice that <strong>&ldquo;it&rdquo;</strong> leans heavily on <strong>&ldquo;animal&rdquo;</strong>.</p>
+
+<div class="attn-demo">
+  <div class="demo-hint">&#128072; Click a word to make it the &ldquo;query.&rdquo; Brighter teal = more attention paid to that word.</div>
+  <div class="attn-sentence" id="attn-sentence"></div>
+  <div class="attn-readout" id="attn-readout">Click any word to begin.</div>
+  <div class="attn-legend"><span>less attention</span><span class="bar"></span><span>more attention</span></div>
+</div>
+
+<p>That's the entire promise of attention, in miniature: <em>relevance is computed, not assumed</em>. The model isn't told that &ldquo;it&rdquo; refers to &ldquo;animal&rdquo; &mdash; it learns to compute a high relevance score between them. Now let's build up how that actually works.</p>
+
+<h2 id="background">Background Concepts</h2>
+
+<p>This paper assumes you're comfortable with the basics of neural networks for language. Let's build that vocabulary from scratch &mdash; each idea here is a prerequisite for understanding the Transformer.</p>
+
+<h3>From words to numbers: tokens and embeddings</h3>
+
+<p>A neural network only understands numbers, not letters. So the first step in any language model is to chop text into pieces called <span class="term">tokens<span class="tooltip">The small units a model reads &mdash; often words or word-fragments. "unbelievable" might become "un", "believ", "able". The paper uses ~32,000&ndash;37,000 sub-word tokens via byte-pair encoding.</span></span> (roughly, words or word-fragments), then map each token to a list of numbers called an <span class="term">embedding<span class="tooltip">A vector (a list of numbers, e.g. 512 of them) that represents a token's meaning. Words with similar meanings get similar vectors. The model learns these during training.</span></span>. An embedding is just a <span class="term">vector<span class="tooltip">An ordered list of numbers, like [0.2, -1.1, 0.7, ...]. You can think of it as coordinates pointing to a location in a high-dimensional "meaning space."</span></span> &mdash; a point in a high-dimensional &ldquo;meaning space&rdquo; where similar words sit near each other. In this paper every token becomes a vector of <strong>512</strong> numbers.</p>
+
+<div class="analogy">An embedding is like giving every word GPS coordinates in a vast map of meaning. &ldquo;King&rdquo; and &ldquo;queen&rdquo; live in the same neighborhood; &ldquo;banana&rdquo; is on the other side of town. The model isn't handed this map &mdash; it draws it during training, nudging related words closer together.</div>
+
+<h3>The old workhorse: recurrent networks and their bottleneck</h3>
+
+<p>Before the Transformer, sequence problems were ruled by <span class="term">RNNs<span class="tooltip">Recurrent Neural Networks &mdash; networks that read a sequence step by step, carrying a memory (hidden state) forward from one step to the next.</span></span> and their smarter cousins, <span class="term">LSTMs<span class="tooltip">Long Short-Term Memory networks &mdash; a type of RNN with gates that help it remember information over longer stretches without it fading away.</span></span> and <span class="term">GRUs<span class="tooltip">Gated Recurrent Units &mdash; a streamlined LSTM variant. Like LSTMs, designed to carry memory across many steps.</span></span>. They read a sentence the way you read aloud: one word at a time, updating a mental summary (the <span class="term">hidden state<span class="tooltip">The RNN's running memory &mdash; a vector updated at each step that's supposed to summarize everything seen so far.</span></span>) as you go. This is intuitive, but it forces two costs: the work is strictly <em>sequential</em> (word 10 can't start until word 9 is done), and information from far-back words has to survive a long relay to reach the present, often fading along the way.</p>
+
+<h3>Encoder and decoder: read, then write</h3>
+
+<p>Translation models share a common shape: an <span class="term">encoder<span class="tooltip">The half of the model that reads and "understands" the input sentence, turning it into a set of rich numeric representations.</span></span> reads the whole input sentence and compresses its meaning into a set of vectors; a <span class="term">decoder<span class="tooltip">The half that writes the output sentence, one token at a time, using both what it has written so far and the encoder's representation of the input.</span></span> then writes the output sentence using that understanding. The decoder works <span class="term">autoregressively<span class="tooltip">"Auto-regressive" means it generates one token at a time, and each new token is fed back in as input to help predict the next one. This is how GPT-style models still generate text today.</span></span> &mdash; it produces one word, feeds that word back in, produces the next, and so on. The Transformer keeps this encoder&ndash;decoder shape but rebuilds both halves out of attention.</p>
+
+<h3>Softmax: turning scores into a spotlight</h3>
+
+<p>One small function shows up everywhere in this paper: <span class="term">softmax<span class="tooltip">A function that turns a list of raw scores into positive numbers that add up to 1 (a probability distribution). Big scores get exaggerated; small ones get squashed toward zero.</span></span>. It takes a list of raw numbers (&ldquo;scores&rdquo;) and turns them into percentages that add up to 100%, exaggerating the big ones and shrinking the small ones. Attention uses softmax to turn raw &ldquo;how relevant is this word?&rdquo; scores into clean weights &mdash; a spotlight that mostly lands on the few words that matter and dims the rest.</p>
+
+<h2 id="attention">The Heart of It: Attention</h2>
+
+<p>Everything in the Transformer rests on one operation. The paper describes attention with three roles that every word plays at once: a <strong>Query</strong>, a <strong>Key</strong>, and a <strong>Value</strong>. The names come from databases, and the analogy is the clearest way in.</p>
+
+<div class="qkv-grid">
+  <div class="qkv-card q">
+    <span class="qkv-let">Q &mdash; Query</span>
+    <p>What I'm looking for. Each word forms a question: &ldquo;which other words are relevant to me?&rdquo;</p>
+  </div>
+  <div class="qkv-card k">
+    <span class="qkv-let">K &mdash; Key</span>
+    <p>What I advertise about myself. Every word offers a label that queries can match against.</p>
+  </div>
+  <div class="qkv-card v">
+    <span class="qkv-let">V &mdash; Value</span>
+    <p>What I actually contribute. The information a word hands over if it gets attended to.</p>
+  </div>
+</div>
+
+<div class="analogy">Attention is like searching a library. Your <strong>query</strong> is what you want ("books about volcanoes"). Each book has a spine label &mdash; its <strong>key</strong> ("Geology", "Cooking", "Volcanoes"). You compare your query to every key to score the match, then you actually read the <strong>contents</strong> &mdash; the <strong>value</strong> &mdash; of the books that matched, weighted by how good the match was. You don't read just one book; you blend the contents of all of them, paying most attention to the best matches.</div>
+
+<h3>Scaled dot-product attention</h3>
+
+<p>Here is the actual recipe, in plain steps. For one query word:</p>
+
+<ol class="big">
+  <li><strong>Score every word.</strong> Compare the query against each word's key using a <span class="term">dot product<span class="tooltip">A way of multiplying two vectors into a single number that measures how aligned they are. Big when the vectors point the same way &mdash; a natural "similarity" score.</span></span> &mdash; a single number measuring how well they match.</li>
+  <li><strong>Scale the scores.</strong> Divide every score by <span class="term">&radic;d<sub>k</sub><span class="tooltip">The square root of the key dimension (d_k = 64 in the base model). Dividing by it keeps the scores from growing too large, which would push softmax into a region where it barely learns. A small but crucial stabilizer.</span></span> to keep them from getting too large.</li>
+  <li><strong>Softmax into weights.</strong> Run the scores through softmax so they become positive weights that sum to 1 &mdash; the attention spotlight.</li>
+  <li><strong>Blend the values.</strong> Take a weighted sum of all the words' values, using those weights. The result is the query word's new, context-aware representation.</li>
+</ol>
+
+<p>The paper writes this as one compact formula, <strong>Attention(Q, K, V) = softmax(QK<sup>T</sup> / &radic;d<sub>k</sub>) V</strong>, and computes it for all words simultaneously as a single matrix multiplication &mdash; which is exactly why it's so fast on a GPU. The video below walks through it for the word &ldquo;it.&rdquo;</p>
+
+<div class="video-embed">
+  <video src="videos/attention.mp4" autoplay muted loop playsinline></video>
+  <div class="video-caption"><a href="https://github.com/heygen-com/hyperframes" target="_blank" class="badge" title="Made with HyperFrames — HeyGen's HTML-to-video composition framework"><span class="badge-label">made with</span><span class="badge-name">HyperFrames</span></a> A query word scores every other word, softmax turns those scores into attention weights, and the output is a weighted blend of the matched words' values.</div>
+</div>
+
+<details>
+<summary>Why divide by &radic;d<sub>k</sub>? (the &ldquo;scaled&rdquo; part)</summary>
+<div class="content">
+<p>When you take a dot product of two long vectors of random-ish numbers, the result tends to grow larger as the vectors get longer (specifically, its variance grows with the dimension <span class="term">d<sub>k</sub><span class="tooltip">The dimension of the key and query vectors &mdash; 64 in the base model (512 total, split across 8 heads).</span></span>). Very large scores push softmax into a regime where almost all the weight piles onto one option and the <span class="term">gradients<span class="tooltip">The signals used to train a network &mdash; they tell each weight which direction to adjust. If softmax saturates, these signals shrink toward zero and learning stalls.</span></span> become tiny, so the model learns slowly. Dividing by &radic;d<sub>k</sub> rescales the scores back to a sane range, keeping training stable. It's a one-character fix with an outsized effect.</p>
+</div>
+</details>
+
+<h3>Self-attention vs. cross-attention</h3>
+
+<p>The same operation gets used in two modes. In <strong>self-attention</strong>, the queries, keys, and values all come from the <em>same</em> sentence &mdash; words looking at their own neighbors to build context (this is what the &ldquo;it&rdquo; &rarr; &ldquo;animal&rdquo; demo showed). In <strong>cross-attention</strong>, the queries come from the sentence being written (the decoder) while the keys and values come from the input sentence (the encoder) &mdash; this is how the translation looks back at the original. Same math, different sources.</p>
+
+<h3>Many heads are better than one</h3>
+
+<p>A single attention operation can only focus one way at a time. But a word relates to others in many ways at once &mdash; grammatically, semantically, by position. So the Transformer runs attention <strong>multiple times in parallel</strong>, each with its own learned projections, and calls each one a <span class="term">head<span class="tooltip">One independent attention computation. The base Transformer uses 8 heads, each operating on a 64-dimensional slice, so the total cost matches a single full-size attention.</span></span>. The paper uses <strong>8 heads</strong>. Each head can specialize &mdash; one might track the subject of a verb, another the next word, another a long-range reference &mdash; and their outputs are concatenated and mixed back together.</p>
+
+<div class="video-embed">
+  <video src="videos/multi-head.mp4" autoplay muted loop playsinline></video>
+  <div class="video-caption"><a href="https://github.com/heygen-com/hyperframes" target="_blank" class="badge" title="Made with HyperFrames — HeyGen's HTML-to-video composition framework"><span class="badge-label">made with</span><span class="badge-name">HyperFrames</span></a> The input is split into 8 heads that each attend differently &mdash; tracking adjacent words, the subject, the object, long-range links &mdash; all in parallel, then concatenated back into one richer vector.</div>
+</div>
+
+<div class="insight">Multi-head attention is the difference between reading a sentence with one lens and reading it with eight at once. Each head learns to capture a different kind of relationship, and because they run in parallel on smaller slices, you get this richness for roughly the same compute as a single attention.</div>
+
+<h2 id="architecture">The Transformer, Assembled</h2>
+
+<p>Now we can stack the pieces into the full model. The Transformer keeps the classic two-tower shape &mdash; an encoder that reads the input and a decoder that writes the output &mdash; but each tower is a stack of <strong>6 identical layers</strong> built from attention and simple feed-forward networks.</p>
+
+<div class="arch2">
+  <div class="arch-col enc">
+    <div class="col-head">Encoder &times;6</div>
+    <div class="tag-row"><span class="tag tag-blue">input tokens</span><span class="tag tag-orange">+ positional encoding</span></div>
+    <div class="arrow-down"></div>
+    <div class="arch-card sm highlight"><div class="name">Multi-Head Self-Attention</div><div class="desc">every word attends to every other word</div></div>
+    <div class="arrow-down"></div>
+    <div class="arch-card sm"><div class="name">Add &amp; Norm</div><div class="desc">residual connection + layer normalization</div></div>
+    <div class="arrow-down"></div>
+    <div class="arch-card sm"><div class="name">Feed-Forward Network</div><div class="desc">a small per-word transformation</div></div>
+    <div class="arrow-down"></div>
+    <div class="arch-card sm"><div class="name">Add &amp; Norm</div><div class="desc">residual + normalize again</div></div>
+    <div class="arch-note">output: a context-rich vector per input word &rarr;</div>
+  </div>
+
+  <div class="arch-col dec">
+    <div class="col-head">Decoder &times;6</div>
+    <div class="tag-row"><span class="tag tag-purple">output so far</span><span class="tag tag-orange">+ positional encoding</span></div>
+    <div class="arrow-down"></div>
+    <div class="arch-card sm highlight"><div class="name">Masked Multi-Head Self-Attention</div><div class="desc">attends only to earlier output words</div></div>
+    <div class="arrow-down"></div>
+    <div class="arch-card sm highlight"><div class="name">Cross-Attention</div><div class="desc">queries the encoder's output (the input sentence)</div></div>
+    <div class="arrow-down"></div>
+    <div class="arch-card sm"><div class="name">Feed-Forward + Add &amp; Norm</div><div class="desc">same per-word transform &amp; normalization</div></div>
+    <div class="arrow-down"></div>
+    <div class="arch-card sm"><div class="name">Linear + Softmax</div><div class="desc">probabilities for the next token</div></div>
+    <div class="arch-note">output: the next word of the translation</div>
+  </div>
+</div>
+
+<p>A few components in that diagram deserve a closer look.</p>
+
+<h3>The feed-forward network: thinking about each word on its own</h3>
+
+<p>After attention has mixed information between words, each word passes through a small <span class="term">feed-forward network<span class="tooltip">A simple two-layer transformation applied to each position independently: expand to 2048 dimensions, apply a ReLU non-linearity, shrink back to 512. It lets the model process the information attention just gathered.</span></span> &mdash; the same little two-step transformation applied to every position separately. If attention is the step where words <em>talk to each other</em>, the feed-forward network is the step where each word <em>thinks privately</em> about what it just heard. It expands each 512-number vector to 2048, applies a <span class="term">ReLU<span class="tooltip">Rectified Linear Unit &mdash; a simple non-linear function that keeps positive numbers and zeroes out negatives. It lets the network learn non-linear, more expressive patterns.</span></span> non-linearity, and shrinks it back.</p>
+
+<h3>Residual connections and layer normalization: keeping deep stacks trainable</h3>
+
+<p>Around every sub-layer, the Transformer adds two pieces of plumbing. A <span class="term">residual connection<span class="tooltip">A shortcut that adds a sub-layer's input to its output (output = x + Sublayer(x)). It gives gradients a clear path through deep networks, making them much easier to train.</span></span> adds each sub-layer's input back to its output, giving information (and training signal) a clean shortcut through all 6 layers. Then <span class="term">layer normalization<span class="tooltip">A step that re-centers and re-scales a vector to have a consistent statistical range. It stabilizes and speeds up training of deep networks.</span></span> rescales the result to a stable range. These aren't glamorous, but without them, stacking 6+ layers of attention would be far harder to train.</p>
+
+<h3>Positional encoding: putting the words back in order</h3>
+
+<p>Here's a subtle problem. Because the Transformer looks at all words at once instead of in sequence, it has <em>no inherent idea of word order</em> &mdash; to it, &ldquo;dog bites man&rdquo; and &ldquo;man bites dog&rdquo; would look identical. The fix is <span class="term">positional encoding<span class="tooltip">A pattern of numbers added to each word's embedding that encodes its position in the sentence. The paper uses sine and cosine waves of different frequencies so every position gets a unique, learnable-to-interpret signature.</span></span>: before the first layer, each word's embedding gets a unique &ldquo;position fingerprint&rdquo; added to it, built from sine and cosine waves of different frequencies.</p>
+
+<div class="video-embed">
+  <video src="videos/pos-enc.mp4" autoplay muted loop playsinline></video>
+  <div class="video-caption"><a href="https://github.com/heygen-com/hyperframes" target="_blank" class="badge" title="Made with HyperFrames — HeyGen's HTML-to-video composition framework"><span class="badge-label">made with</span><span class="badge-name">HyperFrames</span></a> Each column is one position's unique code, built from sine/cosine waves &mdash; fast-changing in some dimensions, slow in others. Added to the word embedding, it tells the model where each word sits.</div>
+</div>
+
+<details>
+<summary>Why sine waves instead of just numbering the positions 1, 2, 3&hellip;?</summary>
+<div class="content">
+<p>Plain position numbers don't generalize well and grow without bound. The sinusoidal scheme has two nice properties. First, every position gets a distinct pattern across the 512 dimensions (slow waves capture coarse position, fast waves capture fine position). Second &mdash; and this is the clever part &mdash; for any fixed offset <em>k</em>, the encoding of position <em>pos+k</em> is a simple linear function of the encoding at <em>pos</em>, which the authors hypothesized would make it easy for the model to learn to attend by <em>relative</em> position ("the word three back"). They also tried <em>learned</em> position vectors and got nearly identical results &mdash; but chose sinusoids because they might extrapolate to sentences longer than any seen in training.</p>
+</div>
+</details>
+
+<h3>Masking: why the decoder can't peek ahead</h3>
+
+<p>When the decoder writes word number 5, it must not be allowed to see words 6, 7, 8&hellip; &mdash; those don't exist yet at generation time, and letting the model see them during training would be cheating. So the decoder's self-attention is <span class="term">masked<span class="tooltip">A trick that blocks attention to future positions by setting their scores to negative infinity before softmax (which makes their weights zero). It preserves the auto-regressive property: position i can only use positions up to i.</span></span>: any attention weight pointing to a future word is forced to zero. We'll see this in motion in the inference section.</p>
+
+<h2 id="why-self-attention">Why Self-Attention Wins</h2>
+
+<p>Section 4 of the paper makes the efficiency argument explicit by comparing self-attention to recurrent and convolutional layers on three measures. The headline is about <span class="term">path length<span class="tooltip">The number of steps information must travel to get from one position to another through the network. Shorter paths make long-range dependencies easier to learn.</span></span>: how many steps must information travel to connect two words?</p>
+
+<div class="video-embed">
+  <video src="videos/path-length.mp4" autoplay muted loop playsinline></video>
+  <div class="video-caption"><a href="https://github.com/heygen-com/hyperframes" target="_blank" class="badge" title="Made with HyperFrames — HeyGen's HTML-to-video composition framework"><span class="badge-label">made with</span><span class="badge-name">HyperFrames</span></a> An RNN connects the first and last words only after a chain of n sequential hops. Self-attention connects every pair of words directly, in a single step &mdash; and does it for all pairs in parallel.</div>
+</div>
+
+<table class="metrics-table">
+  <thead>
+    <tr><th>Layer type</th><th>Compute per layer</th><th>Sequential steps</th><th>Max path length</th></tr>
+  </thead>
+  <tbody>
+    <tr><td class="row-label">Self-Attention</td><td>O(n&sup2; &middot; d)</td><td class="val-best">O(1)</td><td class="val-best">O(1)</td></tr>
+    <tr><td class="row-label">Recurrent (RNN/LSTM)</td><td>O(n &middot; d&sup2;)</td><td>O(n)</td><td>O(n)</td></tr>
+    <tr><td class="row-label">Convolutional</td><td>O(k &middot; n &middot; d&sup2;)</td><td class="val-best">O(1)</td><td>O(log<sub>k</sub> n)</td></tr>
+  </tbody>
+</table>
+
+<p>Here <em>n</em> is the number of words and <em>d</em> is the vector size. The two columns that matter: self-attention needs only <strong>O(1)</strong> sequential steps (everything happens in one parallel pass) and has an <strong>O(1)</strong> maximum path length (any word reaches any other directly). Recurrent layers need <strong>O(n)</strong> on both &mdash; the bottleneck the Transformer was designed to escape.</p>
+
+<details>
+<summary>The catch: that O(n&sup2;) compute term</summary>
+<div class="content">
+<p>Self-attention isn't free. Because every word attends to every other word, the compute grows with the <em>square</em> of the sentence length (n&sup2;). For the sentence lengths in this paper that's a great trade &mdash; it's cheaper than recurrence whenever n is smaller than the vector size d, which is usually true. But that same n&sup2; term is exactly why, years later, a whole research field sprang up to make attention cheaper for very long inputs (think book-length documents). The authors even floated restricting attention to a local neighborhood as future work. The Transformer won by spending compute to buy parallelism and short paths &mdash; a bet that paid off as hardware kept getting faster.</p>
+</div>
+</details>
+
+<div class="insight">A bonus the authors noticed: self-attention is more <em>interpretable</em>. You can literally read off which words each head attended to, and many heads turn out to learn recognizable grammatical roles &mdash; following a verb to its object, or resolving what a pronoun refers to.</div>
+
+<h2 id="training">How It's Trained</h2>
+
+<p>The Transformer was trained on standard machine-translation datasets &mdash; about 4.5 million English&ndash;German sentence pairs, and a larger English&ndash;French set &mdash; with a few important tricks that made training fast and stable.</p>
+
+<div class="pipeline">
+  <div class="pipe-stage s1">
+    <span class="num">1</span>
+    <span class="stage-name">Prepare the data</span>
+    <span class="stage-desc">Split text into ~37K sub-word tokens; batch sentences of similar length together (~25K tokens per batch).</span>
+  </div>
+  <div class="pipe-arrow">&rarr;</div>
+  <div class="pipe-stage s2">
+    <span class="num">2</span>
+    <span class="stage-name">Optimize with warmup</span>
+    <span class="stage-desc">Use the Adam optimizer with a learning rate that ramps up for 4,000 steps, then decays &mdash; a schedule that proved key to stable training.</span>
+  </div>
+  <div class="pipe-arrow">&rarr;</div>
+  <div class="pipe-stage s3">
+    <span class="num">3</span>
+    <span class="stage-name">Regularize</span>
+    <span class="stage-desc">Apply dropout and label smoothing so the model generalizes instead of memorizing the training set.</span>
+  </div>
+</div>
+
+<details>
+<summary>The learning-rate warmup schedule</summary>
+<div class="content">
+<p>The <span class="term">learning rate<span class="tooltip">How big a step the optimizer takes when adjusting the model's weights. Too high and training diverges; too low and it crawls.</span></span> isn't constant. The paper <em>increases</em> it linearly for the first 4,000 <span class="term">warmup steps<span class="tooltip">An initial phase where the learning rate ramps up from near zero. It prevents the unstable early updates that a large fixed rate would cause in a fresh, randomly-initialized model.</span></span>, then decreases it in proportion to the inverse square root of the step number. The intuition: a brand-new model is fragile, so take small steps at first; once it finds its footing, take bigger steps, then gradually settle down. This warmup trick became standard practice for training Transformers. They used the <span class="term">Adam optimizer<span class="tooltip">A popular optimization algorithm that adapts the step size for each weight automatically. The workhorse optimizer for deep learning.</span></span> to do the actual weight updates.</p>
+</div>
+</details>
+
+<details>
+<summary>Dropout and label smoothing</summary>
+<div class="content">
+<p><span class="term">Dropout<span class="tooltip">During training, randomly switch off a fraction of the network's connections each step. This stops the model from over-relying on any one path and reduces overfitting.</span></span> randomly disables 10% of connections during training so the model can't lean too hard on any single pathway &mdash; a classic defense against <span class="term">overfitting<span class="tooltip">When a model memorizes its training data instead of learning general patterns, so it performs well in practice runs but poorly on new examples.</span></span>. <span class="term">Label smoothing<span class="tooltip">Instead of training the model to be 100% certain of the correct word, train it toward, say, 90% &mdash; leaving a little probability spread across others. It hurts raw confidence but improves accuracy and translation quality.</span></span> stops the model from becoming overconfident: rather than demanding it predict the correct word with 100% certainty, it's trained toward a slightly softer target. Counter-intuitively this <em>worsens</em> the model's confidence metric but <em>improves</em> its actual accuracy and translation scores.</p>
+</div>
+</details>
+
+<p>The whole base model trained in about <strong>12 hours on 8 GPUs</strong>; the larger model took 3.5 days &mdash; a small fraction of what competing models of the day required.</p>
+
+<h2 id="inference">How It Generates Text</h2>
+
+<p>Once trained, the Transformer generates a translation the same way GPT-style models still generate text today: <strong>one token at a time</strong>, feeding each new token back in to predict the next. At every step, the decoder attends to the full input sentence (cross-attention) and to the words it has already written &mdash; but, thanks to masking, never to words it hasn't written yet.</p>
+
+<div class="video-embed">
+  <video src="videos/autoregressive.mp4" autoplay muted loop playsinline></video>
+  <div class="video-caption"><a href="https://github.com/heygen-com/hyperframes" target="_blank" class="badge" title="Made with HyperFrames — HeyGen's HTML-to-video composition framework"><span class="badge-label">made with</span><span class="badge-name">HyperFrames</span></a> The decoder writes the translation word by word. The causal mask (right) guarantees each position can only look at positions up to itself &mdash; the future stays hidden until it's written.</div>
+</div>
+
+<details>
+<summary>Beam search: not just grabbing the single best word each step</summary>
+<div class="content">
+<p>Greedily picking the highest-probability word at every step can paint you into a corner &mdash; an early choice that looks good locally might doom the rest of the sentence. So at inference the paper uses <span class="term">beam search<span class="tooltip">A search strategy that keeps the few most promising partial sentences ("beams") alive at each step instead of committing to one, then picks the best complete sentence at the end. The paper uses a beam size of 4.</span></span>, which keeps the top 4 candidate sentences alive simultaneously and only commits at the end. A small <span class="term">length penalty<span class="tooltip">An adjustment that keeps beam search from unfairly preferring very short outputs (which tend to have higher total probability just by being shorter).</span></span> keeps it from preferring suspiciously short translations.</p>
+</div>
+</details>
+
+<h2 id="results">Results</h2>
+
+<p>The Transformer didn't just match the previous best translation systems &mdash; it beat them, while training far more cheaply. Translation quality is measured in <span class="term">BLEU<span class="tooltip">Bilingual Evaluation Understudy &mdash; a score from 0 to 100 measuring how closely a machine translation matches human reference translations. Higher is better; a couple of points is a meaningful gap.</span></span>, where higher is better.</p>
+
+<table class="metrics-table">
+  <thead>
+    <tr><th>Model</th><th>EN&rarr;DE BLEU</th><th>EN&rarr;FR BLEU</th><th>Training cost (FLOPs)</th></tr>
+  </thead>
+  <tbody>
+    <tr><td class="row-label">GNMT + RL (Google, 2016)</td><td>24.6</td><td>39.9</td><td>~1.4 &times; 10<sup>20</sup></td></tr>
+    <tr><td class="row-label">ConvS2S (Facebook)</td><td>25.2</td><td>40.5</td><td>~1.5 &times; 10<sup>20</sup></td></tr>
+    <tr><td class="row-label">Previous best ensemble</td><td>26.4</td><td>41.3</td><td>~1.2 &times; 10<sup>21</sup></td></tr>
+    <tr><td class="row-label">Transformer (base)</td><td>27.3</td><td>38.1</td><td class="val-best">3.3 &times; 10<sup>18</sup></td></tr>
+    <tr><td class="row-label">Transformer (big)</td><td class="val-best">28.4</td><td class="val-best">41.8</td><td>2.3 &times; 10<sup>19</sup></td></tr>
+  </tbody>
+</table>
+
+<p>Two things stand out. The big Transformer set a new state of the art on English&rarr;German (<strong>28.4 BLEU</strong>, more than 2 points above the previous best, <em>including</em> ensembles) and English&rarr;French (<strong>41.8</strong>). And the cost column is the real shock: even the base model trained for <strong>10&ndash;100&times; less compute</strong> &mdash; measured in <span class="term">FLOPs<span class="tooltip">Floating-point operations &mdash; the total count of arithmetic operations a computer performs. A standard way to measure how much raw computation training a model takes.</span></span>, the total arithmetic operations &mdash; than the competition. More quality, far less cost.</p>
+
+<h3>What the ablations taught us</h3>
+
+<p>The authors also varied the model piece by piece to see what mattered. The lessons: too few attention heads hurt quality, but so did too many (8 was a sweet spot); shrinking the key size hurt, suggesting matching words is genuinely hard; bigger models were reliably better; and dropout was essential. They also confirmed the Transformer generalizes beyond translation by applying it successfully to English sentence <span class="term">parsing<span class="tooltip">Constituency parsing &mdash; analyzing the grammatical structure of a sentence into a tree. A very different task from translation, used here to show the architecture is general.</span></span>, a structurally very different task.</p>
+
+<h2 id="quiz">Final Quiz</h2>
+
+<div class="quiz">
+  <div class="quiz-q">What was the Transformer's core proposal?</div>
+  <label><input type="radio" name="q1" value="a"> Make recurrent networks deeper and faster.</label>
+  <label><input type="radio" name="q1" value="b"> Throw out recurrence entirely and rely only on attention, so every word can look at every other word in parallel.</label>
+  <label><input type="radio" name="q1" value="c"> Replace neural networks with a database lookup.</label>
+  <label><input type="radio" name="q1" value="d"> Translate text one letter at a time instead of one word at a time.</label>
+  <button class="quiz-btn" onclick="checkQuiz('q1', 'b', this)">Check</button>
+  <div class="quiz-feedback"></div>
+</div>
+
+<div class="quiz">
+  <div class="quiz-q">In attention, what do the Query, Key, and Value represent?</div>
+  <label><input type="radio" name="q2" value="a"> Three separate neural networks that vote on the answer.</label>
+  <label><input type="radio" name="q2" value="b"> The input, the output, and the loss.</label>
+  <label><input type="radio" name="q2" value="c"> What a word is looking for (Query), what each word advertises (Key), and what it contributes if matched (Value).</label>
+  <label><input type="radio" name="q2" value="d"> Past, present, and future tokens.</label>
+  <button class="quiz-btn" onclick="checkQuiz('q2', 'c', this)">Check</button>
+  <div class="quiz-feedback"></div>
+</div>
+
+<div class="quiz">
+  <div class="quiz-q">Why does the Transformer add positional encodings?</div>
+  <label><input type="radio" name="q3" value="a"> To make the model run faster on GPUs.</label>
+  <label><input type="radio" name="q3" value="b"> Because attention looks at all words at once and otherwise has no sense of word order.</label>
+  <label><input type="radio" name="q3" value="c"> To compress the embeddings into fewer numbers.</label>
+  <label><input type="radio" name="q3" value="d"> To prevent overfitting during training.</label>
+  <button class="quiz-btn" onclick="checkQuiz('q3', 'b', this)">Check</button>
+  <div class="quiz-feedback"></div>
+</div>
+
+<div class="quiz">
+  <div class="quiz-q">Why use multiple attention heads instead of one?</div>
+  <label><input type="radio" name="q4" value="a"> To make the model smaller.</label>
+  <label><input type="radio" name="q4" value="b"> Each head can specialize in a different kind of relationship (grammar, position, reference), and they run in parallel for roughly the same cost as one.</label>
+  <label><input type="radio" name="q4" value="c"> Because one head can only process one word.</label>
+  <label><input type="radio" name="q4" value="d"> To translate into multiple languages at once.</label>
+  <button class="quiz-btn" onclick="checkQuiz('q4', 'b', this)">Check</button>
+  <div class="quiz-feedback"></div>
+</div>
+
+<div class="quiz">
+  <div class="quiz-q">What's the key advantage of self-attention's "path length"?</div>
+  <label><input type="radio" name="q5" value="a"> It uses less memory than any other layer type.</label>
+  <label><input type="radio" name="q5" value="b"> Any two words connect directly in one step (O(1)), instead of through a long chain like in an RNN (O(n)), making long-range relationships easy to learn.</label>
+  <label><input type="radio" name="q5" value="c"> It guarantees the model never makes mistakes.</label>
+  <label><input type="radio" name="q5" value="d"> It removes the need for training data.</label>
+  <button class="quiz-btn" onclick="checkQuiz('q5', 'b', this)">Check</button>
+  <div class="quiz-feedback"></div>
+</div>
+
+<div class="quiz">
+  <div class="quiz-q">Why is the decoder's self-attention "masked"?</div>
+  <label><input type="radio" name="q6" value="a"> To hide the model's weights from attackers.</label>
+  <label><input type="radio" name="q6" value="b"> To save compute by skipping some words.</label>
+  <label><input type="radio" name="q6" value="c"> So that when generating word i, the model can only attend to words before it &mdash; it can't cheat by peeking at words it hasn't produced yet.</label>
+  <label><input type="radio" name="q6" value="d"> To encrypt the output translation.</label>
+  <button class="quiz-btn" onclick="checkQuiz('q6', 'c', this)">Check</button>
+  <div class="quiz-feedback"></div>
+</div>
+
+<h2 id="why-it-matters">Why This Paper Matters</h2>
+
+<h3>For builders and practitioners</h3>
+
+<p>If you've used ChatGPT, Claude, Gemini, Copilot, or virtually any modern AI product, you've used a descendant of this exact architecture. The Transformer turned out to be far more than a translation model: because it's parallelizable and scales gracefully, it became the substrate for <span class="term">large language models<span class="tooltip">Models like GPT, Claude, and Gemini, trained on vast amounts of text. They are, at their core, very large Transformers.</span></span>, image models, speech models, and protein-folding models. The practical lessons are still copied verbatim today &mdash; multi-head attention, residual-plus-normalization blocks, warmup schedules, sub-word tokenization. Learning this paper isn't studying history; it's learning the blueprint your tools are built from.</p>
+
+<h3>For the research community</h3>
+
+<p>The paper's deepest contribution was a <em>removal</em>, not an addition: it showed that the recurrence everyone assumed was essential for sequence modeling could be dropped entirely. That cleared the way for scaling. Within a year, BERT and GPT (the first big Transformer-based language models) showed the same architecture, trained on raw text at scale, could be repurposed for almost any language task &mdash; kicking off the pretraining era. The Transformer also made models more <em>interpretable</em> (you can inspect attention) and more <em>general</em> (the same block works across modalities). Few papers have ever changed a field's default architecture this completely.</p>
+
+<h3>The bigger picture</h3>
+
+<p>&ldquo;Attention Is All You Need&rdquo; is arguably the most consequential machine-learning paper of its decade. It didn't just win a translation benchmark; it handed the field an architecture that <em>kept getting better as you made it bigger and fed it more data</em> &mdash; the property that, scaled up a thousandfold, produced the generative-AI moment we're living through now. The authors closed by saying they were &ldquo;excited about the future of attention-based models&rdquo; and planned to extend them beyond text to images, audio, and video. That turned out to be a dramatic understatement. The entire modern AI landscape is, in a real sense, a footnote to this 2017 paper.</p>
+
+<!-- Glossary -->
+<button class="glossary-toggle" onclick="document.querySelector('.glossary-panel').classList.toggle('open')">&#x1F4D6;</button>
+<div class="glossary-panel">
+  <h3>Glossary</h3>
+  <input type="text" id="glossary-search" placeholder="Search..." oninput="filterGlossary()">
+  <div id="glossary-entries">
+    <div class="glossary-entry"><strong>Transformer</strong><p>The neural-network architecture introduced by this paper, built entirely from attention instead of recurrence. The foundation of modern large AI models.</p></div>
+    <div class="glossary-entry"><strong>Attention</strong><p>An operation where each element scores how relevant every other element is, then blends their information by those scores.</p></div>
+    <div class="glossary-entry"><strong>Self-attention</strong><p>Attention where queries, keys, and values all come from the same sequence &mdash; words building context from their own neighbors.</p></div>
+    <div class="glossary-entry"><strong>Cross-attention</strong><p>Attention where queries come from the decoder and keys/values from the encoder &mdash; how the output looks back at the input.</p></div>
+    <div class="glossary-entry"><strong>Query / Key / Value (Q/K/V)</strong><p>The three roles each word plays: what it's looking for, what it advertises, and what it contributes when matched.</p></div>
+    <div class="glossary-entry"><strong>Multi-head attention</strong><p>Running several attention computations in parallel, each on a slice of the vector, so different heads capture different relationships. The paper uses 8.</p></div>
+    <div class="glossary-entry"><strong>Scaled dot-product attention</strong><p>The specific attention recipe: dot-product scores, divided by &radic;d_k, softmaxed into weights, used to blend values.</p></div>
+    <div class="glossary-entry"><strong>Encoder</strong><p>The stack that reads the input sentence and turns it into context-rich vectors.</p></div>
+    <div class="glossary-entry"><strong>Decoder</strong><p>The stack that writes the output one token at a time, using its own past output and the encoder's vectors.</p></div>
+    <div class="glossary-entry"><strong>RNN / LSTM / GRU</strong><p>Recurrent networks that process sequences step by step, carrying a memory forward. What the Transformer replaced.</p></div>
+    <div class="glossary-entry"><strong>Token</strong><p>The small unit of text a model reads &mdash; a word or word-fragment.</p></div>
+    <div class="glossary-entry"><strong>Embedding</strong><p>A vector of numbers representing a token's meaning; similar tokens get similar vectors.</p></div>
+    <div class="glossary-entry"><strong>Softmax</strong><p>Turns raw scores into positive weights that sum to 1, exaggerating big scores and shrinking small ones.</p></div>
+    <div class="glossary-entry"><strong>Dot product</strong><p>Multiplying two vectors into one number that measures how aligned they are &mdash; a similarity score.</p></div>
+    <div class="glossary-entry"><strong>Feed-forward network</strong><p>A small per-word transformation (expand to 2048, ReLU, shrink to 512) applied after attention.</p></div>
+    <div class="glossary-entry"><strong>Residual connection</strong><p>A shortcut adding a sub-layer's input to its output, easing gradient flow through deep stacks.</p></div>
+    <div class="glossary-entry"><strong>Layer normalization</strong><p>Re-scales a vector to a stable statistical range, stabilizing training.</p></div>
+    <div class="glossary-entry"><strong>Positional encoding</strong><p>Position "fingerprints" (sine/cosine waves) added to embeddings so the model knows word order.</p></div>
+    <div class="glossary-entry"><strong>Masking</strong><p>Blocking attention to future positions (scores set to &minus;&infin;) so the decoder can't peek ahead.</p></div>
+    <div class="glossary-entry"><strong>Autoregressive</strong><p>Generating one token at a time, feeding each output back in to predict the next.</p></div>
+    <div class="glossary-entry"><strong>Beam search</strong><p>Keeping the few most promising partial outputs alive during generation, then choosing the best complete one.</p></div>
+    <div class="glossary-entry"><strong>Path length</strong><p>How many steps information travels to connect two positions. O(1) for self-attention, O(n) for RNNs.</p></div>
+    <div class="glossary-entry"><strong>BLEU</strong><p>A 0&ndash;100 score for how closely a machine translation matches human references. Higher is better.</p></div>
+    <div class="glossary-entry"><strong>Warmup schedule</strong><p>Ramping the learning rate up for the first 4,000 steps, then decaying it &mdash; key to stable Transformer training.</p></div>
+    <div class="glossary-entry"><strong>Label smoothing</strong><p>Training toward slightly-less-than-100% confidence in the correct token; hurts confidence but improves accuracy.</p></div>
+    <div class="glossary-entry"><strong>Dropout</strong><p>Randomly switching off connections during training to prevent overfitting.</p></div>
+  </div>
+</div>
+
+</div>
+
+<script>
+// Progress bar
+window.addEventListener('scroll', function() {
+  var h = document.documentElement;
+  var b = document.body;
+  var st = 'scrollTop';
+  var sh = 'scrollHeight';
+  var percent = (h[st] || b[st]) / ((h[sh] || b[sh]) - h.clientHeight) * 100;
+  document.getElementById('progress-bar').style.width = percent + '%';
+});
+
+// Active TOC
+window.addEventListener('scroll', function() {
+  var sections = document.querySelectorAll('h2[id]');
+  var current = '';
+  sections.forEach(function(section) {
+    var top = section.getBoundingClientRect().top;
+    if (top < 150) current = section.id;
+  });
+  if ((window.innerHeight + window.scrollY) >= document.documentElement.scrollHeight - 50) {
+    current = sections[sections.length - 1].id;
+  }
+  document.querySelectorAll('.sidebar a').forEach(function(link) {
+    link.classList.remove('active');
+    if (link.getAttribute('href') === '#' + current) link.classList.add('active');
+  });
+});
+
+// Quiz
+function checkQuiz(name, correct, btn) {
+  var inputs = document.getElementsByName(name);
+  var selected = null;
+  for (var i = 0; i < inputs.length; i++) {
+    if (inputs[i].checked) { selected = inputs[i].value; break; }
+  }
+  var feedback = btn.parentElement.querySelector('.quiz-feedback');
+  feedback.style.display = 'block';
+  if (selected === correct) {
+    feedback.className = 'quiz-feedback quiz-correct';
+    feedback.textContent = 'Correct!';
+  } else if (selected === null) {
+    feedback.className = 'quiz-feedback quiz-wrong';
+    feedback.textContent = 'Pick an answer first.';
+  } else {
+    feedback.className = 'quiz-feedback quiz-wrong';
+    feedback.textContent = 'Not quite — try again.';
+  }
+}
+
+// Glossary search
+function filterGlossary() {
+  var q = document.getElementById('glossary-search').value.toLowerCase();
+  document.querySelectorAll('.glossary-entry').forEach(function(entry) {
+    var text = entry.textContent.toLowerCase();
+    entry.style.display = text.indexOf(q) >= 0 ? '' : 'none';
+  });
+}
+
+// Interactive attention demo
+(function() {
+  var words = ['The','animal','didn’t','cross','the','street','because','it','was','too','tired'];
+  // illustrative strong links: index -> indices it attends to most
+  var links = { 1:[3,5], 3:[1,5], 5:[3,1], 7:[1,10], 8:[7,1], 10:[7,1], 6:[10,7], 2:[3], 9:[10] };
+  var container = document.getElementById('attn-sentence');
+  var readout = document.getElementById('attn-readout');
+  if (!container) return;
+
+  function weights(qi) {
+    var w = [];
+    for (var k = 0; k < words.length; k++) {
+      var val = 0.12;                                  // small baseline
+      if (k === qi) val += 0.6;                        // attends to itself
+      var dist = Math.abs(k - qi);
+      if (dist === 1) val += 0.45; else if (dist === 2) val += 0.18; // neighbors
+      var lk = links[qi];
+      if (lk) { var pos = lk.indexOf(k); if (pos === 0) val += 1.4; else if (pos === 1) val += 0.7; }
+      w.push(val);
+    }
+    var max = Math.max.apply(null, w);
+    return w.map(function(x){ return x / max; });
+  }
+
+  function render(qi) {
+    var w = qi == null ? null : weights(qi);
+    Array.prototype.forEach.call(container.children, function(el, k) {
+      el.classList.toggle('query', qi === k);
+      if (w) {
+        el.style.background = 'rgba(46,196,182,' + (0.04 + w[k] * 0.9).toFixed(3) + ')';
+        el.style.color = w[k] > 0.55 ? '#011627' : 'var(--text)';
+      } else {
+        el.style.background = 'transparent';
+        el.style.color = 'var(--text)';
+      }
+    });
+    if (qi != null) {
+      var ranked = w.map(function(x,k){return {k:k,x:x};})
+                    .filter(function(o){return o.k !== qi;})
+                    .sort(function(a,b){return b.x - a.x;});
+      var top = ranked.slice(0,2).map(function(o){return '“' + words[o.k] + '”';}).join(' and ');
+      readout.innerHTML = 'Showing what <b>“' + words[qi] + '”</b> attends to &mdash; most strongly ' + top + '.';
+    }
+  }
+
+  words.forEach(function(word, k) {
+    var span = document.createElement('span');
+    span.className = 'attn-word';
+    span.textContent = word;
+    span.addEventListener('click', function(){ render(k); });
+    container.appendChild(span);
+  });
+  render(7); // start by showing "it"
+})();
+</script>
+
+<script data-goatcounter="https://tcho.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+
+</body>
+</html>
