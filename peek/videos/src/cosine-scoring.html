@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap');
+* { margin: 0; padding: 0; box-sizing: border-box; }
+</style>
+</head>
+<body>
+<div data-composition-id="cosine-scoring" data-width="1920" data-height="540" data-start="0" data-duration="11">
+  <div class="scene">
+    <div class="title">A frame's relevance = its angle to the caption</div>
+
+    <div class="cols">
+      <svg class="plane" id="plane" viewBox="0 0 760 430" preserveAspectRatio="xMidYMid meet">
+        <defs>
+          <marker id="ah-orange" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#FF9F1C"/></marker>
+          <marker id="ah-teal" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#2EC4B6"/></marker>
+          <marker id="ah-slate" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#778DA9"/></marker>
+        </defs>
+      </svg>
+
+      <div class="panel">
+        <div class="ptitle">cos&nbsp;&theta; &mdash; the similarity score</div>
+        <div class="score-row" id="sr-match">
+          <span class="semo">&#127930;</span>
+          <span class="sbar-wrap"><span class="sbar teal" id="bar-match"></span></span>
+          <span class="sval teal">0.92</span>
+        </div>
+        <div class="score-cap teal">small angle &rarr; high score &rarr; <b>selected</b></div>
+        <div class="score-row" id="sr-off">
+          <span class="semo">&#128106;</span>
+          <span class="sbar-wrap"><span class="sbar slate" id="bar-off"></span></span>
+          <span class="sval slate">0.31</span>
+        </div>
+        <div class="score-cap slate">wide angle &rarr; low score &rarr; skipped</div>
+        <div class="formula">score = cos&nbsp;&theta; = &#10216;z,&nbsp;u&#10217; / (&#8214;z&#8214;&#8201;&#8214;u&#8214;)</div>
+      </div>
+    </div>
+  </div>
+
+  <style>
+    [data-composition-id="cosine-scoring"] {
+      position: relative; overflow: hidden; background: #011627;
+      width: 1920px; height: 540px;
+      font-family: 'Space Mono', monospace; color: #FDFFFC;
+    }
+    [data-composition-id="cosine-scoring"] .scene {
+      width: 1920px; height: 540px; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 14px; padding: 22px 50px 30px;
+    }
+    [data-composition-id="cosine-scoring"] .title { font-size: 46px; font-weight: 700; text-align: center; }
+    [data-composition-id="cosine-scoring"] .cols { display: flex; align-items: center; gap: 40px; }
+    [data-composition-id="cosine-scoring"] .plane { width: 720px; height: 408px; flex-shrink: 0; }
+    [data-composition-id="cosine-scoring"] .panel { width: 640px; display: flex; flex-direction: column; gap: 10px; }
+    [data-composition-id="cosine-scoring"] .ptitle { font-size: 26px; font-weight: 700; margin-bottom: 6px; }
+    [data-composition-id="cosine-scoring"] .score-row { display: flex; align-items: center; gap: 16px; }
+    [data-composition-id="cosine-scoring"] .semo { font-size: 40px; width: 52px; }
+    [data-composition-id="cosine-scoring"] .sbar-wrap { flex: 1; height: 26px; background: #0d2137; border-radius: 13px; overflow: hidden; }
+    [data-composition-id="cosine-scoring"] .sbar { display: block; height: 100%; border-radius: 13px; }
+    [data-composition-id="cosine-scoring"] .sbar.teal { background: #2EC4B6; width: 92%; }
+    [data-composition-id="cosine-scoring"] .sbar.slate { background: #778DA9; width: 31%; }
+    [data-composition-id="cosine-scoring"] .sval { font-size: 28px; font-weight: 700; width: 70px; text-align: right; }
+    [data-composition-id="cosine-scoring"] .teal { color: #2EC4B6; }
+    [data-composition-id="cosine-scoring"] .slate { color: #9fb3c8; }
+    [data-composition-id="cosine-scoring"] .score-cap { font-size: 20px; margin: -2px 0 6px 68px; }
+    [data-composition-id="cosine-scoring"] .score-cap b { font-weight: 700; }
+    [data-composition-id="cosine-scoring"] .formula {
+      font-size: 24px; margin-top: 10px; padding: 12px 18px; border-radius: 10px;
+      background: #0d2137; border: 1px solid #21405e; color: #FDFFFC; text-align: center;
+    }
+  </style>
+
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+  <script>
+    window.__timelines = window.__timelines || {};
+    var root = document.currentScript.parentElement;
+    var svg = root.querySelector('#plane');
+    var SVGNS = 'http://www.w3.org/2000/svg';
+    var OX = 80, OY = 372;
+    function mk(t, a) { var e = document.createElementNS(SVGNS, t); for (var k in a) e.setAttribute(k, a[k]); return e; }
+    function end(deg, L) { var r = deg * Math.PI / 180; return [OX + L * Math.cos(r), OY - L * Math.sin(r)]; }
+
+    // axes
+    svg.appendChild(mk('line', { x1: OX, y1: OY, x2: 710, y2: OY, stroke: '#21405e', 'stroke-width': 2 }));
+    svg.appendChild(mk('line', { x1: OX, y1: OY, x2: OX, y2: 40, stroke: '#21405e', 'stroke-width': 2 }));
+    var axlab = mk('text', { x: 400, y: 405, 'text-anchor': 'middle', fill: '#56708a', 'font-size': 18, 'font-family': "'Space Mono', monospace" });
+    axlab.textContent = 'embedding space (2-D sketch)';
+    svg.appendChild(axlab);
+
+    // vectors: [deg, length, color, marker, label, labelColor]
+    var Udeg = 58, Mdeg = 44, Odeg = 13;
+    function vec(deg, L, color, marker) {
+      var p = end(deg, L);
+      var g = mk('g', {});
+      var ln = mk('line', { x1: OX, y1: OY, x2: p[0], y2: p[1], stroke: color, 'stroke-width': 6, 'marker-end': 'url(#' + marker + ')', 'stroke-linecap': 'round' });
+      g.appendChild(ln); svg.appendChild(g);
+      return { g: g, p: p };
+    }
+    function arc(r, d1, d2, color) {
+      var a = end(d1, r), b = end(d2, r);
+      var p = mk('path', { d: 'M ' + a[0] + ' ' + a[1] + ' A ' + r + ' ' + r + ' 0 0 0 ' + b[0] + ' ' + b[1], fill: 'none', stroke: color, 'stroke-width': 3 });
+      svg.appendChild(p); return p;
+    }
+    function label(deg, L, txt, color, dx, dy) {
+      var p = end(deg, L);
+      var t = mk('text', { x: p[0] + (dx||10), y: p[1] + (dy||0), fill: color, 'font-size': 24, 'font-weight': 700, 'font-family': "'Space Mono', monospace" });
+      t.textContent = txt; svg.appendChild(t); return t;
+    }
+
+    var vU = vec(Udeg, 300, '#FF9F1C', 'ah-orange');
+    var vM = vec(Mdeg, 288, '#2EC4B6', 'ah-teal');
+    var vO = vec(Odeg, 286, '#778DA9', 'ah-slate');
+    var arcM = arc(90, Udeg, Mdeg, '#2EC4B6');
+    var arcO = arc(150, Udeg, Odeg, '#778DA9');
+    var lU = label(Udeg, 300, 'caption', '#FF9F1C', 8, -6);
+    var lM = label(Mdeg, 288, '🎺 frame', '#2EC4B6', 14, 2);
+    var lO = label(Odeg, 286, '🛋️ frame', '#9fb3c8', 14, 6);
+    var angM = mk('text', { x: end(50, 130)[0], y: end(50, 130)[1], fill: '#2EC4B6', 'font-size': 22, 'font-weight': 700, 'font-family': "'Space Mono', monospace" });
+    angM.textContent = 'θ small'; svg.appendChild(angM);
+
+    var tl = gsap.timeline({ paused: true });
+    tl.from(root.querySelector('.title'), { opacity: 0, y: -18, duration: 0.6 });
+    tl.from([axlab, svg.querySelectorAll('line')[0], svg.querySelectorAll('line')[1]], { opacity: 0, duration: 0.5 }, 0.5);
+    tl.from([vU.g, lU], { opacity: 0, scale: 0, svgOrigin: OX + ' ' + OY, duration: 0.6, ease: 'back.out(1.5)' }, 0.9);
+    tl.from([vM.g, lM], { opacity: 0, scale: 0, svgOrigin: OX + ' ' + OY, duration: 0.6, ease: 'back.out(1.5)' }, 1.6);
+    tl.from([arcM, angM], { opacity: 0, duration: 0.5 }, 2.2);
+    tl.from([vO.g, lO], { opacity: 0, scale: 0, svgOrigin: OX + ' ' + OY, duration: 0.6, ease: 'back.out(1.5)' }, 2.9);
+    tl.from([arcO], { opacity: 0, duration: 0.5 }, 3.5);
+    // scores panel
+    tl.from(root.querySelector('.ptitle'), { opacity: 0, x: 20, duration: 0.4 }, 4.0);
+    tl.from(root.querySelector('#sr-match'), { opacity: 0, x: 20, duration: 0.5 }, 4.3);
+    tl.from(root.querySelector('#bar-match'), { width: 0, duration: 0.7, ease: 'power2.out' }, 4.4);
+    tl.from(root.querySelector('#sr-match').nextElementSibling, { opacity: 0, duration: 0.4 }, 5.0);
+    tl.from(root.querySelector('#sr-off'), { opacity: 0, x: 20, duration: 0.5 }, 5.4);
+    tl.from(root.querySelector('#bar-off'), { width: 0, duration: 0.7, ease: 'power2.out' }, 5.5);
+    tl.from(root.querySelector('#sr-off').nextElementSibling, { opacity: 0, duration: 0.4 }, 6.1);
+    tl.from(root.querySelector('.formula'), { opacity: 0, y: 14, duration: 0.6 }, 6.4);
+
+    window.__timelines["cosine-scoring"] = tl;
+  </script>
+</div>
+</body>
+</html>

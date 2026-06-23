@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PEEK: The Paper, Explained</title>
+<style>
+:root {
+  --bg: #0d1117; --surface: #161b22; --border: #30363d; --text: #e6edf3; --text-muted: #8b949e;
+  --accent: #58a6ff; --accent-subtle: #1f6feb22; --green: #3fb950; --yellow: #d29922; --red: #f85149; --purple: #bc8cff;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; background: var(--bg); color: var(--text); line-height: 1.7; max-width: 1200px; margin: 0 auto; padding: 2rem 1.5rem; display: flex; gap: 0; }
+.progress-bar { position: fixed; top: 0; left: 0; height: 3px; background: var(--accent); z-index: 1000; transition: width 0.1s; }
+.sidebar { position: sticky; top: 1rem; align-self: flex-start; width: 240px; flex-shrink: 0; max-height: calc(100vh - 2rem); overflow-y: auto; padding-right: 1.25rem; border-right: 1px solid var(--border); margin-right: 2rem; scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
+.sidebar::-webkit-scrollbar { width: 4px; } .sidebar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; } .sidebar::-webkit-scrollbar-track { background: transparent; }
+.sidebar .toc-title { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); margin-bottom: 0.75rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border); }
+.sidebar a { display: block; color: var(--text-muted); text-decoration: none; font-size: 0.8rem; padding: 0.2rem 0; line-height: 1.4; transition: color 0.15s, border-color 0.15s; border-left: 2px solid transparent; padding-left: 0.6rem; }
+.sidebar a:hover { color: var(--text); } .sidebar a.active { color: var(--accent); border-left-color: var(--accent); font-weight: 600; }
+.sidebar a.section-gap { margin-top: 0.4rem; }
+.sidebar-home { display: block; font-size: 0.8rem; color: var(--text-muted); text-decoration: none; padding: 0.3rem 0.6rem; margin-bottom: 0.75rem; border-left: none !important; transition: color 0.15s; }
+.sidebar-home:hover { color: var(--accent); }
+.main-content { flex: 1; min-width: 0; max-width: 860px; }
+@media (max-width: 900px) {
+  body { display: block; max-width: 860px; overflow-x: hidden; }
+  .sidebar { position: fixed; top: 0; left: -280px; width: 260px; height: 100vh; max-height: 100vh; background: var(--surface); border-right: 1px solid var(--border); padding: 1rem; margin-right: 0; z-index: 1001; transition: left 0.25s ease; }
+  .sidebar.mobile-open { left: 0; } .main-content { max-width: 100%; } .mobile-toc-btn { display: flex !important; }
+  .mobile-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; } .mobile-overlay.active { display: block; }
+  .glossary-panel { width: calc(100vw - 3rem); right: 1.5rem; }
+  .term .tooltip { width: calc(100vw - 4rem); max-width: 320px; left: 0; transform: none; }
+  .metrics-table { display: block; overflow-x: auto; }
+  .pipeline { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .arch-card { max-width: 100%; }
+}
+.mobile-toc-btn { display: none; position: fixed; bottom: 1.5rem; left: 1.5rem; width: 44px; height: 44px; background: var(--accent); color: var(--bg); border: none; border-radius: 50%; font-size: 1.1rem; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.4); z-index: 999; align-items: center; justify-content: center; }
+h1 { font-size: 2rem; margin-bottom: 0.5rem; } .subtitle { color: var(--text-muted); margin-bottom: 2rem; font-size: 1.05rem; }
+.meta { color: var(--text-muted); font-size: 0.8rem; margin-top: -1rem; margin-bottom: 1.5rem; }
+h2 { font-size: 1.5rem; margin: 2.5rem 0 1rem; color: var(--accent); border-bottom: 1px solid var(--border); padding-bottom: 0.5rem; }
+h3 { font-size: 1.2rem; margin: 1.5rem 0 0.75rem; color: var(--purple); } p { margin-bottom: 1rem; } a { color: var(--accent); }
+ul, ol { margin-bottom: 1rem; padding-left: 1.5rem; } li { margin-bottom: 0.35rem; }
+.research-banner { background: linear-gradient(135deg, #011627 0%, #0d2137 50%, #1a1a3a 100%); border: 1px solid #2EC4B6; border-radius: 12px; padding: 1.25rem 1.5rem; margin-bottom: 2rem; display: flex; align-items: center; gap: 1.25rem; }
+.research-banner .banner-icon { font-size: 2.2rem; flex-shrink: 0; } .research-banner .banner-text { flex: 1; }
+.research-banner .banner-text p { margin: 0; font-size: 0.95rem; color: var(--text-muted); line-height: 1.5; }
+.research-banner .banner-text p:first-child { font-size: 1.05rem; font-weight: 600; color: var(--text); margin-bottom: 0.25rem; }
+.research-banner a { color: #2EC4B6; text-decoration: none; font-weight: 600; } .research-banner a:hover { text-decoration: underline; }
+.banner-links { display: flex; gap: 0.75rem; margin-top: 0.5rem; flex-wrap: wrap; }
+.banner-link { display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.85rem; padding: 0.35rem 0.75rem; border-radius: 6px; border: 1px solid; text-decoration: none !important; transition: background 0.2s; }
+.banner-link.primary { border-color: #2EC4B6; color: #2EC4B6; } .banner-link.primary:hover { background: rgba(46,196,182,0.1); }
+.banner-link.secondary { border-color: var(--border); color: var(--text-muted); } .banner-link.secondary:hover { background: var(--accent-subtle); }
+.term { color: var(--yellow); cursor: help; border-bottom: 1px dashed var(--yellow); position: relative; } .term:hover { color: #e3b341; }
+.term .tooltip { display: none; position: absolute; bottom: 130%; left: 50%; transform: translateX(-50%); background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 0.75rem 1rem; width: 320px; font-size: 0.85rem; color: var(--text); z-index: 100; box-shadow: 0 4px 20px rgba(0,0,0,0.5); line-height: 1.5; }
+.term:hover .tooltip { display: block; }
+.analogy { background: #1a2332; border-left: 4px solid var(--accent); padding: 1rem 1.25rem; border-radius: 0 8px 8px 0; margin: 1rem 0; }
+.analogy::before { content: "Real-world analogy: "; font-weight: 700; color: var(--accent); }
+.insight { background: #1a2a1a; border-left: 4px solid var(--green); padding: 1rem 1.25rem; border-radius: 0 8px 8px 0; margin: 1rem 0; }
+.insight::before { content: "Key Insight: "; font-weight: 700; color: var(--green); }
+details { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; margin: 1rem 0; padding: 0; overflow: visible; }
+details summary { padding: 0.75rem 1.5rem; cursor: pointer; font-weight: 600; user-select: none; list-style: none; display: flex; align-items: center; gap: 0.5rem; }
+details summary::before { content: '+ '; color: var(--accent); font-family: monospace; font-size: 1.2rem; }
+details[open] summary::before { content: '- '; } details summary:hover { background: var(--accent-subtle); }
+details .content { padding: 0 1.5rem 1.25rem; }
+details .content ul, details .content ol { padding-left: 2.5rem; }
+
+.arch-flow { display: flex; flex-direction: column; align-items: center; gap: 0; margin: 1.5rem 0; }
+.arch-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 1rem 1.5rem; width: 100%; max-width: 580px; text-align: center; }
+.arch-card.highlight { border-color: #2EC4B6; background: linear-gradient(135deg, var(--surface) 0%, rgba(46,196,182,0.05) 100%); }
+.arch-card .name { font-weight: 700; font-size: 1em; } .arch-card .desc { color: var(--text-muted); font-size: 0.85em; margin-top: 0.25rem; }
+.arch-card .icon { font-size: 1.3rem; margin-right: 0.4rem; }
+.arrow-down { width: 2px; height: 22px; background: var(--border); position: relative; }
+.arrow-down::after { content: ''; position: absolute; bottom: -4px; left: -4px; border: 5px solid transparent; border-top: 6px solid var(--border); }
+.tag-row { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-bottom: 8px; }
+.tag { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 0.8em; font-weight: 600; }
+.tag-teal { background: rgba(46,196,182,0.15); color: #2EC4B6; } .tag-orange { background: rgba(255,159,28,0.15); color: #FF9F1C; }
+.tag-purple { background: rgba(188,140,255,0.15); color: #bc8cff; } .tag-green { background: rgba(63,185,80,0.15); color: var(--green); }
+.tag-blue { background: rgba(88,166,255,0.15); color: var(--accent); }
+.out-badge { display: inline-block; background: rgba(46,196,182,0.12); border: 1px solid #2EC4B6; color: #2EC4B6; font-weight: 700; padding: 0.5rem 1.25rem; border-radius: 8px; margin-top: 0.25rem; }
+
+.compare-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 1rem 0; }
+.compare-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 1.25rem; }
+.compare-card h4 { margin-bottom: 0.5rem; } .compare-card.good { border-color: var(--green); } .compare-card.good h4 { color: var(--green); }
+.compare-card.bad { border-color: var(--red); } .compare-card.bad h4 { color: var(--red); }
+.compare-card.mid { border-color: var(--yellow); } .compare-card.mid h4 { color: var(--yellow); }
+.compare-card ul { padding-left: 1.25rem; font-size: 0.9rem; }
+
+.metrics-table { width: 100%; border-collapse: collapse; margin: 1.25rem 0; font-size: 0.9rem; }
+.metrics-table th { text-transform: uppercase; font-size: 0.7rem; letter-spacing: 1px; color: var(--text-muted); padding: 0.6rem 0.75rem; text-align: left; border-bottom: 2px solid var(--border); }
+.metrics-table td { padding: 0.6rem 0.75rem; border-bottom: 1px solid var(--border); }
+.metrics-table tr:hover td { background: rgba(88,166,255,0.04); } .val-best { color: var(--green); font-weight: 700; }
+.metrics-table .row-label { font-weight: 600; } .metrics-table .dim { color: var(--text-muted); }
+
+.quiz { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 1.25rem; margin: 1.5rem 0; }
+.quiz-q { font-weight: 600; margin-bottom: 0.75rem; color: var(--purple); }
+.quiz label { display: block; padding: 0.5rem 0.75rem; margin: 0.25rem 0; border-radius: 6px; cursor: pointer; transition: background 0.2s; }
+.quiz label:hover { background: var(--accent-subtle); } .quiz input[type="radio"] { margin-right: 0.5rem; }
+.quiz-btn { margin-top: 0.75rem; padding: 0.5rem 1.25rem; background: var(--accent); color: var(--bg); border: none; border-radius: 6px; font-weight: 600; cursor: pointer; }
+.quiz-btn:hover { opacity: 0.9; } .quiz-feedback { display: none; margin-top: 0.75rem; padding: 0.75rem; border-radius: 6px; }
+.quiz-correct { background: #1a2a1a; color: var(--green); } .quiz-wrong { background: #2a1a1a; color: var(--red); }
+
+.glossary-toggle { position: fixed; bottom: 1.5rem; right: 1.5rem; width: 50px; height: 50px; background: var(--accent); color: var(--bg); border: none; border-radius: 50%; font-size: 1.3rem; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.4); z-index: 999; display: flex; align-items: center; justify-content: center; }
+.glossary-panel { display: none; position: fixed; bottom: 5rem; right: 1.5rem; width: 380px; max-height: 70vh; overflow-y: auto; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 1.25rem; z-index: 998; box-shadow: 0 8px 30px rgba(0,0,0,0.5); }
+.glossary-panel.open { display: block; } .glossary-panel h3 { margin-top: 0; }
+.glossary-panel input { width: 100%; padding: 0.5rem 0.75rem; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; color: var(--text); margin-bottom: 0.75rem; font-size: 0.9rem; }
+.glossary-entry { padding: 0.5rem 0; border-bottom: 1px solid var(--border); } .glossary-entry:last-child { border-bottom: none; }
+.glossary-entry strong { color: var(--yellow); } .glossary-entry p { font-size: 0.85rem; color: var(--text-muted); margin: 0.25rem 0 0; }
+
+.video-embed { margin: 1.5rem 0; border-radius: 12px; overflow: hidden; border: 1px solid var(--border); background: #011627; }
+.video-embed video { display: block; width: 100%; height: auto; }
+.video-caption { padding: 0.5rem 0.75rem; font-size: 0.8rem; color: var(--text-muted); background: var(--surface); display: flex; align-items: center; gap: 0.5rem; }
+.video-caption .badge { display: inline-flex; flex-direction: column; align-items: center; padding: 0.2rem 0.6rem; border-radius: 4px; background: rgba(46,196,182,0.15); color: #2EC4B6; text-decoration: none; white-space: nowrap; line-height: 1.2; transition: background 0.15s; }
+.video-caption .badge .badge-label { font-size: 0.55rem; font-weight: 400; color: #778DA9; text-transform: uppercase; letter-spacing: 0.04em; }
+.video-caption .badge .badge-name { font-size: 0.75rem; font-weight: 700; } .video-caption .badge:hover { background: rgba(46,196,182,0.3); text-decoration: none; }
+
+ol.big { counter-reset: biglist; list-style: none; padding: 0; }
+ol.big li { counter-increment: biglist; padding: 8px 0 8px 48px; position: relative; margin-bottom: 8px; }
+ol.big li::before { content: counter(biglist); position: absolute; left: 0; top: 6px; width: 32px; height: 32px; border-radius: 50%; background: rgba(88,166,255,0.12); color: var(--accent); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.9em; }
+
+.stepper { margin: 1.5rem 0; padding-left: 20px; }
+.step { position: relative; padding: 0 0 1.25rem 28px; border-left: 2px solid var(--accent); }
+.step:last-child { border-left: 2px solid transparent; }
+.step::before { content: ""; position: absolute; left: -7px; top: 4px; width: 12px; height: 12px; border-radius: 50%; background: var(--accent); }
+.step strong { display: block; margin-bottom: 4px; } .step .step-desc { color: var(--text-muted); font-size: 0.95em; }
+
+.pipeline { display: flex; gap: 0; align-items: stretch; margin: 1.5rem 0; flex-wrap: nowrap; }
+.pipe-stage { flex: 1; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 1rem; position: relative; min-width: 0; }
+.pipe-stage .num { width: 28px; height: 28px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.85em; color: var(--bg); margin-bottom: 0.5rem; }
+.pipe-stage.s1 .num { background: #2EC4B6; } .pipe-stage.s1 { border-color: #2EC4B6; }
+.pipe-stage.s2 .num { background: #FF9F1C; } .pipe-stage.s2 { border-color: #FF9F1C; }
+.pipe-stage.s3 .num { background: #bc8cff; } .pipe-stage.s3 { border-color: #bc8cff; }
+.pipe-stage .stage-name { font-weight: 700; display: block; }
+.pipe-stage .stage-desc { color: var(--text-muted); font-size: 0.85em; font-style: italic; line-height: 1.5; margin-top: 0.25rem; }
+.pipe-arrow { display: flex; align-items: center; justify-content: center; padding: 0 0.5rem; color: var(--text-muted); font-size: 1.5rem; flex-shrink: 0; }
+
+.statgrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin: 1.5rem 0; }
+.statgrid .stat { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 1rem; text-align: center; }
+.statgrid .stat .big { font-size: 1.7rem; font-weight: 700; color: var(--accent); display: block; }
+.statgrid .stat.green .big { color: var(--green); }
+.statgrid .stat .lab { font-size: 0.78rem; color: var(--text-muted); margin-top: 0.25rem; }
+@media (max-width: 900px) { .statgrid { grid-template-columns: 1fr 1fr; } }
+
+/* Mobile grid collapses — placed last so they win over the base grid rules at equal specificity */
+@media (max-width: 900px) {
+  .compare-row { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<div class="progress-bar" id="progress-bar"></div>
+<button class="mobile-toc-btn" onclick="document.querySelector('.sidebar').classList.toggle('mobile-open'); document.querySelector('.mobile-overlay').classList.toggle('active');">&#9776;</button>
+<div class="mobile-overlay" onclick="document.querySelector('.sidebar').classList.remove('mobile-open'); this.classList.remove('active');"></div>
+
+<nav class="sidebar">
+  <a href="../" class="sidebar-home">&larr; All Papers</a>
+  <div class="toc-title">Contents</div>
+  <a href="#big-picture">The Big Picture</a>
+  <a href="#background" class="section-gap">Background Concepts</a>
+  <a href="#how-it-works" class="section-gap">How PEEK Works</a>
+  <a href="#training" class="section-gap">How It's Trained</a>
+  <a href="#inference" class="section-gap">How It Picks Frames</a>
+  <a href="#data" class="section-gap">The Data</a>
+  <a href="#results" class="section-gap">Results</a>
+  <a href="#quiz" class="section-gap">Final Quiz</a>
+  <a href="#why-it-matters" class="section-gap">Why It Matters</a>
+</nav>
+
+<div class="main-content">
+
+<h1>PEEK: The Paper, Explained</h1>
+<p class="subtitle">A beginner-friendly guide to PEEK &mdash; a fast, lightweight way to pick the few most useful frames from a video before an AI describes it. Every technical term is defined. Every concept is grounded in analogy.</p>
+<p class="meta">Paper by Killian Steunou, Anas Filali Razzouki, Khalil Guetari, Moun&icirc;m A. El-Yacoubi &amp; Yannis Tevissen (T&eacute;l&eacute;com SudParis / Institut Polytechnique de Paris &amp; Moments Lab, 2026) &bull; Explainer published June 2026</p>
+
+<div class="research-banner">
+  <div class="banner-icon">&#127916;</div>
+  <div class="banner-text">
+    <p>This is a companion explainer for &ldquo;PEEK: Picking Essential frames via Efficient Knowledge distillation&rdquo;</p>
+    <p>An AI that describes videos can only look at a handful of frames at a time. PEEK is a tiny, fast model that decides <em>which</em> frames to show it &mdash; learning a sense of &ldquo;what matters&rdquo; from a powerful but slow expert, then doing the job on its own at a fraction of the cost.</p>
+    <div class="banner-links">
+      <a href="https://arxiv.org/abs/2605.31029" target="_blank" class="banner-link primary">&#x1F4C4; Read the Paper (arXiv)</a>
+      <a href="https://github.com/momentslab/peek" target="_blank" class="banner-link secondary">&#x1F4BB; Code &amp; Checkpoint (GitHub)</a>
+    </div>
+  </div>
+</div>
+
+<h2 id="big-picture">The Big Picture</h2>
+
+<p>Imagine you want an AI to watch a two-minute video and write a one-sentence description of it &mdash; this task is called <span class="term">video captioning<span class="tooltip">The task of automatically writing a short natural-language description of what happens in a video, e.g. &ldquo;A man plays the bagpipes in front of a crowd.&rdquo;</span></span>. There's a catch: the AI models that do this, called <span class="term">vision&ndash;language models<span class="tooltip">A vision&ndash;language model (VLM) is an AI that takes in images (or video frames) together with text, and can reason about both &mdash; for example, looking at frames and producing a caption. Examples in this paper: Qwen2.5-VL and SmolVLM2.</span></span>, can only look at a small fixed number of <span class="term">frames<span class="tooltip">A single still image pulled from a video. A two-minute clip contains thousands of frames; the model only gets to see a few of them.</span></span> at once &mdash; often just one, two, four, or eight. A video has thousands of frames. So before the AI ever sees the video, something has to choose which few frames to hand it. That choice is the <span class="term">frame budget<span class="tooltip">The fixed number of frames (k) a vision&ndash;language model is allowed to process for one video. Small budgets (k = 1, 2, 4, 8) are common because frames are expensive to process.</span></span> problem, and it turns out to matter a lot.</p>
+
+<p>The standard trick is <span class="term">uniform sampling<span class="tooltip">Splitting the video into k equal-length time chunks and taking one frame (usually the middle one) from each. Simple and cheap, but blind to what's actually in the frames.</span></span>: chop the video into equal time slices and grab the middle frame of each. It's cheap and surprisingly hard to beat &mdash; but it's <em>content-blind</em>. If the one moment that matters (a goal being scored, an instrument appearing) happens between the slices it grabs, uniform sampling simply misses it. The video below shows exactly this failure, using a real example from the paper:</p>
+
+<div class="video-embed">
+  <video src="videos/frame-budget.mp4" autoplay muted loop playsinline></video>
+  <div class="video-caption"><a href="https://github.com/heygen-com/hyperframes" target="_blank" class="badge" title="Made with HyperFrames — HeyGen's HTML-to-video composition framework"><span class="badge-label">made with</span><span class="badge-name">HyperFrames</span></a> With a budget of one frame, uniform sampling grabs the center of the clip (a couch) and the captioner invents the wrong scene; a content-aware pick lands on the bagpipes and gets it right.</div>
+</div>
+
+<p>Smarter, content-aware selectors do exist, but they come with their own problems. The problems PEEK sets out to solve:</p>
+
+<ol class="big">
+  <li><strong>Uniform sampling is content-blind.</strong> It treats a clip where the key event lasts a single instant exactly like one where evidence is spread evenly. Sometimes it works; sometimes it grabs nothing useful.</li>
+  <li><strong>Existing smart selectors are slow.</strong> Methods that score frames by usefulness run a big neural network over many densely-sampled frames. Some add 65% to 212% to the total captioning time &mdash; expensive enough to cancel out the point of using few frames.</li>
+  <li><strong>For captioning, you can't use the caption to choose.</strong> The most accurate way to find relevant frames is to compare them against the text you're looking for. But in captioning, the caption is exactly what you're trying to produce &mdash; you don't have it yet. So any method that needs the text up front is unusable at selection time.</li>
+</ol>
+
+<div class="insight">Train a tiny, fast model to <em>imitate</em> a powerful but &ldquo;cheating&rdquo; expert. The expert (an Oracle) is allowed to peek at the correct caption and score every frame for relevance. The tiny student watches only the pixels and learns to reproduce the expert's frame rankings. At run time you throw the expert away and keep the cheap student &mdash; recovering much of the benefit for about a 5% time cost instead of 65&ndash;212%.</div>
+
+<h2 id="background">Background Concepts</h2>
+
+<p>PEEK stacks together several standard ideas from modern AI. Here's each one, in plain language, before we see how they fit together.</p>
+
+<h3>Embeddings &amp; dual encoders</h3>
+<p>Neural networks don't work with raw pixels or letters &mdash; they work with <span class="term">embeddings<span class="tooltip">A list of numbers (a vector) that represents the meaning of something &mdash; an image or a sentence. Things with similar meaning get vectors that point in similar directions.</span></span>: lists of numbers (vectors) that capture meaning. A <span class="term">dual encoder<span class="tooltip">A model with two separate encoders &mdash; one for images, one for text &mdash; trained so that an image and a matching caption land near each other in the same embedding space. CLIP and SigLIP are the famous examples.</span></span> like <span class="term">CLIP<span class="tooltip">Contrastive Language&ndash;Image Pre-training (OpenAI, 2021): a dual encoder trained on millions of image&ndash;caption pairs so that matching images and texts get similar embeddings. The blueprint for SigLIP.</span></span> or <span class="term">SigLIP<span class="tooltip">A CLIP-style dual encoder from Google that uses a sigmoid training loss. SigLIP 2 is the version PEEK uses as its &ldquo;teacher.&rdquo;</span></span> has two of these encoders &mdash; one for images, one for text &mdash; trained so that a picture and its matching caption produce vectors that point in nearly the same direction. That shared space is what lets you measure how well an image matches a sentence.</p>
+<div class="analogy">Think of embeddings as GPS coordinates for meaning. A photo of a dog and the words &ldquo;a dog&rdquo; get placed at almost the same spot on the map, even though one is pixels and the other is letters. To check if they match, you just measure how close the two spots are.</div>
+
+<h3>Cosine similarity</h3>
+<p>Once an image and a caption are both vectors, how do you measure their match? With <span class="term">cosine similarity<span class="tooltip">A score from &minus;1 to 1 measuring the angle between two vectors. 1 means they point the same way (very similar), 0 means unrelated. It ignores length and looks only at direction.</span></span>: the cosine of the <em>angle</em> between them. A small angle (vectors pointing the same way) means high similarity; a wide angle means low similarity. Because it looks only at direction, not length, the vectors are first <span class="term">L2-normalized<span class="tooltip">Rescaling a vector so its length is exactly 1, so only its direction matters. Standard before computing cosine similarity.</span></span> (rescaled to length 1). This is how PEEK's expert scores each frame against the caption:</p>
+
+<div class="video-embed">
+  <video src="videos/cosine-scoring.mp4" autoplay muted loop playsinline></video>
+  <div class="video-caption"><a href="https://github.com/heygen-com/hyperframes" target="_blank" class="badge" title="Made with HyperFrames — HeyGen's HTML-to-video composition framework"><span class="badge-label">made with</span><span class="badge-name">HyperFrames</span></a> The caption and each frame become vectors. The frame whose vector sits at the smallest angle to the caption gets the highest relevance score.</div>
+</div>
+
+<h3>Knowledge distillation (teacher &amp; student)</h3>
+<p><span class="term">Knowledge distillation<span class="tooltip">A training technique where a small &ldquo;student&rdquo; model is trained to copy the outputs of a larger, more capable &ldquo;teacher&rdquo; model &mdash; ending up nearly as good but far cheaper to run.</span></span> is how you compress the skill of a big, expensive model into a small, cheap one. The big model (the <strong>teacher</strong>) produces outputs on training data; the small model (the <strong>student</strong>) is trained to reproduce them. Crucially, the student can be built to need <em>less information</em> than the teacher &mdash; which is the whole trick in PEEK: the teacher gets to see the caption, the student never does.</p>
+<div class="analogy">A master sommelier can taste a wine and rank a tray of glasses by quality. That skill is slow to acquire and the sommelier is expensive to hire. So you have them rank thousands of trays, then train an apprentice to predict the same rankings from cheaper clues. Once trained, the apprentice ranks glasses on their own &mdash; you no longer need the sommelier in the room.</div>
+
+<h3>The Transformer &amp; self-attention</h3>
+<p>PEEK's student is a small <span class="term">Transformer<span class="tooltip">The neural-network architecture behind almost all modern AI. It processes a whole sequence at once and lets every element &ldquo;look at&rdquo; every other element via self-attention.</span></span> &mdash; the same architecture behind ChatGPT and Claude (we have a <a href="../transformer/">full explainer on the Transformer</a> if you want the deep dive). The key feature it relies on is <span class="term">self-attention<span class="tooltip">A mechanism that lets each element in a sequence directly look at every other element and decide how relevant each one is. It's what lets PEEK judge a frame in the context of the whole video.</span></span>: every frame in the video can directly look at every other frame and judge its importance <em>in context</em>. A frame isn't scored in isolation &mdash; it's scored relative to what surrounds it.</p>
+
+<h3>Zero-shot transfer</h3>
+<p><span class="term">Zero-shot transfer<span class="tooltip">Using a model on a new dataset or task it was never trained on, with no extra training. A strong test of whether the model learned something general rather than memorizing its training set.</span></span> means taking a model trained on one dataset and testing it on a completely different one without any retraining. If it still works, it learned something general. PEEK is trained on one video dataset and then tested, untouched, on a second &mdash; a key check that it learned a real notion of &ldquo;relevant frame&rdquo; rather than memorizing quirks of its training videos.</p>
+
+<h2 id="how-it-works">How PEEK Works</h2>
+
+<p>At run time, PEEK is a simple pipeline that sits in front of any captioning model. Frames go in; a tiny scorer rates each one; a coverage rule picks the best few; those frames go to the captioner.</p>
+
+<div class="arch-flow">
+  <div class="tag-row">
+    <span class="tag tag-blue">video frames @ 2 per second</span>
+  </div>
+  <div class="arrow-down"></div>
+  <div class="arch-card">
+    <div class="name"><span class="icon">&#10052;&#65039;</span>MobileCLIP2 vision encoder <span style="color:var(--text-muted);font-weight:400;">(frozen)</span></div>
+    <div class="desc">Turns each frame into a 512-number embedding. Cheap and fixed &mdash; never trained.</div>
+  </div>
+  <div class="arrow-down"></div>
+  <div class="arch-card highlight">
+    <div class="name"><span class="icon">&#129504;</span>Temporal Transformer scorer &mdash; <span style="color:#2EC4B6;">this is PEEK</span></div>
+    <div class="desc">Looks across all the frames at once and outputs a single relevance score per frame. Only ~1.7M trained weights.</div>
+  </div>
+  <div class="arrow-down"></div>
+  <div class="arch-card">
+    <div class="name"><span class="icon">&#128208;</span>Stratified argmax</div>
+    <div class="desc">Splits the video into k time-bins and keeps the highest-scoring frame in each.</div>
+  </div>
+  <div class="arrow-down"></div>
+  <div class="out-badge">k chosen frames &rarr; downstream captioner &rarr; caption</div>
+</div>
+
+<p>But the interesting part isn't the run-time pipeline &mdash; it's how that little scorer was <em>taught</em>. PEEK is built in two stages: an expert teacher that's too slow and too privileged to deploy, and a cheap student distilled from it.</p>
+
+<div class="video-embed">
+  <video src="videos/distillation.mp4" autoplay muted loop playsinline></video>
+  <div class="video-caption"><a href="https://github.com/heygen-com/hyperframes" target="_blank" class="badge" title="Made with HyperFrames — HeyGen's HTML-to-video composition framework"><span class="badge-label">made with</span><span class="badge-name">HyperFrames</span></a> The teacher reads the frames <em>and</em> the caption to rank frames by relevance. The student learns to reproduce that ranking from frames alone &mdash; so at run time the teacher can be discarded.</div>
+</div>
+
+<h3>Stage 1 &mdash; the Oracle teacher</h3>
+<p>The teacher is a frozen SigLIP&nbsp;2 dual encoder. For each training video it does something the deployed system never can: it looks at the <em>ground-truth caption</em>. It embeds the caption with its text encoder, embeds every candidate frame with its vision encoder, and scores each frame by cosine similarity to the caption. The result is a relevance score for every frame &mdash; high for frames that visually match the caption, low for the rest. The scores are then <span class="term">min&ndash;max rescaled<span class="tooltip">Linearly rescaling a set of numbers so the smallest becomes 0 and the largest becomes 1, while keeping their order intact. Used here to standardize the teacher's targets.</span></span> to the range 0&ndash;1.</p>
+<p>This teacher is called an <span class="term">Oracle<span class="tooltip">A model given privileged information unavailable at deployment (here, the correct caption). It's used to define an upper bound on performance and to generate training targets &mdash; never to run live.</span></span> because it cheats: it knows the answer. You could never use it for real captioning, because the caption is the thing you're trying to generate. Its only job is to produce a teaching signal &mdash; a high-quality opinion about which frames matter.</p>
+
+<h3>Stage 2 &mdash; the query-free student</h3>
+<p>The student is what actually gets deployed. Each frame is first turned into a 512-number embedding by a frozen, lightweight <span class="term">MobileCLIP2<span class="tooltip">A small, fast image encoder designed to run cheaply (even on phones). PEEK uses it to turn frames into embeddings; it stays frozen and is never trained.</span></span> encoder. A small Transformer then reads the whole sequence of frame embeddings and outputs one <span class="term">logit<span class="tooltip">A raw, unbounded score a model produces before it's turned into a probability or ranking. Higher means &ldquo;more relevant&rdquo; here.</span></span> &mdash; a raw relevance score &mdash; per frame. It uses a fixed <span class="term">positional encoding<span class="tooltip">Extra numbers added to each frame's embedding that encode its position in time, so the model knows the order of frames. PEEK uses fixed sine/cosine patterns.</span></span> so it knows the order of frames in time.</p>
+<p>The student is deliberately tiny: about <strong>1.7 million</strong> trained parameters (13.1 million counting the frozen encoder it sits on). And it is <span class="term">query-free<span class="tooltip">Needs no text query or caption at run time &mdash; it scores frames from pixels alone. The opposite of query-dependent methods that must be told what to look for.</span></span>: it never sees any text. It learned its sense of &ldquo;relevant&rdquo; once, during training, by copying the teacher &mdash; and now applies it from pixels alone.</p>
+
+<details>
+  <summary>Deep dive: why a <em>ranking</em> loss instead of just predicting the scores?</summary>
+  <div class="content">
+    <p>The obvious way to copy the teacher would be to train the student to output the exact same number for each frame (a <span class="term">pointwise<span class="tooltip">Training each frame's predicted score to match a target number independently, ignoring how frames compare to each other.</span></span> regression). But frame selection never cares about the exact scores &mdash; it only cares about the <em>order</em>: which frames end up on top. Getting every number slightly wrong but the order perfectly right is a win; getting the numbers close but swapping the top two frames is a loss.</p>
+    <p>So PEEK trains with a <span class="term">listwise<span class="tooltip">A ranking loss that optimizes the ordering of the whole list of items at once, rather than individual scores (pointwise) or pairs (pairwise).</span></span> ranking objective called <span class="term">ListMLE<span class="tooltip">List Maximum Likelihood Estimation: a loss that maximizes the probability of producing the teacher's exact ranking order of frames. Treats the scores as Plackett&ndash;Luce ranking utilities.</span></span>. It directly maximizes the probability that the student would reproduce the teacher's <em>entire</em> ordering of frames, using the Plackett&ndash;Luce model of rankings. In the paper's ablation, ListMLE beats a combined pointwise + pairwise loss on every metric &mdash; most of all at the tightest one-frame budget, exactly where getting the single top frame right matters most.</p>
+  </div>
+</details>
+
+<h2 id="training">How It's Trained</h2>
+
+<p>Because both encoders are frozen, training is cheap: you precompute everything once, then train only the small scorer. Three stages:</p>
+
+<div class="pipeline">
+  <div class="pipe-stage s1">
+    <span class="num">1</span>
+    <span class="stage-name">Teacher targets</span>
+    <span class="stage-desc">SigLIP&nbsp;2 scores every frame against the ground-truth caption; scores rescaled to 0&ndash;1. Computed once.</span>
+  </div>
+  <div class="pipe-arrow">&rarr;</div>
+  <div class="pipe-stage s2">
+    <span class="num">2</span>
+    <span class="stage-name">Student inputs</span>
+    <span class="stage-desc">MobileCLIP2 turns each frame into a frozen 512-number embedding. Also computed once, no text.</span>
+  </div>
+  <div class="pipe-arrow">&rarr;</div>
+  <div class="pipe-stage s3">
+    <span class="num">3</span>
+    <span class="stage-name">Train the scorer</span>
+    <span class="stage-desc">The little Transformer learns to reproduce the teacher's ranking from the embeddings, using the ListMLE loss.</span>
+  </div>
+</div>
+
+<p>Only the third box involves any learning, and only the ~1.7M-parameter scorer is updated. The expensive encoders are run once and their outputs cached, so training never has to touch a heavy vision model again.</p>
+
+<details>
+  <summary>Training recipe &amp; settings</summary>
+  <div class="content">
+    <ul>
+      <li><strong>Architecture:</strong> hidden size 256, 2 Transformer encoder layers, 4 attention heads, feed-forward size 1024, dropout 0.15.</li>
+      <li><strong>Optimizer:</strong> AdamW, learning rate 2&times;10<sup>&minus;4</sup>, cosine-annealing schedule, weight decay 0.03.</li>
+      <li><strong>Schedule:</strong> batch size 1024, 25 epochs, 2 warm-up epochs, gradient clipping at norm 1.0.</li>
+      <li><strong>Data augmentation:</strong> light temporal jitter &mdash; randomly drop 5&ndash;25% of frames and random-crop the sequence (keeping at least 70%), so the model doesn't overfit to exact frame timing.</li>
+      <li><strong>Sequence length:</strong> capped at 32 frames per segment during training (with at least 6 kept after augmentation); shorter clips are zero-padded with an attention mask.</li>
+    </ul>
+    <p>The whole student is small enough that this is a fast, cheap training run &mdash; the opposite of the heavy video models other selectors depend on.</p>
+  </div>
+</details>
+
+<h2 id="inference">How It Picks Frames</h2>
+
+<p>At run time the scorer rates every candidate frame. But you can't just keep the top-scoring frames overall &mdash; if the most relevant moment is one big peak, the top few frames will all be crowded around that single instant, giving the captioner four near-identical pictures and no sense of the rest of the video. PEEK fixes this with a rule called <span class="term">stratified argmax<span class="tooltip">Split the video into k equal time-bins, then keep the single highest-scoring frame in each bin. Combines &ldquo;pick the best frame&rdquo; with &ldquo;cover the whole timeline.&rdquo;</span></span>: split the timeline into k equal bins, and keep the best frame <em>in each bin</em>. That blends two instincts &mdash; pick content-rich frames, but also spread them across the video.</p>
+
+<div class="video-embed">
+  <video src="videos/stratified-argmax.mp4" autoplay muted loop playsinline></video>
+  <div class="video-caption"><a href="https://github.com/heygen-com/hyperframes" target="_blank" class="badge" title="Made with HyperFrames — HeyGen's HTML-to-video composition framework"><span class="badge-label">made with</span><span class="badge-name">HyperFrames</span></a> Taking the globally top-scoring frames (left) clusters them on one moment. Taking the best frame per time-bin (right) keeps the high scores while covering the whole video.</div>
+</div>
+
+<p>The selected frames are then put back in time order and handed to the captioner. The paper's ablation confirms this matters: stratified argmax beats raw top-k selection on every metric and every budget tested. For a budget of one frame, stratified argmax simply reduces to picking the single best-scoring frame in the whole video.</p>
+
+<h2 id="data">The Data</h2>
+
+<p>PEEK is trained on one dataset and evaluated on two &mdash; the second purely to test whether it generalizes.</p>
+
+<div class="stepper">
+  <div class="step">
+    <strong>Train &amp; test &mdash; ActivityNet Captions</strong>
+    <span class="step-desc">Untrimmed YouTube videos (about two minutes each), every video densely annotated with several short, time-stamped event descriptions. On average 3&ndash;4 events per video. Frames are decoded at 2 per second. PEEK is trained <em>only</em> on this dataset's training split.</span>
+  </div>
+  <div class="step">
+    <strong>Zero-shot test &mdash; MSR-VTT</strong>
+    <span class="step-desc">Short web clips (about 15 seconds), each with 20 crowd-sourced captions describing the whole clip. PEEK never trains on this &mdash; it's used only to check that the learned notion of &ldquo;relevant frame&rdquo; transfers to a different kind of video.</span>
+  </div>
+</div>
+
+<div class="insight">The same single trained checkpoint is used for every test, every captioning model, and both datasets. Nothing is re-tuned per model or per dataset &mdash; so any gains reflect a genuinely transferable sense of frame relevance, not per-benchmark fitting.</div>
+
+<h2 id="results">Results</h2>
+
+<p>The headline: when the frame budget is tight, PEEK is the best content-aware selector that doesn't need text &mdash; clearly so at one frame. It's measured mostly with <span class="term">CIDEr<span class="tooltip">Consensus-based Image Description Evaluation: the standard 0&ndash;100+ score for captioning, rewarding captions that match human reference captions on the important, distinctive words. Higher is better.</span></span>, the standard captioning score, alongside <span class="term">BLEU-4<span class="tooltip">A captioning/translation metric measuring overlap of 4-word sequences with reference captions. Higher is better.</span></span>, <span class="term">METEOR<span class="tooltip">A captioning metric that rewards matching words including synonyms and word-stems, not just exact matches. Higher is better.</span></span>, and <span class="term">ROUGE-L<span class="tooltip">A metric based on the longest common word sequence shared with the reference caption. Higher is better.</span></span>.</p>
+
+<div class="statgrid">
+  <div class="stat green"><span class="big">14/16</span><span class="lab">ActivityNet CIDEr settings won (best query-free selector)</span></div>
+  <div class="stat green"><span class="big">all</span><span class="lab">one-frame CIDEr settings won, on both datasets</span></div>
+  <div class="stat green"><span class="big">+5.2%</span><span class="lab">time added to captioning (vs +65% / +212% for rivals)</span></div>
+  <div class="stat"><span class="big">0.36s</span><span class="lab">to score a whole video segment</span></div>
+</div>
+
+<h3>One-frame captioning on ActivityNet (CIDEr)</h3>
+<p>With a budget of a single frame &mdash; the hardest, most selection-sensitive case &mdash; PEEK beats plain uniform sampling across every captioner. The Oracle column is the cheating teacher, shown only as an upper bound; it can't be deployed.</p>
+
+<table class="metrics-table">
+  <thead>
+    <tr><th>Captioning model</th><th>Uniform</th><th>PEEK (ours)</th><th>Gain</th><th class="dim">Oracle (upper bound)</th></tr>
+  </thead>
+  <tbody>
+    <tr><td class="row-label">SmolVLM2-2.2B</td><td>29.79</td><td class="val-best">31.53</td><td>+1.74</td><td class="dim">37.36</td></tr>
+    <tr><td class="row-label">Qwen2.5-VL-3B</td><td>30.05</td><td class="val-best">32.39</td><td>+2.34</td><td class="dim">37.31</td></tr>
+    <tr><td class="row-label">Qwen3.5-4B</td><td>29.55</td><td class="val-best">31.73</td><td>+2.18</td><td class="dim">38.44</td></tr>
+    <tr><td class="row-label">Qwen2.5-VL-7B</td><td>28.54</td><td class="val-best">31.54</td><td>+3.00</td><td class="dim">36.60</td></tr>
+  </tbody>
+</table>
+
+<p>On the <strong>zero-shot</strong> MSR-VTT test &mdash; a dataset PEEK never trained on &mdash; it is again the best text-free selector for all four captioners at one frame, improving CIDEr by up to +2.68 points. That's the strongest evidence that it learned a transferable idea of relevance, not a memorized one.</p>
+
+<h3>It's cheap &mdash; that's the point</h3>
+<p>Accuracy isn't worth much if selecting frames costs more than captioning them. This is where PEEK separates from other content-aware methods. Measured over the full ActivityNet evaluation set:</p>
+
+<table class="metrics-table">
+  <thead>
+    <tr><th>Selector</th><th>Needs text?</th><th>Time per segment</th><th>Added to full pipeline</th></tr>
+  </thead>
+  <tbody>
+    <tr><td class="row-label">Uniform / Random</td><td>No</td><td class="dim">negligible</td><td class="dim">&mdash;</td></tr>
+    <tr><td class="row-label">PEEK (ours)</td><td>No</td><td class="val-best">0.36s</td><td class="val-best">+5.2%</td></tr>
+    <tr><td class="row-label">CSTA</td><td>No</td><td>4.52s</td><td>+65.4%</td></tr>
+    <tr><td class="row-label">MaxInfo</td><td>No</td><td>14.62s</td><td>+211.9%</td></tr>
+    <tr><td class="row-label dim">Oracle (not deployable)</td><td>Yes</td><td class="dim">2.03s</td><td class="dim">+29.4%</td></tr>
+  </tbody>
+</table>
+
+<p>PEEK is roughly <strong>12&times; faster</strong> than CSTA and <strong>40&times; faster</strong> than MaxInfo per segment, while beating both at low budgets. The other learned baselines optimize visual diversity (MaxInfo) or summarization importance (CSTA) &mdash; and the paper shows neither is the same thing as caption relevance, especially when you only get one frame.</p>
+
+<h3>An honest limitation</h3>
+<p>PEEK is not a universal replacement for uniform sampling. Its advantage is largest at one or two frames and shrinks as the budget grows: at four or eight frames, simply spreading frames evenly often catches the whole short clip just as well, and uniform or diversity-based methods sometimes edge ahead. Learned relevance selection helps most exactly when it's hardest &mdash; when you can afford only a frame or two. (See the bagpipes example in the opening video for the kind of case where it wins decisively.)</p>
+
+<h2 id="quiz">Final Quiz</h2>
+<p>Check your understanding of the key ideas.</p>
+
+<div class="quiz">
+  <div class="quiz-q">1. Why can't a captioning system use the caption to choose which frames to look at?</div>
+  <label><input type="radio" name="q1" value="a"> Captions are too long to fit in memory</label>
+  <label><input type="radio" name="q1" value="b"> The caption is what the system is trying to produce &mdash; it doesn't exist yet at selection time</label>
+  <label><input type="radio" name="q1" value="c"> Captions are written in too many languages</label>
+  <button class="quiz-btn" onclick="checkQuiz('q1','b',this)">Check</button>
+  <div class="quiz-feedback"></div>
+</div>
+
+<div class="quiz">
+  <div class="quiz-q">2. What does the &ldquo;Oracle teacher&rdquo; do that makes it impossible to deploy directly?</div>
+  <label><input type="radio" name="q2" value="a"> It looks at the ground-truth caption to score frames &mdash; information you don't have at run time</label>
+  <label><input type="radio" name="q2" value="b"> It runs only on supercomputers</label>
+  <label><input type="radio" name="q2" value="c"> It can only handle black-and-white video</label>
+  <button class="quiz-btn" onclick="checkQuiz('q2','a',this)">Check</button>
+  <div class="quiz-feedback"></div>
+</div>
+
+<div class="quiz">
+  <div class="quiz-q">3. The deployed PEEK student is &ldquo;query-free.&rdquo; What does that mean?</div>
+  <label><input type="radio" name="q3" value="a"> It runs without a GPU</label>
+  <label><input type="radio" name="q3" value="b"> It needs no text or caption at run time &mdash; it scores frames from pixels alone</label>
+  <label><input type="radio" name="q3" value="c"> It charges no money to query</label>
+  <button class="quiz-btn" onclick="checkQuiz('q3','b',this)">Check</button>
+  <div class="quiz-feedback"></div>
+</div>
+
+<div class="quiz">
+  <div class="quiz-q">4. Why does PEEK use a <em>ranking</em> loss (ListMLE) instead of just predicting each frame's exact score?</div>
+  <label><input type="radio" name="q4" value="a"> Ranking losses are faster to compute</label>
+  <label><input type="radio" name="q4" value="b"> Frame selection only cares about the order of frames, not their exact scores</label>
+  <label><input type="radio" name="q4" value="c"> Exact scores can't be stored as numbers</label>
+  <button class="quiz-btn" onclick="checkQuiz('q4','b',this)">Check</button>
+  <div class="quiz-feedback"></div>
+</div>
+
+<div class="quiz">
+  <div class="quiz-q">5. Why pick the best frame in each time-bin instead of the top-scoring frames overall?</div>
+  <label><input type="radio" name="q5" value="a"> To keep the chosen frames spread across the video instead of clustered on one moment</label>
+  <label><input type="radio" name="q5" value="b"> Because the scorer can't compare frames far apart in time</label>
+  <label><input type="radio" name="q5" value="c"> To make the video file smaller</label>
+  <button class="quiz-btn" onclick="checkQuiz('q5','a',this)">Check</button>
+  <div class="quiz-feedback"></div>
+</div>
+
+<div class="quiz">
+  <div class="quiz-q">6. When does PEEK help the most?</div>
+  <label><input type="radio" name="q6" value="a"> When the captioner can see eight or more frames</label>
+  <label><input type="radio" name="q6" value="b"> When the frame budget is tight &mdash; only one or two frames</label>
+  <label><input type="radio" name="q6" value="c"> Only on videos longer than ten minutes</label>
+  <button class="quiz-btn" onclick="checkQuiz('q6','b',this)">Check</button>
+  <div class="quiz-feedback"></div>
+</div>
+
+<h2 id="why-it-matters">Why It Matters</h2>
+
+<h3>For people building things</h3>
+<p>PEEK is a drop-in front-end for any video captioner. It's text-free, so it works for captioning (where you have no query). It's independent of the downstream model, so the same checkpoint helps a 2-billion-parameter captioner and a 7-billion one alike. And it's so cheap &mdash; about 5% added time, a third of a second per clip &mdash; that there's little reason not to use it when frames are scarce. The authors point to obvious extensions: picking thumbnails, preview frames, or representative stills for any video product. For anyone running video AI at scale, &ldquo;which frames do we even send?&rdquo; is a real cost and quality lever, and PEEK answers it without a heavy model.</p>
+
+<h3>For the research community</h3>
+<p>The paper makes a clean, useful point: a lot of a privileged &ldquo;cheating&rdquo; signal can be distilled into a model that doesn't get the privilege. The Oracle, by reading the caption, measures how much caption-aware frame selection <em>could</em> help; PEEK then shows how much of that a pixels-only model can actually recover at deployment time. Two design choices turn out to matter and are worth carrying forward: training to reproduce a <em>ranking</em> (not exact scores), and enforcing temporal <em>coverage</em> at selection time. Just as important, the paper is honest about the boundary &mdash; learned relevance beats uniform sampling mainly in the low-budget regime, and uniform remains a strong baseline once you can afford several frames. That clarity about <em>when</em> a method helps is as valuable as the method.</p>
+
+<h3>The bigger picture</h3>
+<p>As AI moves from images to long video, the bottleneck shifts. Models can't watch everything, so the question becomes <em>what to look at</em> &mdash; and that decision is increasingly a learned one. PEEK is a small, sharp example of a pattern that keeps recurring in modern AI: use an expensive, privileged model once, offline, to teach a cheap one that you can run everywhere. The expert is the scaffolding; the student is the product. As video understanding spreads into search, moderation, robotics, and assistants, lightweight learned front-ends that decide where to spend a model's limited attention &mdash; without needing to know the question in advance &mdash; are likely to become standard plumbing.</p>
+
+<p style="margin-top:2rem;color:var(--text-muted);font-size:0.9rem;border-top:1px solid var(--border);padding-top:1rem;">
+Want the primary source? Read <a href="https://arxiv.org/abs/2605.31029" target="_blank">the full paper on arXiv</a> or browse <a href="https://github.com/momentslab/peek" target="_blank">the code and pretrained checkpoint</a>.
+</p>
+
+</div><!-- /main-content -->
+
+<button class="glossary-toggle" onclick="document.querySelector('.glossary-panel').classList.toggle('open')">&#x1F4D6;</button>
+<div class="glossary-panel">
+  <h3>Glossary</h3>
+  <input type="text" id="glossary-search" placeholder="Search..." oninput="filterGlossary()">
+  <div id="glossary-entries">
+    <div class="glossary-entry"><strong>PEEK</strong><p>Picking Essential frames via Efficient Knowledge distillation &mdash; a fast, text-free model that selects the most useful frames of a video before captioning.</p></div>
+    <div class="glossary-entry"><strong>Video captioning</strong><p>Automatically writing a short text description of what happens in a video.</p></div>
+    <div class="glossary-entry"><strong>Frame</strong><p>A single still image pulled from a video. A clip has thousands; the model sees only a few.</p></div>
+    <div class="glossary-entry"><strong>Frame budget (k)</strong><p>The fixed number of frames a captioner is allowed to process for one video &mdash; often 1, 2, 4, or 8.</p></div>
+    <div class="glossary-entry"><strong>Vision&ndash;language model (VLM)</strong><p>An AI that takes images/frames plus text and reasons over both &mdash; e.g. to produce a caption.</p></div>
+    <div class="glossary-entry"><strong>Uniform sampling</strong><p>Splitting a video into equal time slices and taking the center frame of each. Cheap but content-blind.</p></div>
+    <div class="glossary-entry"><strong>Adaptive / content-aware sampling</strong><p>Choosing frames based on what's actually in them, rather than just by clock time.</p></div>
+    <div class="glossary-entry"><strong>Embedding</strong><p>A vector of numbers representing the meaning of an image or sentence; similar things get similar vectors.</p></div>
+    <div class="glossary-entry"><strong>Dual encoder</strong><p>A model with separate image and text encoders trained so matching images and captions land near each other. CLIP, SigLIP.</p></div>
+    <div class="glossary-entry"><strong>CLIP / SigLIP</strong><p>Famous dual encoders. PEEK's teacher is SigLIP&nbsp;2.</p></div>
+    <div class="glossary-entry"><strong>Cosine similarity</strong><p>The cosine of the angle between two vectors; 1 = same direction (very similar), 0 = unrelated.</p></div>
+    <div class="glossary-entry"><strong>L2 normalization</strong><p>Rescaling a vector to length 1 so only its direction matters &mdash; done before cosine similarity.</p></div>
+    <div class="glossary-entry"><strong>Knowledge distillation</strong><p>Training a small &ldquo;student&rdquo; model to copy a larger &ldquo;teacher,&rdquo; ending up nearly as good but far cheaper.</p></div>
+    <div class="glossary-entry"><strong>Oracle</strong><p>A model given privileged information (here, the correct caption) used only to set an upper bound and generate training targets &mdash; never deployed.</p></div>
+    <div class="glossary-entry"><strong>MobileCLIP2</strong><p>A small, fast image encoder. PEEK uses it (frozen) to turn frames into 512-number embeddings.</p></div>
+    <div class="glossary-entry"><strong>Transformer</strong><p>The architecture behind modern AI; processes a whole sequence at once via self-attention.</p></div>
+    <div class="glossary-entry"><strong>Self-attention</strong><p>Lets each element look at every other and judge its relevance in context. Lets PEEK score a frame relative to the whole video.</p></div>
+    <div class="glossary-entry"><strong>Positional encoding</strong><p>Numbers added to each frame's embedding to encode its position in time, so order is preserved.</p></div>
+    <div class="glossary-entry"><strong>Logit</strong><p>A raw, unbounded score a model outputs &mdash; here, &ldquo;how relevant&rdquo; a frame is.</p></div>
+    <div class="glossary-entry"><strong>Query-free</strong><p>Needs no text query/caption at run time; scores frames from pixels alone.</p></div>
+    <div class="glossary-entry"><strong>ListMLE (listwise ranking)</strong><p>A loss that maximizes the probability of reproducing the teacher's entire ordering of frames.</p></div>
+    <div class="glossary-entry"><strong>Pointwise / pairwise / listwise</strong><p>Three flavors of ranking loss: match each score, match each pair's order, or match the whole list's order.</p></div>
+    <div class="glossary-entry"><strong>Stratified argmax</strong><p>Split the video into k equal time-bins and keep the highest-scoring frame in each &mdash; relevance plus coverage.</p></div>
+    <div class="glossary-entry"><strong>Min&ndash;max rescaling</strong><p>Rescaling numbers so the smallest is 0 and the largest is 1, keeping their order.</p></div>
+    <div class="glossary-entry"><strong>Zero-shot transfer</strong><p>Using a trained model on a new dataset with no retraining &mdash; a test of generalization.</p></div>
+    <div class="glossary-entry"><strong>CIDEr</strong><p>The standard captioning score; rewards matching the distinctive words humans use. Higher is better.</p></div>
+    <div class="glossary-entry"><strong>BLEU-4 / METEOR / ROUGE-L</strong><p>Other captioning metrics: 4-word overlap, synonym-aware word match, and longest common word sequence.</p></div>
+    <div class="glossary-entry"><strong>ActivityNet Captions</strong><p>~2-minute YouTube videos with dense, time-stamped event captions. PEEK's training set.</p></div>
+    <div class="glossary-entry"><strong>MSR-VTT</strong><p>Short web clips with 20 captions each. PEEK's zero-shot test set.</p></div>
+    <div class="glossary-entry"><strong>MaxInfo / CSTA</strong><p>Baseline learned selectors optimizing visual diversity (MaxInfo) or summarization importance (CSTA) &mdash; slower than PEEK and weaker at low budgets.</p></div>
+  </div>
+</div>
+
+<script>
+// Progress bar
+window.addEventListener('scroll', function() {
+  var h = document.documentElement, b = document.body;
+  var percent = (h.scrollTop || b.scrollTop) / ((h.scrollHeight || b.scrollHeight) - h.clientHeight) * 100;
+  document.getElementById('progress-bar').style.width = percent + '%';
+});
+
+// Active TOC
+window.addEventListener('scroll', function() {
+  var sections = document.querySelectorAll('h2[id]');
+  var current = '';
+  sections.forEach(function(section) {
+    var top = section.getBoundingClientRect().top;
+    if (top < 150) current = section.id;
+  });
+  if ((window.innerHeight + window.scrollY) >= document.documentElement.scrollHeight - 50) {
+    current = sections[sections.length - 1].id;
+  }
+  document.querySelectorAll('.sidebar a').forEach(function(link) {
+    link.classList.remove('active');
+    if (link.getAttribute('href') === '#' + current) link.classList.add('active');
+  });
+});
+
+// Quiz
+function checkQuiz(name, correct, btn) {
+  var inputs = document.getElementsByName(name);
+  var selected = null;
+  for (var i = 0; i < inputs.length; i++) { if (inputs[i].checked) { selected = inputs[i].value; break; } }
+  var feedback = btn.parentElement.querySelector('.quiz-feedback');
+  feedback.style.display = 'block';
+  if (selected === correct) {
+    feedback.className = 'quiz-feedback quiz-correct';
+    feedback.textContent = 'Correct!';
+  } else if (selected === null) {
+    feedback.className = 'quiz-feedback quiz-wrong';
+    feedback.textContent = 'Pick an answer first.';
+  } else {
+    feedback.className = 'quiz-feedback quiz-wrong';
+    feedback.textContent = 'Not quite — try again.';
+  }
+}
+
+// Glossary search
+function filterGlossary() {
+  var q = document.getElementById('glossary-search').value.toLowerCase();
+  document.querySelectorAll('.glossary-entry').forEach(function(entry) {
+    var text = entry.textContent.toLowerCase();
+    entry.style.display = text.indexOf(q) >= 0 ? '' : 'none';
+  });
+}
+</script>
+
+<script data-goatcounter="https://tcho.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+
+</body>
+</html>

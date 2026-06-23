@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap');
+* { margin: 0; padding: 0; box-sizing: border-box; }
+</style>
+</head>
+<body>
+<div data-composition-id="distillation" data-width="1920" data-height="540" data-start="0" data-duration="12">
+  <div class="scene">
+    <div class="title">Learn the expert's ranking &mdash; then deploy without it</div>
+
+    <div class="flow">
+      <!-- TEACHER -->
+      <div class="block teacher" id="teacher">
+        <div class="inputs">
+          <span class="chip frames">frames</span>
+          <span class="chip text">caption: &ldquo;plays bagpipes&rdquo;</span>
+        </div>
+        <div class="box">
+          <div class="box-name">&#10052;&#65039; SigLIP&nbsp;2 &mdash; Oracle teacher</div>
+          <div class="box-sub">scores each frame vs. the caption</div>
+        </div>
+        <div class="rank" id="rank-t"></div>
+        <div class="tag orange">heavy &middot; needs the caption &middot; training only</div>
+      </div>
+
+      <!-- ARROW -->
+      <div class="bridge" id="bridge">
+        <div class="bridge-label">distill the<br>ranking</div>
+        <div class="bridge-arrow">&#10230;</div>
+      </div>
+
+      <!-- STUDENT -->
+      <div class="block student" id="student">
+        <div class="inputs">
+          <span class="chip frames">frames</span>
+          <span class="chip none">no&nbsp;text</span>
+        </div>
+        <div class="box hl">
+          <div class="box-name">PEEK &mdash; temporal scorer</div>
+          <div class="box-sub">predicts the ranking from pixels alone</div>
+        </div>
+        <div class="rank" id="rank-s"></div>
+        <div class="tag teal">13.1M params &middot; query-free &middot; runs at inference</div>
+      </div>
+    </div>
+
+    <div class="footer" id="footer">At inference the caption is unknown &mdash; the teacher is discarded, only the lightweight student runs.</div>
+  </div>
+
+  <style>
+    [data-composition-id="distillation"] {
+      position: relative; overflow: hidden; background: #011627;
+      width: 1920px; height: 540px;
+      font-family: 'Space Mono', monospace; color: #FDFFFC;
+    }
+    [data-composition-id="distillation"] .scene {
+      width: 1920px; height: 540px; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 22px; padding: 24px 50px 28px;
+    }
+    [data-composition-id="distillation"] .title { font-size: 44px; font-weight: 700; text-align: center; }
+    [data-composition-id="distillation"] .flow { display: flex; align-items: center; gap: 26px; }
+    [data-composition-id="distillation"] .block {
+      width: 700px; display: flex; flex-direction: column; align-items: center; gap: 12px;
+    }
+    [data-composition-id="distillation"] .inputs { display: flex; gap: 12px; }
+    [data-composition-id="distillation"] .chip {
+      font-size: 19px; font-weight: 700; padding: 7px 16px; border-radius: 20px;
+      border: 1px solid #415A77; color: #cdd9e5;
+    }
+    [data-composition-id="distillation"] .chip.frames { border-color: #bc8cff; color: #bc8cff; }
+    [data-composition-id="distillation"] .chip.text { border-color: #FF9F1C; color: #FF9F1C; }
+    [data-composition-id="distillation"] .chip.none { border-style: dashed; color: #5b6b7d; }
+    [data-composition-id="distillation"] .box {
+      width: 100%; border-radius: 14px; padding: 18px 22px; text-align: center;
+      background: #0d2137; border: 2px solid #FF9F1C;
+    }
+    [data-composition-id="distillation"] .student .box { border-color: #2EC4B6; }
+    [data-composition-id="distillation"] .box.hl { background: linear-gradient(135deg, #0d2137, rgba(46,196,182,0.14)); }
+    [data-composition-id="distillation"] .box-name { font-size: 28px; font-weight: 700; }
+    [data-composition-id="distillation"] .box-sub { font-size: 19px; color: #9fb3c8; margin-top: 4px; }
+    [data-composition-id="distillation"] .rank { display: flex; gap: 8px; align-items: center; }
+    [data-composition-id="distillation"] .rtile {
+      width: 76px; height: 60px; border-radius: 8px; background: #0d2137; border: 1px solid #415A77;
+      display: flex; align-items: center; justify-content: center; font-size: 30px; position: relative;
+    }
+    [data-composition-id="distillation"] .rtile .rk {
+      position: absolute; top: -10px; left: -8px; font-size: 14px; font-weight: 700;
+      background: #2EC4B6; color: #011627; border-radius: 50%; width: 22px; height: 22px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    [data-composition-id="distillation"] .teacher .rtile .rk { background: #FF9F1C; }
+    [data-composition-id="distillation"] .tag {
+      font-size: 18px; font-weight: 700; padding: 6px 16px; border-radius: 8px;
+    }
+    [data-composition-id="distillation"] .tag.orange { color: #FF9F1C; background: rgba(255,159,28,0.12); }
+    [data-composition-id="distillation"] .tag.teal { color: #2EC4B6; background: rgba(46,196,182,0.12); }
+    [data-composition-id="distillation"] .bridge { display: flex; flex-direction: column; align-items: center; gap: 4px; width: 150px; }
+    [data-composition-id="distillation"] .bridge-label { font-size: 19px; font-weight: 700; color: #FDFFFC; text-align: center; line-height: 1.25; }
+    [data-composition-id="distillation"] .bridge-arrow { font-size: 52px; color: #2EC4B6; }
+    [data-composition-id="distillation"] .footer {
+      font-size: 22px; color: #cdd9e5; text-align: center; max-width: 1500px;
+      border-top: 1px solid #21405e; padding-top: 16px;
+    }
+  </style>
+
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+  <script>
+    window.__timelines = window.__timelines || {};
+    var root = document.currentScript.parentElement;
+    var ranking = ['🎺', '👏', '👥', '🛋️'];
+    function fillRank(sel) {
+      var c = root.querySelector(sel);
+      ranking.forEach(function(e, i) {
+        var d = document.createElement('div');
+        d.className = 'rtile';
+        d.innerHTML = '<span class="rk">' + (i + 1) + '</span>' + e;
+        c.appendChild(d);
+      });
+      return c.querySelectorAll('.rtile');
+    }
+    var rt = fillRank('#rank-t');
+    var rs = fillRank('#rank-s');
+
+    var tl = gsap.timeline({ paused: true });
+    tl.from(root.querySelector('.title'), { opacity: 0, y: -18, duration: 0.6 });
+    // teacher
+    tl.from(root.querySelectorAll('#teacher .chip'), { opacity: 0, y: -14, duration: 0.4, stagger: 0.18 }, 0.5);
+    tl.from(root.querySelector('#teacher .box'), { opacity: 0, scale: 0.8, transformOrigin: 'center', duration: 0.5 }, 1.0);
+    tl.from(rt, { opacity: 0, y: 14, scale: 0.5, transformOrigin: 'center', duration: 0.4, stagger: 0.12 }, 1.6);
+    tl.from(root.querySelector('#teacher .tag'), { opacity: 0, duration: 0.4 }, 2.3);
+    // bridge
+    tl.from(root.querySelector('#bridge'), { opacity: 0, scale: 0.6, transformOrigin: 'center', duration: 0.5 }, 2.7);
+    // student
+    tl.from(root.querySelectorAll('#student .chip'), { opacity: 0, y: -14, duration: 0.4, stagger: 0.18 }, 3.2);
+    tl.from(root.querySelector('#student .box'), { opacity: 0, scale: 0.8, transformOrigin: 'center', duration: 0.5 }, 3.7);
+    tl.from(rs, { opacity: 0, y: 14, scale: 0.5, transformOrigin: 'center', duration: 0.4, stagger: 0.12 }, 4.3);
+    tl.from(root.querySelector('#student .tag'), { opacity: 0, duration: 0.4 }, 5.0);
+    // emphasize the student matches the teacher
+    tl.fromTo(rs, { boxShadow: '0 0 0 rgba(46,196,182,0)' }, { boxShadow: '0 0 18px rgba(46,196,182,0.8)', duration: 0.4, stagger: 0.08, repeat: 1, yoyo: true }, 5.4);
+    // inference: dim teacher, glow student
+    tl.to('#teacher', { opacity: 0.32, duration: 0.6 }, 6.6);
+    tl.from(root.querySelector('#footer'), { opacity: 0, y: 16, duration: 0.6 }, 6.8);
+
+    window.__timelines["distillation"] = tl;
+  </script>
+</div>
+</body>
+</html>

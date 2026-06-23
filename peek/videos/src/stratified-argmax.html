@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap');
+* { margin: 0; padding: 0; box-sizing: border-box; }
+</style>
+</head>
+<body>
+<div data-composition-id="stratified-argmax" data-width="1920" data-height="540" data-start="0" data-duration="11">
+  <div class="scene">
+    <div class="title">Pick the best frame in each time-bin &mdash; not just the global best</div>
+
+    <div class="charts">
+      <div class="chart">
+        <div class="clab orange">Raw top-4 &mdash; the 4 highest-scoring frames</div>
+        <svg id="svg-raw" viewBox="0 0 760 330" preserveAspectRatio="xMidYMid meet"></svg>
+        <div class="ctag orange">all cluster on one moment &rarr; near-duplicate frames</div>
+      </div>
+      <div class="chart">
+        <div class="clab teal">Stratified argmax &mdash; PEEK's rule</div>
+        <svg id="svg-strat" viewBox="0 0 760 330" preserveAspectRatio="xMidYMid meet"></svg>
+        <div class="ctag teal">one frame per bin &rarr; covers the whole video</div>
+      </div>
+    </div>
+  </div>
+
+  <style>
+    [data-composition-id="stratified-argmax"] {
+      position: relative; overflow: hidden; background: #011627;
+      width: 1920px; height: 540px;
+      font-family: 'Space Mono', monospace; color: #FDFFFC;
+    }
+    [data-composition-id="stratified-argmax"] .scene {
+      width: 1920px; height: 540px; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 16px; padding: 22px 50px 28px;
+    }
+    [data-composition-id="stratified-argmax"] .title { font-size: 42px; font-weight: 700; text-align: center; }
+    [data-composition-id="stratified-argmax"] .charts { display: flex; gap: 44px; }
+    [data-composition-id="stratified-argmax"] .chart { width: 760px; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+    [data-composition-id="stratified-argmax"] .chart svg { width: 760px; height: 330px; }
+    [data-composition-id="stratified-argmax"] .clab { font-size: 25px; font-weight: 700; }
+    [data-composition-id="stratified-argmax"] .ctag { font-size: 21px; font-weight: 700; padding: 7px 18px; border-radius: 8px; }
+    [data-composition-id="stratified-argmax"] .orange { color: #FF9F1C; }
+    [data-composition-id="stratified-argmax"] .teal { color: #2EC4B6; }
+    [data-composition-id="stratified-argmax"] .ctag.orange { background: rgba(255,159,28,0.12); }
+    [data-composition-id="stratified-argmax"] .ctag.teal { background: rgba(46,196,182,0.12); }
+  </style>
+
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+  <script>
+    window.__timelines = window.__timelines || {};
+    var root = document.currentScript.parentElement;
+    var SVGNS = 'http://www.w3.org/2000/svg';
+    function mk(t, a) { var e = document.createElementNS(SVGNS, t); for (var k in a) e.setAttribute(k, a[k]); return e; }
+
+    // ---- relevance curve ----
+    var N = 26;
+    var peaks = [ {c:0.18,a:0.40,w:0.05}, {c:0.40,a:0.42,w:0.055}, {c:0.64,a:1.0,w:0.078}, {c:0.86,a:0.38,w:0.05} ];
+    var vals = [];
+    for (var i = 0; i < N; i++) {
+      var x = i / (N - 1), v = 0.06;
+      peaks.forEach(function(p) { v += p.a * Math.exp(-Math.pow((x - p.c) / p.w, 2) / 2); });
+      vals.push(v);
+    }
+    var mx = Math.max.apply(null, vals);
+    vals = vals.map(function(v) { return v / mx; });
+
+    // top-4 globally
+    var order = vals.map(function(v, i) { return {v: v, i: i}; }).sort(function(a, b) { return b.v - a.v; });
+    var topIdx = order.slice(0, 4).map(function(o) { return o.i; });
+    // stratified: 4 contiguous bins, argmax in each
+    var bins = [0, 6, 13, 19, 26];
+    var stratIdx = [];
+    for (var b = 0; b < 4; b++) {
+      var best = bins[b], bv = -1;
+      for (var j = bins[b]; j < bins[b + 1]; j++) { if (vals[j] > bv) { bv = vals[j]; best = j; } }
+      stratIdx.push(best);
+    }
+
+    // geometry
+    var L = 70, R = 720, T = 36, B = 280;
+    function px(i) { return L + (R - L) * i / (N - 1); }
+    function py(v) { return B - (B - T) * v; }
+
+    function buildChart(svgId, mode) {
+      var svg = root.querySelector(svgId);
+      // axis baseline
+      svg.appendChild(mk('line', { x1: L, y1: B, x2: R, y2: B, stroke: '#21405e', 'stroke-width': 2 }));
+      svg.appendChild(mk('line', { x1: L, y1: T - 4, x2: L, y2: B, stroke: '#21405e', 'stroke-width': 2 }));
+      var xl = mk('text', { x: (L + R) / 2, y: 318, 'text-anchor': 'middle', fill: '#56708a', 'font-size': 18, 'font-family': "'Space Mono', monospace" });
+      xl.textContent = 'time →'; svg.appendChild(xl);
+      var yl = mk('text', { x: 16, y: (T + B) / 2, fill: '#56708a', 'font-size': 18, 'font-family': "'Space Mono', monospace", transform: 'rotate(-90 16 ' + ((T + B) / 2) + ')', 'text-anchor': 'middle' });
+      yl.textContent = 'PEEK score'; svg.appendChild(yl);
+
+      // bin dividers (stratified only)
+      var dividers = [];
+      if (mode === 'strat') {
+        for (var b = 1; b < 4; b++) {
+          var xb = (px(bins[b] - 1) + px(bins[b])) / 2;
+          var dv = mk('line', { x1: xb, y1: T - 4, x2: xb, y2: B, stroke: '#2EC4B6', 'stroke-width': 1.5, 'stroke-dasharray': '6 6', opacity: 0.7 });
+          svg.appendChild(dv); dividers.push(dv);
+        }
+      }
+
+      // curve
+      var d = 'M ' + px(0) + ' ' + py(vals[0]);
+      for (var i = 1; i < N; i++) d += ' L ' + px(i) + ' ' + py(vals[i]);
+      var path = mk('path', { d: d, fill: 'none', stroke: '#415A77', 'stroke-width': 4, 'stroke-linejoin': 'round', 'stroke-linecap': 'round' });
+      // length for draw animation
+      var len = 0;
+      for (var i = 1; i < N; i++) len += Math.hypot(px(i) - px(i - 1), py(vals[i]) - py(vals[i - 1]));
+      path.setAttribute('stroke-dasharray', len);
+      path.setAttribute('stroke-dashoffset', len);
+      svg.appendChild(path);
+
+      // dots
+      var idxs = mode === 'strat' ? stratIdx : topIdx;
+      var color = mode === 'strat' ? '#2EC4B6' : '#FF9F1C';
+      var dots = [];
+      idxs.forEach(function(i) {
+        var c = mk('circle', { cx: px(i), cy: py(vals[i]), r: 11, fill: color, stroke: '#011627', 'stroke-width': 3 });
+        svg.appendChild(c); dots.push(c);
+        var tick = mk('line', { x1: px(i), y1: B, x2: px(i), y2: B + 14, stroke: color, 'stroke-width': 4 });
+        svg.appendChild(tick); dots.push(tick);
+      });
+      return { path: path, len: len, dots: dots, dividers: dividers };
+    }
+
+    var raw = buildChart('#svg-raw', 'raw');
+    var strat = buildChart('#svg-strat', 'strat');
+
+    var tl = gsap.timeline({ paused: true });
+    tl.from(root.querySelector('.title'), { opacity: 0, y: -18, duration: 0.6 });
+    // left chart
+    tl.from(root.querySelector('.chart:first-child .clab'), { opacity: 0, duration: 0.4 }, 0.5);
+    tl.to(raw.path, { strokeDashoffset: 0, duration: 1.1, ease: 'power1.inOut' }, 0.7);
+    tl.from(raw.dots, { opacity: 0, scale: 0, transformOrigin: 'center', duration: 0.4, stagger: 0.1, ease: 'back.out(2)' }, 1.7);
+    tl.from(root.querySelector('.chart:first-child .ctag'), { opacity: 0, y: 12, duration: 0.5 }, 2.6);
+    // right chart
+    tl.from(root.querySelector('.chart:last-child .clab'), { opacity: 0, duration: 0.4 }, 3.2);
+    tl.to(strat.path, { strokeDashoffset: 0, duration: 1.1, ease: 'power1.inOut' }, 3.4);
+    tl.from(strat.dividers, { opacity: 0, duration: 0.4, stagger: 0.12 }, 4.4);
+    tl.from(strat.dots, { opacity: 0, scale: 0, transformOrigin: 'center', duration: 0.4, stagger: 0.12, ease: 'back.out(2)' }, 4.9);
+    tl.from(root.querySelector('.chart:last-child .ctag'), { opacity: 0, y: 12, duration: 0.5 }, 5.9);
+
+    window.__timelines["stratified-argmax"] = tl;
+  </script>
+</div>
+</body>
+</html>
